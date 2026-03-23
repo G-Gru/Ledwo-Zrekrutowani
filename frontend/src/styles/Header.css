@@ -1,0 +1,77 @@
+.header {
+  background-color: #4C545C;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+}
+
+.header-container {
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  text-decoration: none;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo img {
+  height: 70px;
+  width: auto;
+}
+
+.logo h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 2.5rem;
+}
+
+.btn {
+  padding: 0;
+  border-radius: 0;
+  text-decoration: none;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-block;
+  background: none;
+  color: #ffffff;
+  font-size: 1rem;
+  position: relative;
+  padding-bottom: 0.25rem;
+}
+
+.btn:hover {
+  color: #ffffff87;
+}
+
+.btn.active {
+  color: #ffffffb3;
+  border-bottom: 2px solid #ffffffb3;
+}
+
+.btn-primary {
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  color: #ffffff87;
+}
+
+.btn-secondary {
+  color: #ffffff;
+}
