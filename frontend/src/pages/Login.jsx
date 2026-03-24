@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import '../styles/Auth.css';
+import '../styles/Style.css';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -27,9 +27,9 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-container">
-      <h2 className="auth-title">Logowanie</h2>
-      <div className="auth-box">
+    <div className="page-layout">
+      <h2 className="page-title">Logowanie</h2>
+      <div className="bg-panel">
         {error && <div className="error-message">{error}</div>}
         <input type="text" style={{display: 'none'}} autoComplete="username" />
         <input type="password" style={{display: 'none'}} autoComplete="current-password" />

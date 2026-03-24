@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Header from './components/Header';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import MainPage from './pages/MainPage';
 
 function App() {
   const token = localStorage.getItem('token');
@@ -12,7 +13,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<MainPage />} />
       </Routes>
     </Router>
   );

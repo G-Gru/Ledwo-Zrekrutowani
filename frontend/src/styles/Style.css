@@ -1,4 +1,4 @@
-.auth-container {
+.page-layout {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,7 +9,7 @@
   width: 100%;
 }
 
-.auth-box {
+.bg-panel {
   background: white;
   padding: 2.5rem;
   border-radius: 8px;
@@ -18,12 +18,8 @@
   max-width: none;
 }
 
-.auth-box h2 {
-  display: none;
-}
-
-.auth-title {
-  text-align: left;
+.page-title {
+  text-align: center;
   color: #2c3e50;
   margin-bottom: 2rem;
   font-size: 3rem;
@@ -53,14 +49,14 @@
   gap: 1rem;
 }
 
-@media (max-width: 860px) {
+/* @media (max-width: 860px) {
   .auth-box {
     width: 100%;
   }
   .form-row {
     grid-template-columns: 1fr;
   }
-}
+} */
 
 .form-group label {
   display: block;
@@ -105,7 +101,7 @@ select:-webkit-autofill:focus {
   box-shadow: 0 0 0px 1000px #F6F3F2 inset !important;
 }
 
-.btn-submit {
+button, .btn-submit { /* set default style to btn-submit for now */
   width: 100%;
   padding: 0.75rem;
   font-size: 1rem;

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import '../styles/Auth.css';
+import '../styles/Style.css';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -81,9 +81,9 @@ export default function Register() {
   };
 
   return (
-    <div className="auth-container">
-      <h2 className="auth-title">Rejestracja</h2>
-      <div className="auth-box">
+    <div className="page-layout">
+      <h2 className="page-title">Rejestracja</h2>
+      <div className="bg-panel">
         <form onSubmit={onSubmit} autoComplete="off">
           <div className="section-title">Dane osobowe</div>
           <div className="form-row">
