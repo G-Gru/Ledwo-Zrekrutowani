@@ -3,6 +3,7 @@ import Header from './components/Header';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MainPage from './pages/MainPage';
+import ApplicationForm from './pages/ApplicationForm';
 
 function App() {
   const token = localStorage.getItem('token');
@@ -11,9 +12,10 @@ function App() {
     <Router>
       <Header />
       <Routes>
+        <Route path="/" element={<MainPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/" element={<MainPage />} />
+        <Route path="/applicationForm" element={<ApplicationForm />} />
       </Routes>
     </Router>
   );
