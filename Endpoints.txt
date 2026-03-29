@@ -1,0 +1,47 @@
+# Dokumentacja Endpointów
+
+## Endpoint: POST /api/auth/login
+**Lokalizacja:** frontend/src/services/authService.js (funkcja `login`)
+
+**Argumenty wejściowe (body JSON):**
+- `email` (string, wymagane): Adres email użytkownika
+- `password` (string, wymagane): Hasło użytkownika
+
+**Argumenty wyjściowe (sukces - JSON):**
+- `token` (string): Token JWT do autoryzacji kolejnych żądań
+- `user` (object):
+  - `id` (number): ID użytkownika
+  - `email` (string): Adres email użytkownika
+  - `name` (string): Imię i nazwisko użytkownika (jeśli dostępne)
+
+**Argumenty wyjściowe (błąd - JSON):**
+- `error` (string): Opis błędu, np. "Niepoprawne dane logowania"
+
+---
+
+## Endpoint: POST /api/auth/register
+**Lokalizacja:** frontend/src/services/authService.js (funkcja `register`)
+
+**Argumenty wejściowe (body JSON):**
+- `firstName` (string, wymagane): Imię
+- `lastName` (string, wymagane): Nazwisko
+- `pesel` (string, wymagane): PESEL (11 cyfr)
+- `nationality` (string, wymagane): Obywatelstwo
+- `email` (string, wymagane): Adres email
+- `phone` (string, wymagane): Numer telefonu
+- `password` (string, wymagane): Hasło
+- `confirmPassword` (string, wymagane): Potwierdzenie hasła (tylko do walidacji frontend)
+- `consents` (object): Zgody
+  - `infoClause` (boolean, wymagane): Klauzula informacyjna
+  - `gdpr` (boolean, wymagane): Zgoda RODO
+  - `updates` (boolean): Zgoda na aktualizacje
+
+**Argumenty wyjściowe (sukces - JSON):**
+- `token` (string): Token JWT do autoryzacji
+- `user` (object):
+  - `id` (number): ID nowego użytkownika
+  - `email` (string): Adres email użytkownika
+  - `name` (string): Imię i nazwisko użytkownika
+
+**Argumenty wyjściowe (błąd - JSON):**
+- `error` (string): Opis błędu, np. "Użytkownik już istnieje" lub "Niepoprawne dane"

@@ -12,8 +12,8 @@ export const useAuth = () => {
     return data;
   };
 
-  const handleRegister = async (email, password) => {
-    const data = await register(email, password);
+  const handleRegister = async (userData) => {
+    const data = await register(userData);
     if (data.token) {
       localStorage.setItem("token", data.token);
       if (data.user) {

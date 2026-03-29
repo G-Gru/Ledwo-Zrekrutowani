@@ -27,14 +27,14 @@ export const login = async (email, password) => {
  * Endpoint: POST /api/auth/register
  * Oczekiwana odpowiedź: { token: string, user: { id, email, name } }
  */
-export const register = async (email, password) => {
+export const register = async (userData) => {
   try {
     const response = await apiClient(`${API_BASE_URL}/api/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(userData),
     });
     return response;
   } catch (error) {

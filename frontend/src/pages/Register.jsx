@@ -71,7 +71,7 @@ export default function Register() {
       };
       console.log("Rejestracja payload:", registerPayload);
 
-      await handleRegister(formData.email, formData.password);
+      await handleRegister(registerPayload);
       navigate("/login");
     } catch (err) {
       setError(err?.message || "Błąd rejestracji");
