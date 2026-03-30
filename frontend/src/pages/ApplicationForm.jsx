@@ -1,8 +1,18 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import '../styles/Style.css';
+import '../styles/ApplicationForm.css';
+import DocumentUploadCard from '../components/DocumentUploadCard'
 
 export default function ApplicationForm() {
+    const [files, setFiles] = useState({
+        diploma: null,
+        cv: null,
+        additional: null
+    });
+
+    const handleFileSelect = (id, file) => {
+        setFiles(prev => ({ ...prev, [id]: file }));
+    };
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -41,13 +51,17 @@ export default function ApplicationForm() {
   return (
     <div className='page-layout'>
 
-      <h2 className='page-title'> Wniosek o Rekrutacje na studia podyplomowe </h2>
+      <div className='page-title'> Wniosek o Rekrutacje na studia podyplomowe </div>
 
       <div className='bg-panel'>
 
         <form onSubmit={onSubmit} autoComplete="off">
 
-          <div className="section-title">Dane osobowe</div>
+          {/* DANE OSOBOWE */}
+          <div className="section-title">      
+            <span class="material-symbols-outlined text-primary">person</span>
+            Dane osobowe
+          </div>
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="firstName">Imię</label>
@@ -64,21 +78,25 @@ export default function ApplicationForm() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="birthdate">Data urodzenia</label>
-              <input id="birthdate" name="birthdate" type="date" autoComplete="bday" value={formData.birthdate} onChange={handleChange} required />
+                <label htmlFor="birthdate">Data urodzenia</label>
+                <input id="birthdate" name="birthdate" type="date" autoComplete="bday" value={formData.birthdate} onChange={handleChange} required />
 
-              <label htmlFor="birthplace">Miejsce urodzenia</label>
-              <input id="birthplace" name="birthplace" autoComplete="birthplace" value={formData.birthplace} onChange={handleChange} />
+                <label htmlFor="birthplace">Miejsce urodzenia</label>
+                <input id="birthplace" name="birthplace" autoComplete="birthplace" value={formData.birthplace} onChange={handleChange} />
 
-              <label htmlFor="pesel">PESEL</label>
-              <input id="pesel" name="pesel" maxLength="11" autoComplete="off" value={formData.pesel} onChange={handleChange} required />
+                <label htmlFor="pesel">PESEL</label>
+                <input id="pesel" name="pesel" maxLength="11" autoComplete="off" value={formData.pesel} onChange={handleChange} required />
 
-              <label htmlFor="nationality">Obywatelstwo</label>
-              <input id="nationality" name="nationality" autoComplete="nationality" value={formData.nationality} onChange={handleChange} required />
+                <label htmlFor="nationality">Obywatelstwo</label>
+                <input id="nationality" name="nationality" autoComplete="nationality" value={formData.nationality} onChange={handleChange} required />
             </div>
           </div>
 
-          <div className="section-title">Dane kontaktowe</div>
+          {/* DANE KONTAKTOWE */}
+          <div className="section-title">
+            <span class="material-symbols-outlined text-primary">contact_mail</span>
+            Dane kontaktowe
+            </div>
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="address">Adres zamieszkania</label>
@@ -97,7 +115,11 @@ export default function ApplicationForm() {
             </div>
           </div>
 
-          <div className="section-title">Wykształcenie</div>
+            {/* WYKSZTALCENIE */}
+          <div className="section-title">
+            <span class="material-symbols-outlined text-primary">school</span>
+            Wykształcenie
+            </div>
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="studiesPlace">Miejsce studiów</label>
@@ -109,7 +131,11 @@ export default function ApplicationForm() {
             </div>
           </div>
 
-          <div className="section-title">Kontakt awaryjny</div>
+            {/* KONTAKT AWARYJNY */}
+          <div className="section-title">
+            <span class="material-symbols-outlined text-primary">phone</span>
+            Kontakt awaryjny
+            </div>
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="emergencyContactName">Imię kontaktu</label>
@@ -124,7 +150,42 @@ export default function ApplicationForm() {
             </div>
           </div>
 
-          <div className="section-title">Dokumenty</div>
+            {/* DOKUMENTY */}
+            <div className="section-title">
+            <span class="material-symbols-outlined text-primary">upload_file</span>
+                Dokumenty
+            </div>
+            
+            <div className="form-row" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+
+            <DocumentUploadCard 
+                id="diploma"
+                title="Dyplom ukończenia studiów"
+                formats="PDF, JPG"
+                maxSize="5MB"
+                icon="description"
+                onFileSelect={handleFileSelect}
+            />
+
+            <DocumentUploadCard 
+                id="cv"
+                title="CV"
+                formats="PDF"
+                maxSize="2MB"
+                icon="badge"
+                onFileSelect={handleFileSelect}
+            />
+
+            <DocumentUploadCard 
+                id="additional"
+                title="Inne dodatkowe"
+                formats="PDF, ZIP"
+                maxSize="10MB"
+                icon="add_box"
+                onFileSelect={handleFileSelect}
+            />
+
+            </div>
 
           <button className='btn-submit' type='submit'>Wyślij wniosek</button>
         </form>

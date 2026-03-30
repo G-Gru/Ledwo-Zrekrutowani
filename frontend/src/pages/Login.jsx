@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import '../styles/Style.css';
+import '../styles/Auth.css';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ export default function Login() {
 
   return (
     <div className="page-layout">
-      <h2 className="page-title">Logowanie</h2>
+      <div className="page-title">Logowanie</div>
       <div className="bg-panel">
         {error && <div className="error-message">{error}</div>}
         <input type="text" style={{display: 'none'}} autoComplete="username" />
