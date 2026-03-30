@@ -6,17 +6,22 @@ from users.models import User
 # Create your models here.
 class Studies(models.Model):
     name = models.CharField(max_length=100)
-    terms_count = models.IntegerField()
+    terms_count = models.PositiveIntegerField()
     description = models.TextField()
 
-
 class StudiesEdition(models.Model):
+    class StatusChoices(models.TextChoices):
+        HIDDEN = 'HIDDEN'
+        ACTIVE = 'ACTIVE'
+        CLOSED = 'CLOSED' # todo
+
+
     studies = models.ForeignKey(Studies, on_delete=models.RESTRICT)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     start_date = models.DateField()
     end_date = models.DateField()
     max_participants = models.IntegerField()
-    status = models.CharField(max_length=50)
+    status = models.CharField(max_length=50, choices=StatusChoices.choices, default=StatusChoices.HIDDEN)
     syllabus_url = models.URLField()
     recruitment_start_date = models.DateTimeField()
     recruitment_end_date = models.DateTimeField()
