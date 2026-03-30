@@ -1,12 +1,12 @@
 
 input {
-    border: black
+  border: 1px solid var(--on-surface); 
 }
 
 .upload-card {
-  background-color: var(--surface-alt);
+  background-color: var(--surface-container-lowest);
   padding: 1.5rem;
-  border: 2px dashed #9682286b;
+  border: 2px dashed var(--outline-variant); 
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -18,11 +18,11 @@ input {
 }
 
 .upload-card:hover {
-  border-color: var(--border-focus);
+  border-color: var(--primary); 
 }
 
 .upload-icon {
-  color: var(--text-muted);
+  color: var(--secondary); /* Zgodnie z makietą, ikony są secondary */
   font-size: 2.5rem !important;
 }
 
@@ -35,13 +35,13 @@ input {
 .upload-title {
   font-weight: 700;
   font-size: 0.875rem;
-  color: var(--text-main);
+  color: var(--on-surface);
   margin: 0;
 }
 
 .upload-meta {
   font-size: 0.65rem;
-  color: var(--text-muted);
+  color: var(--secondary);
   text-transform: uppercase;
   margin: 0;
   letter-spacing: 0.5px;
@@ -50,8 +50,9 @@ input {
 .btn-upload {
   margin-top: auto;
   padding: 0.5rem 1rem;
-  background-color: #ebe7e7;
-  color: var(--text-main);
+  /* background-color: #ebe7e7; */
+  background-color: var(--surface-container-high); 
+  color: var(--on-surface);
   font-size: 0.75rem;
   font-weight: 700;
   border: none;
@@ -66,13 +67,13 @@ input {
 }
 
 .btn-upload:hover {
-  background-color: #dcd9d9;
+  background-color: var(--surface-dim); 
 }
 
 #check-circle {
-  color: rgb(8, 120, 83);
+  color: var(--tertiary); 
+  background-color: var(--secondary-container); 
   height: auto;
-  background-color: #e2ebea;
   padding: 10px;
   border-radius: 10px;
   font-size: 2rem;
@@ -80,45 +81,54 @@ input {
 }
 
 .action-card {
-  background-color: rgb(242, 242, 242);
+  /* background-color: rgb(242, 242, 242); */
+  background-color: var(--surface-container-low); 
   margin: 2rem;
   margin-top: 3rem;
   padding: 20px;
-  border-left: 3px #856e05 solid;
+  /* border-left: 3px #856e05 solid; */
+  border-left: 3px solid var(--primary); 
   text-align: left;
 
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
+
 .action-title {
-    color: #856e05;
-    text-transform: uppercase;
-    font-weight: 600;
-    font-size: 0.75rem;
+  color: var(--primary); 
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.75rem;
 }
 
 .payment-deadline-info {
-    background-color: rgb(229, 229, 229);
-    color: black;
-    font-weight: 600;
-    text-align: center;
-    padding: 5px;
+  background-color: var(--surface-container-highest); 
+  color: var(--on-surface);
+  font-weight: 600;
+  padding: 5px;
+  width: 55%;
+  text-align: left;
 }
 
 .moje-wnioski-info {
-    background-color: white;
-    padding: 15px;
-    text-align: center;
-    color: grey;
+  /* background-color: white; */
+  background-color: var(--surface-container-lowest); 
+  padding: 15px;
+  text-align: center;
+  /* color: grey; */
+  color: var(--secondary); 
 }
+
 .moje-wnioski-link {
-    color: #856e05;
-    transition: font-size 0.15s ease;
-    font-weight: 675;
-    margin-left: 5px;
+  /* color: #856e05; */
+  color: var(--primary); 
+  transition: font-size 0.15s ease;
+  font-weight: 675;
+  margin-left: 5px;
 }
+
 .moje-wnioski-link:hover {
-    font-size: 1.05em;
-    text-decoration: underline;
+  font-size: 1.05em;
+  text-decoration: underline;
 }

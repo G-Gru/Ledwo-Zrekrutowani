@@ -1,6 +1,5 @@
 // src/components/ApplicationSent.jsx
 import React from 'react';
-import '../styles/Style.css';
 import '../styles/ApplicationForm.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -36,7 +35,7 @@ export default function ApplicationSent({
             <h2> Opłata Rekrutacyjna </h2>
             <p>
                 Aby dokończyć proces rekrutacji, należy uiścić opłatę rekrutacyjną w wysokości 
-                <span style={{color:'darkred'}}><b> 100 PLN </b></span>
+                <b> 100 PLN </b>
             </p>
 
             {/* TERMIN */}

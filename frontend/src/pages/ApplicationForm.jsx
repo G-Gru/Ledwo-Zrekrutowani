@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import '../styles/Style.css';
 import '../styles/ApplicationForm.css';
 import DocumentUploadCard from '../components/DocumentUploadCard'
 
