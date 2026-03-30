@@ -4,7 +4,6 @@ from studies.models import StudiesEdition, StudiesDocument, StudiesEditionStaff
 from users.models import User
 
 
-# Create your models here.
 class Enrollment(models.Model):
     user = models.ForeignKey(User, on_delete=models.RESTRICT)
     studies_edition = models.ForeignKey(StudiesEdition, on_delete=models.RESTRICT)
@@ -54,5 +53,22 @@ class FormData(models.Model):
     modified_date = models.DateTimeField(auto_now=True)
 
 class Fees(models.Model):
-    pass
-    # TODO
+    enrollment = models.ForeignKey('Enrollment', on_delete=models.RESTRICT, related_name='fees')
+    title = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=10, decimal_places=2) # odpowiada typowi money
+    due_date = models.DateField()
+    issued_date = models.DateField()
+    paid_date = models.DateField(null=True, blank=True)
+
+class Payments(models.Model):
+    fee = models.ForeignKey(Fees, on_delete=models.RESTRICT, related_name='payments')
+    payment_method = models.CharField(max_length=50)
+    reference_number = models.IntegerField()
+    status = models.CharField(max_length=50)
+
+class Payments_History(models.Model):
+    payment = models.ForeignKey(Payments, on_delete=models.RESTRICT)
+    modified_date = models.DateField()
+    previous_status = models.CharField(max_length=50, null=True, blank=True)
+    new_status = models.CharField(max_length=50)
+    note = models.CharField(max_length=255, null=True, blank=True)
