@@ -82,7 +82,7 @@ export default function Register() {
 
   return (
     <div className="page-layout">
-      <h2 className="page-title">Rejestracja</h2>
+      <div className="page-title">Rejestracja</div>
       <div className="bg-panel">
         <form onSubmit={onSubmit} autoComplete="off">
           <div className="section-title">Dane osobowe</div>

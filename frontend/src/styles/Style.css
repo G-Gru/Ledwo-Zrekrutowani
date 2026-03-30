@@ -1,11 +1,31 @@
+:root {
+  --bg-color: #fcf9f8;
+  --surface-color: #f6f3f2;
+  --surface-alt: #ffffff;
+  --surface-border: #dcdbdb;
+  --text-main: #474545;
+  --text-muted: #526772;
+  --primary: #ffd600;
+}
+
+h1,h2,h3,h4 {
+    color: var(--text-main);
+    font-weight: bold;
+    text-align: left;
+}
+
+p {
+    color: var(--text-main);
+    text-align: left;
+}
 .page-layout {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   min-height: calc(100vh - 80px);
-  background-color: #FCF9F8;
-  padding: 50px 2rem 2rem 2rem;
+  background-color: var(--bg-color);
+  padding: 20px 2rem 2rem 2rem;
   width: 100%;
 }
 
@@ -19,12 +39,13 @@
 }
 
 .page-title {
-  text-align: center;
-  color: #2c3e50;
-  margin-bottom: 2rem;
-  font-size: 3rem;
+  /* text-align: center; */
+  color: var(--text-main);
+  margin: 2rem;
+  font-size: 2rem;
   font-weight: 700;
-  width: 60%;
+  /* width: 60%; */
+  left: 50vw;
 }
 
 .form-group {
@@ -42,12 +63,17 @@
   border-bottom: 1px solid #e8e8e8;
   padding-bottom: 0.5rem;
   text-align: left;
+  display: flex;
 }
 
-.form-row {
+.form-row, .form-row-bg {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+}
+
+.material-symbols-outlined {
+    margin-right: 7px;
 }
 
 /* @media (max-width: 860px) {
@@ -65,7 +91,7 @@
   margin-top: 0.5rem;
   text-transform: uppercase;
   color: #636363;
-  font-weight: 650;
+  font-weight: 600;
   font-size: 0.65rem;
   text-align: left;
 }
@@ -78,7 +104,8 @@
   font-size: 1rem;
   transition: border-color 0.3s ease;
   box-sizing: border-box;
-  background-color: #F6F3F2;
+  background-color: var(--surface-color);
+  border: var(--surface-border) 1px solid;
   color: #2c3e50;
 }
 
@@ -100,11 +127,35 @@ select:-webkit-autofill:hover,
 select:-webkit-autofill:focus {
   -webkit-text-fill-color: #2c3e50 !important;
   transition: background-color 5000s ease-in-out 0s !important;
-  background-color: #F6F3F2 !important;
+  background-color: var(--surface-color) !important;
   box-shadow: 0 0 0px 1000px #F6F3F2 inset !important;
 }
 
-button, .btn-submit { /* set default style to btn-submit for now */
+button {
+    border: none;
+    cursor: pointer;
+    color: black;
+    font-weight: 625;
+    font-size: smaller;
+    background-color: var(--primary);
+    padding: 10px 25px 10px 25px;
+    margin: 10px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+button:hover {
+    transform: scale(1.034);
+}
+
+.button-secondary {
+    background-color: transparent;
+    border: 2px var(--surface-border) solid;
+    color: var(--text-muted)
+}
+.button-secondary:hover {
+    background-color: var(--surface-border);
+}
+
+.btn-submit {
   width: 100%;
   padding: 0.75rem;
   font-size: 1rem;
@@ -112,11 +163,8 @@ button, .btn-submit { /* set default style to btn-submit for now */
   margin-bottom: 1rem;
   background-color: #4C545C;
   color: white;
-  border: none;
   border-radius: 4px;
-  cursor: pointer;
   font-weight: 500;
-  transition: background-color 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -156,8 +204,8 @@ button, .btn-submit { /* set default style to btn-submit for now */
 }
 
 .consent-box {
-  border: 1px solid #e6e6e6;
-  background-color: #faf8f7;
+  border: 1px solid var(--surface-border);
+  background-color: var(--surface-color);
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1.25rem;
@@ -201,3 +249,10 @@ button, .btn-submit { /* set default style to btn-submit for now */
   line-height: 14px;
 }
 
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.flat-no-shadow {
+  box-shadow: none !important;
+}

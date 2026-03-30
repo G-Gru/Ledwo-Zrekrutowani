@@ -28,7 +28,7 @@ export default function Login() {
 
   return (
     <div className="page-layout">
-      <h2 className="page-title">Logowanie</h2>
+      <div className="page-title">Logowanie</div>
       <div className="bg-panel">
         {error && <div className="error-message">{error}</div>}
         <input type="text" style={{display: 'none'}} autoComplete="username" />
