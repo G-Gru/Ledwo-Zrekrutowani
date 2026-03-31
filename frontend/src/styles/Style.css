@@ -21,7 +21,7 @@
     --error-container: #ffdad6;
     --secondary: #4c616c;
     --on-secondary-fixed: #071e27;
-    --background: #fcf9f8;
+    --background: white;
     --surface-container: #f0edec;
     --surface: #fcf9f8;
     --secondary-fixed: #cfe6f2;
@@ -68,6 +68,8 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+
+    --header-height: 100px;
 
     @media (max-width: 1024px) {
       font-size: 16px;
@@ -232,4 +234,26 @@ button:hover {
 }
 .flat-no-shadow {
   box-shadow: none !important;
+}
+
+.account-page-layout {
+  display: flex;
+  width: 100%;
+  min-height: calc(100vh - var(--header-height)); 
+}
+.account-column {
+  padding: 20px;
+}
+#account-page-column-left {
+  background-color: var(--surface-container);
+  width: 25%;
+  text-align: left;
+}
+#account-page-column-middle {
+  width: 50%;
+  background-color: var(--background);
+}
+#account-page-column-right {
+  width: 25%;
+  background-color: var(--background)
 }

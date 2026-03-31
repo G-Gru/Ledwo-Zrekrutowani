@@ -14,8 +14,13 @@ export default function MainPage() {
             <button onClick={() => navigate('/register')}>Register Page</button>
             <button onClick={() => navigate('/applicationForm')}>Formularz Zgloszeniowy</button>
             <button onClick={() => navigate('/applicationSent')}>Po wyslaniu Formularza</button>
-            <button onClick={() => navigate('/myapplications')}>Moje Wnioski</button>
-            <button onClick={() => navigate('/mypayments')}>Moje Platnosci</button>
+            <button onClick={() => navigate('/my-applications')}>Moje Wnioski</button>
+            <button onClick={() => navigate('/my-payments')}>Moje platnosci</button>
+            <button onClick={() => navigate('/my-documents')}>Moje dokumenty</button>
+            <button onClick={() => navigate('/my-profile')}>Profil</button>
+            <button onClick={() => navigate('/admin/candidates')}>Admin Kandydaci</button>
+            <button onClick={() => navigate('/admin/finances')}>Admin finananse</button>
+            <button onClick={() => navigate('/admin/export')}>Admin eksport danych</button>
         </div>
     </div>
   );

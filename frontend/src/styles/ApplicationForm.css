@@ -82,6 +82,7 @@ input {
 
 .action-card {
   /* background-color: rgb(242, 242, 242); */
+  width: 60%;
   background-color: var(--surface-container-low); 
   margin: 2rem;
   margin-top: 3rem;
@@ -120,15 +121,14 @@ input {
   color: var(--secondary); 
 }
 
-.moje-wnioski-link {
-  /* color: #856e05; */
+.inline-link {
   color: var(--primary); 
   transition: font-size 0.15s ease;
   font-weight: 675;
   margin-left: 5px;
 }
 
-.moje-wnioski-link:hover {
+.inline-link:hover {
   font-size: 1.05em;
   text-decoration: underline;
 }
