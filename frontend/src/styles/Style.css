@@ -1,12 +1,20 @@
 :root {
-    --bg-color: var(--background);
-    --surface-color: var(--surface-container-low);
-    --surface-alt: var(--surface-container-lowest);
-    --surface-border: var(--surface-container-high);
-    --text-main: var(--on-surface);
-    --text-muted: var(--on-secondary-container);
-    
-    /* Pełna paleta z makiety */
+  --bg-color: var(--background);
+  --surface-color: var(--surface-container-low);
+  --surface-alt: var(--surface-container-lowest);
+  --surface-border: var(--surface-container-high);
+  --text-main: var(--on-surface);
+  --text-muted: var(--on-secondary-container);
+  
+  /* Nasza paleta kolorow (mozna dodawac wlasne tutaj) */
+  --background: white;
+    --surface: #fcf9f8;
+    --primary: #705d00;
+    --tertiary-container: #00f0fc;
+    --secondary: #4c616c;
+    --surface-tint: #dfc22f62;
+
+    /* inne z tailwinda */
     --on-secondary-fixed-variant: #354a53;
     --secondary-container: #cfe6f2;
     --on-primary-fixed-variant: #544600;
@@ -16,14 +24,10 @@
     --on-primary-fixed: #221b00;
     --on-secondary-container: #526772;
     --on-surface-variant: #4d4632;
-    --tertiary-container: #00f0fc;
     --surface-variant: #e5e2e1;
     --error-container: #ffdad6;
-    --secondary: #4c616c;
     --on-secondary-fixed: #071e27;
-    --background: white;
     --surface-container: #f0edec;
-    --surface: #fcf9f8;
     --secondary-fixed: #cfe6f2;
     --inverse-on-surface: #f3f0ef;
     --surface-container-high: #ebe7e7;
@@ -40,7 +44,6 @@
     --inverse-primary: #e9c400;
     --on-tertiary-fixed: #002022;
     --tertiary-fixed-dim: #00dce7;
-    --primary: #705d00;
     --inverse-surface: #313030;
     --on-background: #1c1b1b;
     --secondary-fixed-dim: #b4cad6;
@@ -48,7 +51,6 @@
     --error: #ba1a1a;
     --primary-container: #ffd600;
     --primary-fixed-dim: #e9c400;
-    --surface-tint: #705d00;
     --outline: #7f775f;
     --tertiary-fixed: #70f6ff;
     --on-secondary: #ffffff;
@@ -243,15 +245,20 @@ button:hover {
 }
 .account-column {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 #account-page-column-left {
   background-color: var(--surface-container);
   width: 25%;
+  align-items: left;
   text-align: left;
 }
 #account-page-column-middle {
   width: 50%;
   background-color: var(--background);
+  align-items: center;
 }
 #account-page-column-right {
   width: 25%;

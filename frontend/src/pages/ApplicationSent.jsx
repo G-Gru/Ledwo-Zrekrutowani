@@ -60,7 +60,7 @@ export default function ApplicationSent({
                 
                 {/* Buttons */}
                 <div style={{display: 'flex', flexDirection: 'row'}}>
-                    <button onClick={() => navigate('/mypayments')}> Przejdź do płatności </button>
+                    <button onClick={() => navigate('/my-payments')}> Przejdź do płatności </button>
                     <button className='button-secondary' onClick={() => handleDismissCard(setShowPaymentCard)}> Zrób to później </button>
                 </div>
             </div>
@@ -93,7 +93,7 @@ export default function ApplicationSent({
                 
                 {/* Buttons */}
                 <div style={{display: 'flex', flexDirection: 'row'}}>
-                    <button onClick={() => navigate('/myapplications/download/id=')}> Pobierz wzór dokumentu </button>
+                    <button onClick={() => navigate('/my-applications/download/id=')}> Pobierz wzór dokumentu </button>
                     <button className='button-secondary' onClick={() => handleDismissCard(setShowDocumentCard)}> Zrozumiałem </button>
                 </div>
             </div>
@@ -103,7 +103,7 @@ export default function ApplicationSent({
         <div className='moje-wnioski-info'>
             <span className="material-symbols-outlined">analytics</span>
             Status swojego wniosku możesz zawsze sprawdzić w sekcji 
-            <span className='inline-link' onClick={() => navigate('/myapplications')}>Moje wnioski</span>
+            <span className='inline-link' onClick={() => navigate('/my-applications')}>Moje wnioski</span>
         </div>
 
     </div>
