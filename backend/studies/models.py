@@ -15,7 +15,6 @@ class StudiesEdition(models.Model):
         ACTIVE = 'ACTIVE'
         CLOSED = 'CLOSED' # todo
 
-
     studies = models.ForeignKey(Studies, on_delete=models.RESTRICT)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     start_date = models.DateField()
@@ -25,6 +24,10 @@ class StudiesEdition(models.Model):
     syllabus_url = models.URLField()
     recruitment_start_date = models.DateTimeField()
     recruitment_end_date = models.DateTimeField()
+
+STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES = [
+    StudiesEdition.StatusChoices.ACTIVE
+]
 
 class StudiesDocument(models.Model):
     studies_edition = models.ForeignKey(StudiesEdition, on_delete=models.RESTRICT)
@@ -44,6 +47,6 @@ class StudiesEditionStaff(models.Model):
         ADMINISTRATIVE_COORDINATOR = 'ADMINISTRATIVE_COORDINATOR'
         FINANCE_COORDINATOR = 'FINANCE_COORDINATOR'
 
-    studies_edition = models.ForeignKey(StudiesEdition, on_delete=models.RESTRICT)
+    studies_edition = models.ForeignKey(StudiesEdition, on_delete=models.RESTRICT, related_name='studies_edition_staff')
     user = models.ForeignKey(User, on_delete=models.RESTRICT, related_name='studies_edition_staff')
     role = models.CharField(max_length=50, choices=Roles.choices)
