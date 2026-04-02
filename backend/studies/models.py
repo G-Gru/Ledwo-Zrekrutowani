@@ -26,7 +26,12 @@ class StudiesEdition(models.Model):
     recruitment_end_date = models.DateTimeField()
 
 STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES = [
-    StudiesEdition.StatusChoices.ACTIVE
+    StudiesEdition.StatusChoices.ACTIVE,
+    StudiesEdition.StatusChoices.CLOSED,
+]
+
+STUDIES_EDITION_ENROLLABLE_STATUSES = [
+    StudiesEdition.StatusChoices.ACTIVE,
 ]
 
 class StudiesDocument(models.Model):

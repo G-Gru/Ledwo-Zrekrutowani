@@ -1,9 +1,41 @@
-from django.shortcuts import render
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Enrollment
-from .serializers import AdminEnrollmentSerializer
+
+from . import services
+from .models import Enrollment, FormData
+from .serializers import AdminEnrollmentSerializer, FormDataCreateSerializer, FormDataRetreiveUpdateSerializer
+from .services import get_enrollable_edition
+
+
+## PUBLIC
+class EnrollmentFormCreateAPIView(generics.CreateAPIView):
+    serializer_class = FormDataCreateSerializer
+    permission_classes = [IsAuthenticated] #todo students only
+
+    def perform_create(self, serializer):
+        edition_pk = self.kwargs['edition_pk']
+        get_enrollable_edition(edition_pk)
+        services.create_enrollment_form(edition_pk, self.request.user, serializer)
+
+class EnrollmentFormRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
+    serializer_class = FormDataRetreiveUpdateSerializer
+    permission_classes = [IsAuthenticated]  # todo students only
+
+    def get_object(self):
+        edition_pk = self.kwargs['edition_pk']
+        return FormData.objects.select_related('enrollment').get(
+            enrollment__studies_edition_id=edition_pk,
+            enrollment__user=self.request.user
+        )
+
+    def perform_update(self, serializer):
+        edition_pk = self.kwargs['edition_pk']
+        get_enrollable_edition(edition_pk)
+        services.update_enrollment_form(edition_pk, self.request.user, serializer)
+
+## ADMIN
 
 class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
     # W przyszłości dodać permission_classes = [IsAdminUser]

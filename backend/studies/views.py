@@ -3,7 +3,8 @@ from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser
 
-from studies.models import StudiesEdition, Studies, StudiesEditionStaff, STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES
+from studies import services
+from studies.models import StudiesEdition, Studies, StudiesEditionStaff
 from studies.serializers import StudiesSerializer, StudiesEditionDetailsSerializer, StudiesEditionCreateSerializer, \
     StudiesEditionListSerializer, StudiesEditionStaffWriteSerializer, \
     StudiesEditionStaffReadSerializer
@@ -13,16 +14,16 @@ from users.permissions import IsDirectorOrAdministrativeCoordinator, \
 
 ## PUBLIC
 class StudiesEditionListAPIView(generics.ListAPIView):
-    queryset = (StudiesEdition.objects
-                .filter(status__in=STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES)
+    queryset = (services
+                .get_public_visible_editions_queryset()
                 .select_related('studies'))
     serializer_class = StudiesEditionListSerializer
 
 
 class StudiesEditionRetrieveAPIView(generics.RetrieveAPIView):
     lookup_url_kwarg = "edition_pk"
-    queryset = (StudiesEdition.objects
-                .filter(status__in=STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES)
+    queryset = (services
+                .get_public_visible_editions_queryset()
                 .select_related('studies'))
     serializer_class = StudiesEditionDetailsSerializer
 
@@ -32,29 +33,17 @@ class StudiesEditionStaffListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         edition_pk = self.kwargs.get("edition_pk")
+        public_editions = services.get_public_visible_editions_queryset()
 
         return (StudiesEditionStaff.objects
             .filter(
-                studies_edition_id=edition_pk,
-                studies_edition__status__in=STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES
+                studies_edition__in=public_editions,
+                studies_edition_id=edition_pk
             )
             .select_related('studies_edition', 'user'))
 
+
 ## ADMIN
-def get_user_editions_queryset(request):
-    qs = StudiesEdition.objects.all()
-
-    if request.user.is_staff:
-        return qs
-
-    #Todo dean/other groups later
-
-    return (
-        qs
-        .filter(studies_edition_staff__user=request.user)
-        .distinct()
-    )
-
 class StudiesListCreateAdminAPIView(generics.ListCreateAPIView):
     queryset = Studies.objects.all()
     serializer_class = StudiesSerializer
@@ -75,7 +64,7 @@ class StudiesEditionListCreateAdminAPIView(generics.ListCreateAPIView):
         return StudiesEditionListSerializer
 
     def get_queryset(self):
-        return (get_user_editions_queryset(self.request)
+        return (services.get_user_editions_queryset(self.request)
                     .select_related('studies'))
 
     def get_permissions(self):
@@ -89,7 +78,7 @@ class StudiesEditionRetrieveUpdateDestroyAdminAPIView(generics.RetrieveUpdateAPI
     serializer_class = StudiesEditionDetailsSerializer
 
     def get_queryset(self):
-        return (get_user_editions_queryset(self.request)
+        return (services.get_user_editions_queryset(self.request)
                     .select_related('studies'))
 
     def get_permissions(self):
@@ -103,7 +92,7 @@ class StudiesEditionStaffListCreateAdminAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         pk = self.kwargs['edition_pk']
-        user_editions = get_user_editions_queryset(self.request)
+        user_editions = services.get_user_editions_queryset(self.request)
         return (StudiesEditionStaff.objects
                 .filter(studies_edition_id=pk)
                 .filter(studies_edition__in=user_editions)
@@ -139,7 +128,7 @@ class StudiesEditionStaffDestroyAdminAPIView(generics.DestroyAPIView):
 
     def get_queryset(self):
         pk = self.kwargs['edition_pk']
-        user_editions = get_user_editions_queryset(self.request)
+        user_editions = services.get_user_editions_queryset(self.request)
         return (StudiesEditionStaff.objects
                 .filter(studies_edition_id=pk)
                 .filter(studies_edition__in=user_editions))
