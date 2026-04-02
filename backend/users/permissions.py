@@ -13,6 +13,17 @@ class IsEditionStaffWithRole(BasePermission):
         if request.user.is_staff: #Admin
             return True
 
+        return request.user.studies_edition_staff.filter(
+            role__in=self.allowed_roles
+        ).exists()
+
+    def has_object_permission(self, request, view, obj):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        if request.user.is_staff: #Admin
+            return True
+
         edition_id = view.kwargs.get("edition_pk")
         if edition_id is None:
             return False

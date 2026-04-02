@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from studies.models import Studies, StudiesEdition, StudiesEditionStaff
 from users.models import User
+from users.serializers import UserSerializer
 
 
 class StudiesSerializer(serializers.ModelSerializer):
@@ -29,23 +30,35 @@ class StudiesEditionCreateSerializer(serializers.ModelSerializer):
         exclude = ('studies', )
 
 class StudiesEditionListSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='studies.name')
+    name = serializers.CharField(source='studies.name', read_only=True)
 
     class Meta:
         model = StudiesEdition
         fields = ('id', 'name', 'price', 'start_date', 'status')
 
 class StudiesEditionDetailsSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='studies.name')
-    terms_count = serializers.IntegerField(source='studies.terms_count')
-    description = serializers.CharField(source='studies.description')
+    name = serializers.CharField(source='studies.name', read_only=True)
+    terms_count = serializers.IntegerField(source='studies.terms_count', read_only=True)
+    description = serializers.CharField(source='studies.description', read_only=True)
 
     class Meta:
         model = StudiesEdition
         exclude = ('studies', )
 
 
-class StudiesEditionStaffSerializer(serializers.ModelSerializer):
+class StudiesEditionStaffWriteSerializer(serializers.ModelSerializer):
+    user_id = serializers.PrimaryKeyRelatedField(
+        source='user',
+        queryset=User.objects.all()
+    )
+
     class Meta:
         model = StudiesEditionStaff
-        exclude = ('studies_edition', 'id')
+        exclude = ('studies_edition', 'id', 'user')
+
+class StudiesEditionStaffReadSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = StudiesEditionStaff
+        exclude = ('studies_edition', )

@@ -3,14 +3,9 @@ from django.contrib.auth import authenticate
 from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
-
     class Meta:
         model = User
-        fields = ['id', 'email', 'name']
-
-    def get_name(self, obj):
-        return f"{obj.first_name} {obj.last_name}".strip()
+        fields = ('id', 'email', 'first_name', 'last_name', 'phone')
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

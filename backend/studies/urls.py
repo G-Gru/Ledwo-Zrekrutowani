@@ -2,13 +2,13 @@ from django.urls import path
 from .views import StudiesEditionListAPIView, StudiesEditionRetrieveAPIView, StudiesEditionStaffListAPIView
 
 urlpatterns = [
-    path("editions",
+    path("editions/",
          StudiesEditionListAPIView.as_view(),
          name="studies_list"),
-    path("editions/<int:studies_pk>",
+    path("editions/<int:edition_pk>/",
          StudiesEditionRetrieveAPIView.as_view(),
          name="studies_retrieve"),
-    path("editions/<int:edition_pk>/staff",
+    path("editions/<int:edition_pk>/staff/",
          StudiesEditionStaffListAPIView.as_view(),
          name="studies_staff_list"),
 ]
