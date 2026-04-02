@@ -3,6 +3,8 @@ import Header from './components/Header';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MainPage from './pages/MainPage';
+import StudiesPage from './pages/StudiesPage';
+import StudiesDetailPage from './pages/StudiesDetailPage';
 import ApplicationForm from './pages/ApplicationForm';
 import ApplicationSent from './pages/ApplicationSent';
 
@@ -23,6 +25,8 @@ function App() {
       <Header />
       <Routes>
         <Route path="/" element={<MainPage />} />
+        <Route path="/studies" element={<StudiesPage />} />
+        <Route path="/studies/editions/:id" element={<StudiesDetailPage />} />
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
