@@ -32,7 +32,7 @@ export default function ApplicationForm() {
                 email: "logged_account_email@yunotlogged.com"
             }));
         }
-    })
+    }), []
 
     const navigate = useNavigate();
     const [errors, setErrors] = useState({});
@@ -61,7 +61,7 @@ export default function ApplicationForm() {
         phone: "",
         studiesName: "", studiesLocation: "", studiesEndYear: 2024, highSchoolLocation: "Polska",
         emergencyContact: { name: "", surname: "", phone: "" },
-        consents: { rules: false, rodo: false }
+        consents: { data: false, rules: false, rodo: false }
     });
     const handleChange = (e, section = null) => {
         const { name, value, type, checked } = e.target;
@@ -330,12 +330,24 @@ export default function ApplicationForm() {
                 <label className="consent-item">
                 <input
                     type="checkbox"
+                    name="data"
+                    checked={formData.consents.data}
+                    onChange={(e) => handleChange(e, 'consents')}
+                />
+                Potwierdzam, że wszytkie podane powyżej dane są zgodne z prawdą w momencie wypełnienia.
+                </label>
+
+                <label className="consent-item">
+                <input
+                    type="checkbox"
                     name="rules"
                     checked={formData.consents.rules}
                     onChange={(e) => handleChange(e, 'consents')}
                 />
                 Potwierdzam, że zapoznałem się z treścia i zobowiązuję się przestrzegać regulaminu studiów AGH, 
-                dosępnego pod linkiem: 
+                <a className='inline-link' href ='/assets/dokumenty/regulamin-studiow-podyplomowych-agh.pdf' target="_blank">Link do pełnego dokumetnu.
+                <span class="material-symbols-outlined">open_in_new</span></a>
+                
                 </label>
 
                 <label className="consent-item">
@@ -346,6 +358,8 @@ export default function ApplicationForm() {
                     onChange={(e) => handleChange(e, 'consents')}
                 />
                 Zgodnie z Rozporządzeniem Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016 r. w sprawie ochrony osób fizycznych w związku z przetwarzaniem danych osobowych i w sprawie swobodnego przepływu takich danych oraz uchylenia dyrektywy 95/46/WE (ogólne rozporządzenie o ochronie danych) [Dz. U. UE.L.2016.119.1 z dnia 4 maja 2016 r.], zwanego dalej RODO, wyrażam zgodę na przetwarzanie moich danych osobowych w ramach procesu rekrutacji na powyższe studia i dokumentowanie ich przebiegu.
+                <a className='inline-link' href = '/assets/dokumenty/zgoda_na_przetwarzanie_danych_osobowych.pdf' target="_blank">Link do pełnego dokumetnu. 
+                <span class="material-symbols-outlined">open_in_new</span></a>
                 </label>
             </div> 
         
