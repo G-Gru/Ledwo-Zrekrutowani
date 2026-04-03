@@ -1,3 +1,8 @@
+### !!! UWAGA DOKUMENTACJA PRZENIESIONA DO GOOGLE DOCS
+https://docs.google.com/document/d/1NK_ziPh39m5Q1KJZE_2Dn9SKRhIIEBAIgSnDyyxbhJE/edit?tab=t.0
+
+=============================================================================================
+
 # Dokumentacja Endpointów
 
 ## Endpoint: POST /api/auth/login
@@ -79,3 +84,8 @@
 
 **Argumenty wyjściowe (błąd 400 - JSON):**
 - `error` (string): Błąd, jeśli kandydat posiada już komplet wpłat.
+
+======================================================================================
+
+### !!! UWAGA DOKUMENTACJA PRZENIESIONA DO GOOGLE DOCS
+https://docs.google.com/document/d/1NK_ziPh39m5Q1KJZE_2Dn9SKRhIIEBAIgSnDyyxbhJE/edit?tab=t.0

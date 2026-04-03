@@ -13,6 +13,7 @@
     --tertiary-container: #00f0fc;
     --secondary: #4c616c;
     --surface-tint: #dfc22f62;
+    --palette-yellow: var(--primary-container)
 
     /* inne z tailwinda */
     --on-secondary-fixed-variant: #354a53;
