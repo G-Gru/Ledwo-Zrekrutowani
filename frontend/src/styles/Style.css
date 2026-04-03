@@ -149,6 +149,45 @@ p {
   text-align: left;
 }
 
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.styled-table th,
+.styled-table td {
+  border: 1px solid var(--surface-border);
+  padding: 0.75rem 0.8rem;
+  text-align: left;
+}
+
+.styled-table thead {
+  background: var(--surface-container-low);
+}
+
+.styled-table tbody tr:nth-child(even) {
+  background: var(--surface-container);
+}
+
+.styled-table tbody tr.selected-row {
+  background: var(--secondary-container);
+}
+
+.button-danger {
+  background-color: #ba1a1a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+}
+
+.button-danger:hover {
+  background-color: #93000a;
+}
+
 .studies-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(270px, 1fr));
