@@ -11,6 +11,7 @@ export default function MainPage() {
 
         <div className='bg-panel'> 
             <button onClick={() => navigate('/studies')}>Strona Główna - Oferty Studiów</button>
+            <button onClick={() => navigate('/publish-offer')}>Publikacja Oferty Studiów</button>
             <button onClick={() => navigate('/login')}>Login Page</button>
             <button onClick={() => navigate('/register')}>Register Page</button>
             <button onClick={() => navigate('/applicationForm')}>Formularz Zgloszeniowy</button>

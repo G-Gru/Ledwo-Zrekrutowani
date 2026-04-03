@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import MainPage from './pages/MainPage';
 import StudiesPage from './pages/StudiesPage';
 import StudiesDetailPage from './pages/StudiesDetailPage';
+import PublishStudiesOffer from './pages/PublishStudiesOffer';
 import ApplicationForm from './pages/ApplicationForm';
 import ApplicationSent from './pages/ApplicationSent';
 
@@ -27,6 +28,7 @@ function App() {
         <Route path="/" element={<MainPage />} />
         <Route path="/studies" element={<StudiesPage />} />
         <Route path="/studies/editions/:id" element={<StudiesDetailPage />} />
+        <Route path="/publish-offer" element={<PublishStudiesOffer />} />
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
