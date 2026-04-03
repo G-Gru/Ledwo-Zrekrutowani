@@ -16,6 +16,11 @@ export const login = async (email, password) => {
       },
       body: JSON.stringify({ email, password }),
     });
+
+    // zapisz dane uzytkownika podczas sesji - troche niebezpieczne i nie ma czyszczenia ale na razie ok
+    localStorage.setItem('token', response.token);
+    localStorage.setItem('user', JSON.stringify(response.user));
+
     return response;
   } catch (error) {
     throw new Error(error.message || "Logowanie nie powiodło się");

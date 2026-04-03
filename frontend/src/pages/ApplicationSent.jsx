@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import '../styles/ApplicationForm.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { serverApi } from '../services/serverApi';
 
 export default function ApplicationSent({
-    majorName='nazwa kierunku', 
     responseDeadline='1 stycznia 2000',
     paymentDeadline='1 stycznia 2000',
     documentDeadline='1 stycznia 2000',
@@ -16,6 +16,11 @@ export default function ApplicationSent({
         cardSetter(false);
     };
 
+    // dane kierunku i wydzialu
+    const [searchParams] = useSearchParams();
+    const courseId = searchParams.get('edition_id');
+    const courseInfo = serverApi.getCourseInfo(courseId) || { name: "Nieznany kierunek", faculty: "Nieznany wydział" };
+
   return (
     <div className='page-layout'>
         {/* CHECKMARK */}
@@ -26,7 +31,7 @@ export default function ApplicationSent({
 
         {/* UNDER TITLE TEXT */}
         <p>
-            Twoje zgłoszenie na kierunek <b>{majorName}</b> zostało pomyślnie wysłane. 
+            Twoje zgłoszenie na kierunek <b>{courseInfo.name}</b> zostało pomyślnie wysłane. 
         </p>
         <p>
             Wyniki rekrutacji zostaną ogłoszone do dnia <b><i>{responseDeadline}</i></b>
