@@ -1,6 +1,8 @@
+from random import choices
 
 from rest_framework import serializers
-from .models import Enrollment, Fees, SubmittedDocument
+from .models import Enrollment, Fees, SubmittedDocument, FormData
+
 
 class AdminEnrollmentSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
@@ -35,3 +37,54 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
         if fully_paid and not docs_missing:
             return "KOMPLETNE - GOTOWE DO DECYZJI"
         return "NIESPEŁNIONE WYMOGI (Brak Oplat/Dokumentow)"
+
+class FormDataCreateSerializer(serializers.ModelSerializer):
+    action = serializers.ChoiceField(choices=FormData.Action.choices,
+                                     required=True,
+                                     write_only=True)
+
+    class Meta:
+        model = FormData
+        exclude = ('modified_date', 'enrollment')
+
+    def validate(self, attrs):
+        return form_data_validate(attrs)
+
+    def create(self, validated_data):
+        validated_data.pop("action")
+        return super().create(validated_data)
+
+class FormDataRetreiveUpdateSerializer(serializers.ModelSerializer):
+    action = serializers.ChoiceField(choices=FormData.Action.choices,
+                                     required=True,
+                                     write_only=True)
+
+    class Meta:
+        model = FormData
+        exclude = ('modified_date', 'enrollment')
+
+    def validate(self, attrs):
+        return form_data_validate(attrs)
+
+    def update(self, instance, validated_data):
+        validated_data.pop("action", None)
+        return super().update(instance, validated_data)
+
+
+def form_data_validate(attrs):
+    action = attrs.get("action")
+
+    if action == FormData.Action.ENROLL:
+        required_fields = FormData.REQUIRED_FIELDS
+        missing = [
+            field for field in required_fields
+            if not attrs.get(field)
+        ]
+
+        if missing:
+            raise serializers.ValidationError({
+                field: "This field is required for enrollment."
+                for field in missing
+            })
+
+    return attrs

@@ -5,11 +5,30 @@ from users.models import User
 
 
 class Enrollment(models.Model):
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'studies_edition'),
+                name='unique user enrollment per studies edition'
+            )
+        ]
+
+    class Status(models.TextChoices):
+        DRAFT = 'DRAFT',
+        CANDIDATE = 'CANDIDATE',
+        STUDENT = 'STUDENT',
+        EXPELLED = 'EXPELLED',
+
     user = models.ForeignKey(User, on_delete=models.RESTRICT)
     studies_edition = models.ForeignKey(StudiesEdition, on_delete=models.RESTRICT)
-    status = models.CharField(max_length=50)
+    status = models.CharField(max_length=50, choices=Status.choices, default=Status.DRAFT)
     status_note = models.CharField(max_length=200, blank=True)
-    enrollment_date = models.DateTimeField()
+    enrollment_date = models.DateTimeField(blank=True, null=True)
+
+ENROLLMENT_TAKING_UP_PLACE_STATUSES = [
+    Enrollment.Status.CANDIDATE,
+    Enrollment.Status.STUDENT,
+]
 
 class SubmittedDocument(models.Model):
     studies_document = models.ForeignKey(StudiesDocument, on_delete=models.RESTRICT)
@@ -35,7 +54,28 @@ class Address(models.Model):
     postal_code = models.CharField(max_length=10, blank=True)
 
 class FormData(models.Model):
-    enrollment = models.ForeignKey(Enrollment, on_delete=models.RESTRICT)
+    REQUIRED_FIELDS = [
+            "first_name",
+            "last_name",
+            "family_name",
+            "academic_title",
+            "birth_date",
+            "birth_place",
+            "pesel",
+            "citizenship",
+            "residential_address",
+            "registered_address",
+            "email",
+            "phone",
+            "education",
+            "education_country",
+    ]
+
+    class Action(models.TextChoices):
+        SAVE = 'SAVE',
+        ENROLL = 'ENROLL',
+
+    enrollment = models.OneToOneField(Enrollment, on_delete=models.RESTRICT, primary_key=True)
     first_name = models.CharField(max_length=50, blank=True)
     second_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50, blank=True)
@@ -45,8 +85,12 @@ class FormData(models.Model):
     birth_place = models.CharField(max_length=50, blank=True)
     pesel = models.CharField(max_length=11, blank=True)
     citizenship = models.CharField(max_length=50, blank=True)
-    residential_address = models.ForeignKey(Address, on_delete=models.RESTRICT, related_name="residential_formdata")
-    registered_address = models.ForeignKey(Address, on_delete=models.RESTRICT, related_name="registered_formdata")
+    # residential_address = models.ForeignKey(Address, on_delete=models.RESTRICT, related_name="residential_formdata")
+    # registered_address = models.ForeignKey(Address, on_delete=models.RESTRICT, related_name="registered_formdata")
+    residential_address = models.CharField(max_length=120, blank=True)
+    registered_address = models.CharField(max_length=120, blank=True)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=50, blank=True)
     education = models.CharField(max_length=50, blank=True)
     education_country = models.CharField(max_length=50, blank=True)
     emergency_contact = models.CharField(max_length=100, blank=True)
@@ -55,9 +99,9 @@ class FormData(models.Model):
 class Fees(models.Model):
     enrollment = models.ForeignKey('Enrollment', on_delete=models.RESTRICT, related_name='fees')
     title = models.CharField(max_length=255)
-    amount = models.DecimalField(max_digits=10, decimal_places=2) # odpowiada typowi money
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
     due_date = models.DateField()
-    issued_date = models.DateField()
+    issued_date = models.DateField(auto_now_add=True)
     paid_date = models.DateField(null=True, blank=True)
 
 class Payments(models.Model):
@@ -66,9 +110,9 @@ class Payments(models.Model):
     reference_number = models.IntegerField()
     status = models.CharField(max_length=50)
 
-class Payments_History(models.Model):
+class PaymentsHistory(models.Model):
     payment = models.ForeignKey(Payments, on_delete=models.RESTRICT)
-    modified_date = models.DateField()
+    modified_date = models.DateField(auto_now_add=True)
     previous_status = models.CharField(max_length=50, null=True, blank=True)
     new_status = models.CharField(max_length=50)
     note = models.CharField(max_length=255, null=True, blank=True)

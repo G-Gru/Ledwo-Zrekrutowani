@@ -9,8 +9,6 @@ export default function Register() {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    pesel: "",
-    nationality: "",
     email: "",
     phone: "",
     password: "",
@@ -39,11 +37,6 @@ export default function Register() {
 
     if (!formData.email.includes("@") || !/\S+@\S+\.\S+/.test(formData.email)) {
       setError("Proszę podać poprawny adres email.");
-      return;
-    }
-
-    if (!/^\d{11}$/.test(formData.pesel)) {
-      setError("PESEL musi składać się z 11 cyfr.");
       return;
     }
 
@@ -105,33 +98,6 @@ export default function Register() {
                 name="lastName"
                 autoComplete="family-name"
                 value={formData.lastName}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="pesel">PESEL</label>
-              <input
-                id="pesel"
-                name="pesel"
-                autoComplete="off"
-                inputMode="numeric"
-                pattern="\d{11}"
-                value={formData.pesel}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="nationality">Obywatelstwo</label>
-              <input
-                id="nationality"
-                name="nationality"
-                autoComplete="country-name"
-                value={formData.nationality}
                 onChange={handleChange}
                 required
               />

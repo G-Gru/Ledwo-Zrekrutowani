@@ -10,6 +10,8 @@ export default function MainPage() {
         <h2 className='page-title'> tymczasowa nawigacja ;) </h2>
 
         <div className='bg-panel'> 
+            <button onClick={() => navigate('/studies')}>Strona Główna - Oferty Studiów</button>
+            <button onClick={() => navigate('/manage-studies')}>Zarządzanie ofertami studiów</button>
             <button onClick={() => navigate('/login')}>Login Page</button>
             <button onClick={() => navigate('/register')}>Register Page</button>
             <button onClick={() => navigate('/applicationForm')}>Formularz Zgloszeniowy</button>

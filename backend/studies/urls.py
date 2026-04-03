@@ -1,10 +1,14 @@
 from django.urls import path
-from . import views
-
+from .views import StudiesEditionListAPIView, StudiesEditionRetrieveAPIView, StudiesEditionStaffListAPIView
 
 urlpatterns = [
-    path("", views.StudiesListCreateAPIView.as_view(), name="studies_listcreate"),
-    path("<int:pk>/", views.StudiesRetrieveUpdateDestroyAPIView.as_view(), name="studies_retreiveupdatedestroy"),
-    path("editions/", views.StudiesEditionListCreateAPIView.as_view(), name="studies_editionlistcreate"),
-    path("editions/<int:pk>/", views.StudiesEditionRetrieveUpdateDestroyAPIView.as_view(), name="studies_editionretrieveupdatedestroy"),
+    path("editions/",
+         StudiesEditionListAPIView.as_view(),
+         name="studies_list"),
+    path("editions/<int:edition_pk>/",
+         StudiesEditionRetrieveAPIView.as_view(),
+         name="studies_retrieve"),
+    path("editions/<int:edition_pk>/staff/",
+         StudiesEditionStaffListAPIView.as_view(),
+         name="studies_staff_list"),
 ]
