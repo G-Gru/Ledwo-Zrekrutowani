@@ -1,132 +1,135 @@
 // src/components/ApplicationSent.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AccountPageLeftMenu from '../../components/AccountPageLeftMenu'
 import '../../styles/MyApplications.css'
+import Timeline from '../../components/Timeline';
+import { serverApi } from '../../services/serverApi';
+
+function getStatusColorClass(statusText) {
+    const text = statusText.toLowerCase();
+    if (text.includes("brak zapłaty")) return "status-red";
+    if (text.includes("oczekuje wypełnienia")) return "status-yellow";
+    if (text.includes("odpowiedź")) return "status-blue";
+    return "status-grey"; // domyślny
+}
+
+function getIconFromDocumentType(docType) {
+    return "school"
+}
 
 export default function MyApplications({}) {
     const [activeCardId, setActiveCardId] = React.useState(null);
+    const [unfinishedApplications, setUnfinishedApplications] = useState([])
+    const [activeApplications, setActiveApplications] = useState([])
+    
+    const allApps = [...unfinishedApplications, ...activeApplications];
+    const activeApp = allApps.find(app => app.id === activeCardId);
+    const activeSchedule = activeApp ? activeApp.schedule : [];
 
     /* Karta na wyswietlenie jednego wniosku */
     const ApplicationCard = ({ 
-        id,
-        documentName='dokument wysłany przez użytkownika', 
-        major='kierunek', 
-        institute='wydział', 
-        icon='school', 
-        statusText='Awaiting result',
-        statusId='none',
-        unfinished = false 
-    }) => (
-        <div 
-            className={`single-application-card ${activeCardId === id ? 'active' : ''}`}
-            onClick={() => setActiveCardId(id)}
-        >
-            <span className="material-symbols-outlined">{icon}</span>
+        id, documentName, type, dataId, statuses=[], unfinished=false 
+    }) => {
+        const [appData, setAppData] = useState({ major: '', institute: '' });
 
-            <div style={{display: 'flex', flexDirection: 'column'}}>
-                <h4> {documentName} </h4>
-                <p> <span className='line-item-title'>KIERUNEK:</span> {major} </p>
-                <p> <span className='line-item-title'>WYDZIAŁ:</span> {institute} </p>
-            </div>
-
-            <div className='application-status' id={'application-status-'+statusId}> 
-                {statusText} 
-            </div>
-
-            {!unfinished ? null : 
-                <span className="material-symbols-outlined">chevron_right</span>
+        useEffect(() => {
+            if (type === "rekr" && dataId !== null) {
+                const data = serverApi.getApplicationDataFromId(dataId);
+                setAppData(data);
             }
-        </div>
-    );
+        }, [type, dataId]);
+
+        return (
+            <div 
+                className={`single-application-card ${activeCardId === id ? 'active' : ''}`}
+                onClick={() => setActiveCardId(id)}
+            >
+                <span className="material-symbols-outlined">{getIconFromDocumentType(type)}</span>
+
+                <div style={{display: 'flex', flexDirection: 'column', flex: 1}}>
+                    <h4> {documentName} </h4>
+                    
+                    {type === "rekr" && (
+                        <>
+                            <p><span className='line-item-title'>KIERUNEK:</span> {appData.major}</p>
+                            <p><span className='line-item-title'>WYDZIAŁ:</span> {appData.institute}</p>
+                        </>
+                    )}
+
+                    {/* Generowanie tagów statusów - każdy status jako osobny element */}
+                    <div className="status-badges-container" style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                        {statuses.map((status, idx) => (
+                            <div key={idx} className={`application-status ${getStatusColorClass(status)}`}> 
+                                {status} 
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {unfinished && <span className="material-symbols-outlined">chevron_right</span>}
+            </div>
+        );
+    };
+
+    /* Pobieranie wnioskow z servera */
+    // dane: application { name: "", type: "", status: [""],  schedule: [name: "", startDate: "", endDate: "", flag: ""] }
+    useEffect(() => {
+        // Uwaga: poprawiona składnia useEffect
+        setUnfinishedApplications(serverApi.getUserUnfinishedApplications());
+        setActiveApplications(serverApi.getUserActiveApplications());
+    }, []);
 
     return (
         <div className='account-page-layout'>
             <AccountPageLeftMenu/>
 
             <div className='account-column' id='account-page-column-middle'>
-                <div className='page-title'>
-                    Moje Wnioski
-                </div>
-                <p> Zarządzaj swoimi procesami rekrutacyjnymi i monitoruj statusy dokumentów w jednym miejscu. </p>
+                <div className='page-title'>Moje Wnioski</div>
+                <p>Zarządzaj swoimi procesami rekrutacyjnymi i monitoruj statusy dokumentów w jednym miejscu.</p>
 
-                {/* Dokumenty niewyslane */}
+                {/* Dokumenty niewysłane */}
                 <div className='bg-panel application-card'>
-                    <div className='section-title application-section-title'>
-                        Niewysłane
-                    </div>
-                    <ApplicationCard id="card-1" unfinished={true} statusText='Oczekuje wypełnienia' statusId='unfinished'/>
+                    <div className='section-title application-section-title'>Niewysłane</div>
+                    {unfinishedApplications.map((app, i) => (
+                        <ApplicationCard 
+                            key={i}
+                            id={i} 
+                            documentName={app.name}
+                            type={app.type}
+                            dataId={app.dataId}
+                            statuses={app.status}
+                            unfinished={true} 
+                        />
+                    ))}
                 </div>
                 
                 {/* Wnioski aktywne */}
                 <div className='bg-panel application-card'>
-                    <div className='section-title application-section-title'>
-                        Aktywne wnioski
-                    </div>
-                    <ApplicationCard id="card-2" statusText='Oczekuje odpowiedzi' statusId='document'/>
-                    <ApplicationCard id="card-3" statusText='Brak zapłaty' statusId='payment'/>
+                    <div className='section-title application-section-title'>Aktywne wnioski</div>
+                    {activeApplications.map((app, i) => (
+                        <ApplicationCard 
+                            key={i + unfinishedApplications.length}
+                            id={i + unfinishedApplications.length} 
+                            documentName={app.name}
+                            type={app.type}
+                            dataId={app.dataId}
+                            statuses={app.status}
+                        />
+                    ))}
                 </div>
             </div>
 
+            {/* Prawa kolumna - HARMONOGRAM */}
             <div className='account-column' id='account-page-column-right'>
-                {/* Panel Harmonogramu */}
-                <div className="right-panel harmonogram-panel">
-                    <h3 className="panel-title text-gold">HARMONOGRAM REKRUTACJI</h3>
-                    
-                    <div className="timeline-container">
-                        {/* To jest ta główna linia, która ciągnie się do samego dołu */}
-                        <div className="timeline-line"></div>
+                {/* Przekazujemy harmonogram zależny od tego, która karta jest "active" */}
+                <Timeline schedule={activeSchedule}/>
 
-                        <div className="timeline-item completed">
-                            <div className="timeline-icon bg-teal">
-                                <span className="material-symbols-outlined">check</span>
-                            </div>
-                            <div className="timeline-content">
-                                <h4>SKŁADANIE WNIOSKÓW</h4>
-                                <p>Zakończono: 10 Października</p>
-                            </div>
-                        </div>
-
-                        <div className="timeline-item in-progress">
-                            <div className="timeline-icon bg-yellow">
-                                <span className="material-symbols-outlined">sync</span>
-                            </div>
-                            <div className="timeline-content">
-                                <h4>WERYFIKACJA DOKUMENTÓW</h4>
-                                <p className="text-yellow">W toku: Przewidywany koniec 20 Paź</p>
-                            </div>
-                        </div>
-
-                        <div className="timeline-item upcoming">
-                            <div className="timeline-icon bg-grey"></div>
-                            <div className="timeline-content">
-                                <h4>OGŁOSZENIE WYNIKÓW</h4>
-                                <p>25 Października</p>
-                            </div>
-                        </div>
-
-                        <div className="timeline-item upcoming">
-                            <div className="timeline-icon bg-grey"></div>
-                            <div className="timeline-content">
-                                <h4>WPIS NA STUDIA</h4>
-                                <p>Listopad 2023</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Panel Pomocy */}
                 <div className="right-panel help-panel">
                     <h3 className="help-title">Potrzebujesz pomocy?</h3>
-                    
                     <a href="#faq" className="help-link">
                         <span>FAQ</span>
                         <span className="material-symbols-outlined icon-small">open_in_new</span>
-                    </a>
-                    
-                    <a href="#message" className="help-link">
-                        <span>WYŚLIJ WIADOMOŚĆ DO KOORDYNATORA</span>
-                        <span className="material-symbols-outlined icon-small">mail</span>
                     </a>
                 </div>
             </div>

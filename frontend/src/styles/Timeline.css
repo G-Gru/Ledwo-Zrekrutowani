@@ -1,0 +1,89 @@
+/* =========================================
+   PANEL HARMONOGRAMU (CIEMNY)
+   ========================================= */
+.harmonogram-panel {
+    background-color: #333333; /* Ciemnoszare tło ze screena */
+    color: white;
+}
+
+.panel-title.text-gold {
+    color: var(--palette-yellow); /* Żółto-złoty z obrazka */
+    text-transform: uppercase;
+    font-size: 1rem;
+    margin-top: 0;
+    margin-bottom: 35px;
+    font-weight: 700;
+}
+
+/* Kontener osi czasu */
+.timeline-container {
+    position: relative; /* Wymagane dla .timeline-line */
+    display: flex;
+    flex-direction: column;
+    gap: 30px; /* Odstęp między krokami */
+}
+
+/* CIĄGŁA LINIA - rozwiązanie problemu */
+.timeline-line {
+    position: absolute;
+    left: 11px; /* 12px to środek ikony o szer. 24px, minus 1px na połowę grubości linii */
+    top: 0;
+    bottom: 0; /* Dzięki temu ciągnie się do samego dołu kontenera */
+    width: 2px;
+    background-color: #555555; /* Kolor linii w tle */
+    z-index: 1; /* Linia jest pod spodem */
+}
+
+.timeline-item {
+    display: flex;
+    gap: 16px;
+    position: relative;
+    z-index: 2; /* Ikony i tekst są nad linią */
+}
+
+/* Kółka z ikonami */
+.timeline-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.timeline-icon .material-symbols-outlined {
+    font-size: 16px;
+    font-weight: 800;
+    transform: translate(+25%,0); /* nie wiem czemu nie pojawiaja sie w srodku kolka */
+}
+
+/* Kolory stanów */
+.timeline-icon.bg-teal { background-color: #008080; color: white; }
+.timeline-icon.bg-yellow { background-color: var(--primary-container); color: #333; }
+.timeline-icon.bg-grey { background-color: #666666; }
+
+/* Tekst w harmonogramie */
+.timeline-content h4 {
+    margin: 0 0 6px 0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.timeline-content p {
+    margin: 0;
+    font-size: 0.75rem;
+}
+
+/* Kolorowanie poszczególnych sekcji wg screena */
+.timeline-item.completed h4 { color: white; }
+.timeline-item.completed p { color: #888888; }
+
+.timeline-item.in-progress h4 { color: var(--primary-container); }
+.timeline-item.in-progress p.text-yellow { color: #fbbc04; }
+
+.timeline-item.upcoming h4 { color: #777777; }
+.timeline-item.upcoming p { color: #666666; }

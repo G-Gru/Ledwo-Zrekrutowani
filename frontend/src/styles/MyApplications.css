@@ -37,22 +37,27 @@
     background: var(--surface-tint);
 }
 
-.application-status {
-    background-color: lightgrey;
-    color: var(--text-main);
-    text-transform: uppercase;
-    font-size: x-small;
+/* Kontener dla list statusów */
+.status-badges-container {
+    display: flex;
+    flex-wrap: wrap;
 }
 
-#application-status-payment {
-    background-color: rgba(255, 50, 50, 0.688);
+/* Same pigułki statusów */
+.application-status {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
 }
-#application-status-document {
-    background-color: rgb(171, 213, 255);
-}
-#application-status-unfinished {
-    background-color: rgb(205, 205, 205);
-}
+
+.status-red { background-color: #ffcccc; color: #cc0000; border: 1px solid #cc0000; }
+.status-yellow { background-color: #fff4cc; color: #b38600; border: 1px solid #b38600; }
+.status-blue { background-color: #cce0ff; color: #005ce6; border: 1px solid #005ce6; }
+.status-grey { background-color: #e6e6e6; color: #666; border: 1px solid #999; }
+
 
 /* Układ prawej kolumny */
 #account-page-column-right {
@@ -68,100 +73,15 @@
     width: 75%;
 }
 
-/* =========================================
-   PANEL HARMONOGRAMU (CIEMNY)
-   ========================================= */
-.harmonogram-panel {
-    background-color: #333333; /* Ciemnoszare tło ze screena */
-    color: white;
-}
-
-.panel-title.text-gold {
-    color: var(--palette-yellow); /* Żółto-złoty z obrazka */
-    text-transform: uppercase;
-    font-size: 1rem;
-    margin-top: 0;
-    margin-bottom: 35px;
-    font-weight: 700;
-}
-
-/* Kontener osi czasu */
-.timeline-container {
-    position: relative; /* Wymagane dla .timeline-line */
+.help-panel {
+    background-color: var(--primary-container);
+    color: var(--text-main);
     display: flex;
     flex-direction: column;
-    gap: 30px; /* Odstęp między krokami */
 }
 
-/* CIĄGŁA LINIA - rozwiązanie problemu */
-.timeline-line {
-    position: absolute;
-    left: 11px; /* 12px to środek ikony o szer. 24px, minus 1px na połowę grubości linii */
-    top: 0;
-    bottom: 0; /* Dzięki temu ciągnie się do samego dołu kontenera */
-    width: 2px;
-    background-color: #555555; /* Kolor linii w tle */
-    z-index: 1; /* Linia jest pod spodem */
-}
-
-.timeline-item {
-    display: flex;
-    gap: 16px;
-    position: relative;
-    z-index: 2; /* Ikony i tekst są nad linią */
-}
-
-/* Kółka z ikonami */
-.timeline-icon {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.timeline-icon .material-symbols-outlined {
-    font-size: 16px;
-    font-weight: 800;
-}
-
-/* Kolory stanów */
-.timeline-icon.bg-teal { background-color: #008080; color: white; }
-.timeline-icon.bg-yellow { background-color: var(--palette-yellow); color: #333; }
-.timeline-icon.bg-grey { background-color: #666666; }
-
-/* Tekst w harmonogramie */
-.timeline-content h4 {
-    margin: 0 0 6px 0;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-.timeline-content p {
-    margin: 0;
-    font-size: 0.75rem;
-}
-
-/* Kolorowanie poszczególnych sekcji wg screena */
-.timeline-item.completed h4 { color: #fbbc04; }
-.timeline-item.completed p { color: #888888; }
-
-.timeline-item.in-progress h4 { color: white; }
-.timeline-item.in-progress p.text-yellow { color: #fbbc04; }
-
-.timeline-item.upcoming h4 { color: #777777; }
-.timeline-item.upcoming p { color: #666666; }
-
-/* =========================================
-   PANEL POMOCY (ŻÓŁTY)
-   ========================================= */
-.help-panel {
-    background-color: #fcd116; /* Mocny żółty */
-    color: black;
+.help-panel .material-symbols-outlined {
+    margin: 6px;
 }
 
 .help-title {
@@ -172,13 +92,12 @@
 }
 
 .help-link {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
+    align-items: left;
+    text-align: left;
     gap: 12px;
-    color: black;
+    color: var(--text-main);
     text-decoration: none;
-    font-weight: 800;
+    font-weight: 700;
     font-size: 0.8rem;
     margin-bottom: 20px;
     transition: opacity 0.2s ease;
