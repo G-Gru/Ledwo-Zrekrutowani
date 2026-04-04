@@ -2,6 +2,15 @@ from rest_framework.permissions import BasePermission
 
 from studies.models import StudiesEditionStaff
 
+class IsObjectOwner(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        if request.user.is_staff: #Admin
+            return True
+
+        return obj.user == request.user
 
 class IsEditionStaffWithRole(BasePermission):
     allowed_roles = []

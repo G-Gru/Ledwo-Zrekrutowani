@@ -46,6 +46,7 @@ class DocumentHistory(models.Model):
     note = models.CharField(max_length=200, blank=True)
 
 class Address(models.Model):
+    user = models.ForeignKey(User, on_delete=models.RESTRICT)
     street = models.CharField(max_length=100)
     house_number = models.CharField(max_length=20)
     flat_number = models.CharField(max_length=20, blank=True)
@@ -85,10 +86,8 @@ class FormData(models.Model):
     birth_place = models.CharField(max_length=50, blank=True)
     pesel = models.CharField(max_length=11, blank=True)
     citizenship = models.CharField(max_length=50, blank=True)
-    # residential_address = models.ForeignKey(Address, on_delete=models.RESTRICT, related_name="residential_formdata")
-    # registered_address = models.ForeignKey(Address, on_delete=models.RESTRICT, related_name="registered_formdata")
-    residential_address = models.CharField(max_length=120, blank=True)
-    registered_address = models.CharField(max_length=120, blank=True)
+    residential_address = models.ForeignKey(Address, on_delete=models.RESTRICT, related_name="residential_formdata")
+    registered_address = models.ForeignKey(Address, on_delete=models.RESTRICT, related_name="registered_formdata")
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=50, blank=True)
     education = models.CharField(max_length=50, blank=True)
