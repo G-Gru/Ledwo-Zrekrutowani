@@ -14,10 +14,10 @@ class Enrollment(models.Model):
         ]
 
     class Status(models.TextChoices):
-        DRAFT = 'DRAFT',
-        CANDIDATE = 'CANDIDATE',
-        STUDENT = 'STUDENT',
-        EXPELLED = 'EXPELLED',
+        DRAFT = 'DRAFT'
+        CANDIDATE = 'CANDIDATE'
+        STUDENT = 'STUDENT'
+        EXPELLED = 'EXPELLED'
 
     user = models.ForeignKey(User, on_delete=models.RESTRICT)
     studies_edition = models.ForeignKey(StudiesEdition, on_delete=models.RESTRICT)
@@ -25,17 +25,42 @@ class Enrollment(models.Model):
     status_note = models.CharField(max_length=200, blank=True)
     enrollment_date = models.DateTimeField(blank=True, null=True)
 
+    def has_all_documents(self):
+        required_documents = StudiesDocument.objects.filter(
+            studies_edition=self.studies_edition,
+            required=True
+        )
+
+        missing = required_documents.exclude(
+            submitted_documents__enrollment=self,
+            submitted_documents__status__in=SUBMITTED_DOCUMENT_ACCEPT_ENROLLMENT_STATUSES
+        )
+
+        return not missing.exists()
+
 ENROLLMENT_TAKING_UP_PLACE_STATUSES = [
     Enrollment.Status.CANDIDATE,
     Enrollment.Status.STUDENT,
 ]
 
 class SubmittedDocument(models.Model):
-    studies_document = models.ForeignKey(StudiesDocument, on_delete=models.RESTRICT)
+    class Status(models.TextChoices):
+        SUBMITTED = 'SUBMITTED'
+        ACCEPTED = 'ACCEPTED'
+        VERIFIED = 'VERIFIED'
+        REJECTED = 'REJECTED'
+
+    studies_document = models.ForeignKey(StudiesDocument, on_delete=models.RESTRICT, related_name='submitted_documents')
     enrollment = models.ForeignKey(Enrollment, on_delete=models.RESTRICT)
     file = models.FileField(upload_to='submitted_documents/')
-    status = models.CharField(max_length=50)
+    status = models.CharField(max_length=50, choices=Status.choices, default=Status.SUBMITTED)
     submitted_date = models.DateTimeField(auto_now_add=True)
+
+SUBMITTED_DOCUMENT_ACCEPT_ENROLLMENT_STATUSES = [
+    SubmittedDocument.Status.SUBMITTED,
+    SubmittedDocument.Status.ACCEPTED,
+    SubmittedDocument.Status.VERIFIED,
+]
 
 class DocumentHistory(models.Model):
     staff = models.ForeignKey(StudiesEditionStaff, on_delete=models.RESTRICT)
@@ -73,8 +98,8 @@ class FormData(models.Model):
     ]
 
     class Action(models.TextChoices):
-        SAVE = 'SAVE',
-        ENROLL = 'ENROLL',
+        SAVE = 'SAVE'
+        ENROLL = 'ENROLL'
 
     enrollment = models.OneToOneField(Enrollment, on_delete=models.RESTRICT, primary_key=True)
     first_name = models.CharField(max_length=50, blank=True)

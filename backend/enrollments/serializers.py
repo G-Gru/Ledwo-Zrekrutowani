@@ -1,6 +1,8 @@
 from random import choices
 
 from rest_framework import serializers
+
+from studies.serializers import StudiesEditionListSerializer
 from .models import Enrollment, Fees, SubmittedDocument, FormData, Address
 
 
@@ -38,10 +40,16 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
             return "KOMPLETNE - GOTOWE DO DECYZJI"
         return "NIESPEŁNIONE WYMOGI (Brak Oplat/Dokumentow)"
 
-class FormDataCreateSerializer(serializers.ModelSerializer):
+class SubmittedFileSerializer(serializers.Serializer):
+    studies_document_id = serializers.IntegerField()
+    file = serializers.FileField()
+
+class FormDataSerializer(serializers.ModelSerializer):
     action = serializers.ChoiceField(choices=FormData.Action.choices,
                                      required=True,
                                      write_only=True)
+
+    files = SubmittedFileSerializer(many=True, required=False, write_only=True)
 
     class Meta:
         model = FormData
@@ -52,22 +60,12 @@ class FormDataCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop("action")
+        validated_data.pop("files", [])
         return super().create(validated_data)
-
-class FormDataRetreiveUpdateSerializer(serializers.ModelSerializer):
-    action = serializers.ChoiceField(choices=FormData.Action.choices,
-                                     required=True,
-                                     write_only=True)
-
-    class Meta:
-        model = FormData
-        exclude = ('modified_date', 'enrollment')
-
-    def validate(self, attrs):
-        return form_data_validate(attrs)
 
     def update(self, instance, validated_data):
         validated_data.pop("action", None)
+        validated_data.pop("files", [])
         return super().update(instance, validated_data)
 
 
@@ -94,3 +92,17 @@ class AddressSerializer(serializers.ModelSerializer):
         model = Address
         exclude = ('user', )
         read_only = ('id', )
+
+class EnrollmentSerializer(serializers.ModelSerializer):
+    studies_edition = StudiesEditionListSerializer(read_only=True)
+
+    class Meta:
+        model = Enrollment
+        exclude = ('user', )
+
+
+class SubmittedDocumentsListCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubmittedDocument
+        exclude = ('id', 'enrollment')
+        read_only = ('status', 'submitted_date')

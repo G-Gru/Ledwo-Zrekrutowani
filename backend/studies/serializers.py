@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from studies.models import Studies, StudiesEdition, StudiesEditionStaff
+from studies.models import Studies, StudiesEdition, StudiesEditionStaff, StudiesDocument
 from users.models import User
 from users.serializers import UserSerializer
 
@@ -62,3 +62,9 @@ class StudiesEditionStaffReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudiesEditionStaff
         exclude = ('studies_edition', )
+
+class StudiesDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudiesDocument
+        exclude = ('studies_edition', )
+        read_only = ('id', )

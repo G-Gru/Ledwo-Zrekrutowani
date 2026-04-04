@@ -3,7 +3,7 @@ from django.urls import path
 from .views import StudiesListCreateAdminAPIView, StudiesRetrieveUpdateDestroyAdminAPIView, \
     StudiesEditionListCreateAdminAPIView, \
     StudiesEditionRetrieveUpdateDestroyAdminAPIView, StudiesEditionStaffListCreateAdminAPIView, \
-    StudiesEditionStaffDestroyAdminAPIView
+    StudiesEditionStaffDestroyAdminAPIView, StudiesDocumentsListCreateAdminAPIView, StudiesDocumentsDestroyAdminAPIView
 
 urlpatterns = [
     path("",
@@ -24,4 +24,10 @@ urlpatterns = [
     path("editions/<int:edition_pk>/staff/<int:staff_pk>/",
          StudiesEditionStaffDestroyAdminAPIView.as_view(),
          name="admin-studies-editions-staff-destroy"),
+    path("editions/<int:edition_pk>/documents/",
+         StudiesDocumentsListCreateAdminAPIView.as_view(),
+         name="admin-studies-editions-documents-list-create"),
+    path("editions/<int:edition_pk>/documents/<int:document_pk>/",
+         StudiesDocumentsDestroyAdminAPIView.as_view(),
+         name="admin-studies-editions-documents-destroy"),
 ]

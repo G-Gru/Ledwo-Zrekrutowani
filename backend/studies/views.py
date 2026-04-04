@@ -1,13 +1,11 @@
-from django.db import transaction
 from rest_framework import generics, permissions
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser
 
 from studies import services
-from studies.models import StudiesEdition, Studies, StudiesEditionStaff
+from studies.models import Studies, StudiesEditionStaff, StudiesDocument
 from studies.serializers import StudiesSerializer, StudiesEditionDetailsSerializer, StudiesEditionCreateSerializer, \
     StudiesEditionListSerializer, StudiesEditionStaffWriteSerializer, \
-    StudiesEditionStaffReadSerializer
+    StudiesEditionStaffReadSerializer, StudiesDocumentSerializer
 from users.permissions import IsDirectorOrAdministrativeCoordinator, \
     IsDirectorOrCoordinator
 
@@ -37,11 +35,24 @@ class StudiesEditionStaffListAPIView(generics.ListAPIView):
 
         return (StudiesEditionStaff.objects
             .filter(
-                studies_edition__in=public_editions,
-                studies_edition_id=edition_pk
+                studies_edition_id=edition_pk,
+                studies_edition__in=public_editions
             )
             .select_related('studies_edition', 'user'))
 
+
+class StudiesDocumentsListAPIView(generics.ListAPIView):
+    serializer_class = StudiesDocumentSerializer
+
+    def get_queryset(self):
+        edition_pk = self.kwargs.get("edition_pk")
+        public_editions = services.get_public_visible_editions_queryset()
+
+        return (StudiesDocument.objects
+            .filter(
+                studies_edition_id=edition_pk,
+                studies_edition__in=public_editions
+            ))
 
 ## ADMIN
 class StudiesListCreateAdminAPIView(generics.ListCreateAPIView):
@@ -64,7 +75,7 @@ class StudiesEditionListCreateAdminAPIView(generics.ListCreateAPIView):
         return StudiesEditionListSerializer
 
     def get_queryset(self):
-        return (services.get_user_editions_queryset(self.request)
+        return (services.get_user_editions_queryset(self.request.user)
                     .select_related('studies'))
 
     def get_permissions(self):
@@ -78,7 +89,7 @@ class StudiesEditionRetrieveUpdateDestroyAdminAPIView(generics.RetrieveUpdateAPI
     serializer_class = StudiesEditionDetailsSerializer
 
     def get_queryset(self):
-        return (services.get_user_editions_queryset(self.request)
+        return (services.get_user_editions_queryset(self.request.user)
                     .select_related('studies'))
 
     def get_permissions(self):
@@ -92,24 +103,15 @@ class StudiesEditionStaffListCreateAdminAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         pk = self.kwargs['edition_pk']
-        user_editions = services.get_user_editions_queryset(self.request)
+        user_editions = services.get_user_editions_queryset(self.request.user)
         return (StudiesEditionStaff.objects
                 .filter(studies_edition_id=pk)
                 .filter(studies_edition__in=user_editions)
                 .select_related('user'))
 
     def perform_create(self, serializer):
-        with transaction.atomic():
-            pk = self.kwargs['edition_pk']
-            edition = StudiesEdition.objects.filter(
-                id=pk,
-                studies_edition_staff__user=self.request.user
-            ).first()
-
-            if not edition:
-                raise PermissionDenied()
-
-            serializer.save(studies_edition=edition)
+        pk = self.kwargs['edition_pk']
+        services.add_to_edition(pk, self.request.user, serializer)
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
@@ -128,7 +130,40 @@ class StudiesEditionStaffDestroyAdminAPIView(generics.DestroyAPIView):
 
     def get_queryset(self):
         pk = self.kwargs['edition_pk']
-        user_editions = services.get_user_editions_queryset(self.request)
+        user_editions = services.get_user_editions_queryset(self.request.user)
         return (StudiesEditionStaff.objects
+                .filter(studies_edition_id=pk)
+                .filter(studies_edition__in=user_editions))
+
+
+class StudiesDocumentsListCreateAdminAPIView(generics.ListCreateAPIView):
+    serializer_class = StudiesDocumentSerializer
+    lookup_url_kwarg = "edition_pk"
+
+    def get_queryset(self):
+        pk = self.kwargs['edition_pk']
+        user_editions = services.get_user_editions_queryset(self.request.user)
+        return (StudiesDocument.objects
+                .filter(studies_edition_id=pk)
+                .filter(studies_edition__in=user_editions))
+
+    def perform_create(self, serializer):
+        pk = self.kwargs['edition_pk']
+        services.add_to_edition(pk, self.request.user, serializer)
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [IsDirectorOrCoordinator()]
+        return [IsDirectorOrAdministrativeCoordinator()]
+
+
+class StudiesDocumentsDestroyAdminAPIView(generics.DestroyAPIView):
+    lookup_url_kwarg = "documents_pk"
+    permission_classes = [IsDirectorOrAdministrativeCoordinator]
+
+    def get_queryset(self):
+        pk = self.kwargs['edition_pk']
+        user_editions = services.get_user_editions_queryset(self.request.user)
+        return (StudiesDocument.objects
                 .filter(studies_edition_id=pk)
                 .filter(studies_edition__in=user_editions))

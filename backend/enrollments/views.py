@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -5,15 +6,15 @@ from rest_framework.response import Response
 
 from users.permissions import IsObjectOwner
 from . import services
-from .models import Enrollment, FormData, Address
-from .serializers import AdminEnrollmentSerializer, FormDataCreateSerializer, FormDataRetreiveUpdateSerializer, \
-    AddressSerializer
+from .models import Enrollment, FormData, Address, SubmittedDocument
+from .serializers import AdminEnrollmentSerializer, FormDataSerializer, \
+    AddressSerializer, EnrollmentSerializer, SubmittedDocumentsListCreateSerializer
 from .services import get_enrollable_edition
 
 
 ## PUBLIC
 class EnrollmentFormCreateAPIView(generics.CreateAPIView):
-    serializer_class = FormDataCreateSerializer
+    serializer_class = FormDataSerializer
     permission_classes = [IsAuthenticated] #todo students only
 
     def perform_create(self, serializer):
@@ -22,7 +23,7 @@ class EnrollmentFormCreateAPIView(generics.CreateAPIView):
         services.create_enrollment_form(edition_pk, self.request.user, serializer)
 
 class EnrollmentFormRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
-    serializer_class = FormDataRetreiveUpdateSerializer
+    serializer_class = FormDataSerializer
     permission_classes = [IsAuthenticated]  # todo students only
 
     def get_object(self):
@@ -58,6 +59,48 @@ class AddressRetreiveDestroyAPIView(generics.RetrieveDestroyAPIView):
         return Address.objects.filter(
             user=self.request.user
         )
+
+class EnrollmentListAPIView(generics.ListAPIView):
+    serializer_class = EnrollmentSerializer
+    permission_classes = [IsAuthenticated, IsObjectOwner]
+
+    def get_queryset(self):
+        return Enrollment.objects.filter(
+            user=self.request.user
+        )
+
+class EnrollmentRetrieveAPIView(generics.RetrieveAPIView):
+    serializer_class = EnrollmentSerializer
+    permission_classes = [IsAuthenticated, IsObjectOwner]
+    lookup_url_kwarg = 'enrollment_pk'
+
+    def get_queryset(self):
+        return Enrollment.objects.filter(
+            user=self.request.user
+        )
+
+class SubmittedDocumentsListAPIView(generics.ListAPIView):
+    serializer_class = SubmittedDocumentsListCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return SubmittedDocument.objects.filter(
+            enrollment_id=self.kwargs['enrollment_pk'],
+            enrollment__user=self.request.user,
+        )
+
+class SubmittedDocumentsCreateAPIView(generics.CreateAPIView):
+    serializer_class = SubmittedDocumentsListCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        get_object_or_404(
+            Enrollment,
+            pk=self.kwargs['enrollment_pk'],
+            user=self.request.user
+        )
+
+        serializer.save(enrollment_id=self.kwargs['enrollment_pk'])
 
 ## ADMIN
 
