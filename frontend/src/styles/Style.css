@@ -621,7 +621,8 @@ button:hover {
 }
 #account-page-column-left {
   background-color: var(--surface-container);
-  width: 25%;
+  max-width: 25%;
+  min-width: 25%;
   align-items: left;
   text-align: left;
 }

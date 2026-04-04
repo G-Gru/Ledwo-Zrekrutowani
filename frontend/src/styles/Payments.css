@@ -1,0 +1,214 @@
+.payments-main-container {
+    flex: 1; /* Zajmuje całą resztę miejsca obok menu */
+    padding: 40px 60px;
+    background-color: var(--background);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    overflow-y: auto;
+}
+
+.payments-page-header {
+    margin-bottom: 40px;
+    margin-left: 15%;
+}
+
+/* Layout Siatki dla górnych kart */
+.payments-grid-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr; /* Karta sumy stała, tabela elastyczna */
+    gap: 30px;
+    width: 100%;
+    margin-bottom: 50px;
+}
+
+/* Karta Podsumowania */
+.summary-wide-card {
+    background-color: var(--surface-container-lowest);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 30px !important;
+    position: relative;
+    border: 1px solid var(--surface-border);
+}
+
+.main-balance {
+    font-size: 1.75rem;
+    font-weight: 900;
+    margin: 15px 0;
+    color: var(--on-surface);
+}
+
+.label-tiny {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--on-secondary-container);
+    letter-spacing: 1.5px;
+}
+
+.deadline-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--secondary);
+}
+
+.btn-primary-large {
+    background-color: var(--primary-container);
+    width: 100%;
+    padding: 18px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    margin: 20px 0 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-radius: 8px;
+}
+
+.watermark-icon {
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    font-size: 120px !important;
+    opacity: 0.04;
+    pointer-events: none;
+}
+
+/* Tabela */
+.active-table-card {
+    padding: 30px !important;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.panel-h3 {
+    margin-bottom: 25px;
+    font-size: 1.4rem;
+    text-align: center;
+}
+
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.modern-table th {
+    text-align: left;
+    font-size: 0.7rem;
+    color: var(--secondary);
+    padding: 12px;
+    border-bottom: 2px solid var(--surface-container);
+}
+
+.modern-table td {
+    padding: 20px 12px;
+    border-bottom: 1px solid var(--surface-container-low);
+}
+
+.badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.badge.pending { background: rgba(112, 93, 0, 0.1); color: var(--primary); }
+.badge.overdue { background: var(--error-container); color: var(--error); }
+
+.table-action-btn {
+    background: transparent;
+    border: 2px solid var(--primary-container);
+    color: var(--primary);
+    padding: 6px 15px;
+    font-size: 0.75rem;
+}
+
+/* Historia - Szeroka */
+.history-section-wide {
+    width: 100%;
+}
+
+.history-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.history-list-container {
+    padding: 0 !important;
+    width: 100%;
+}
+
+.history-row-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 30px;
+    border-bottom: 1px solid var(--surface-container-low);
+    transition: background 0.2s;
+}
+
+.history-row-item:hover {
+    background-color: var(--surface-container-low);
+}
+
+.row-main-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 2;
+}
+
+.status-icon-circle {
+    width: 45px;
+    height: 45px;
+    background: rgba(0, 105, 111, 0.1);
+    color: var(--tertiary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.history-item-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.history-item-sub {
+    font-size: 0.8rem;
+    color: var(--secondary);
+}
+
+.row-amount-info {
+    text-align: right;
+    flex: 1;
+    margin-right: 40px;
+}
+
+.history-amount {
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.history-status-tag {
+    font-size: 0.65rem;
+    color: var(--tertiary);
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.btn-ghost-icon {
+    background: transparent;
+    color: var(--secondary);
+    padding: 8px;
+}
+
+.bold-text { font-weight: 700; }
+.error-text { color: var(--error); font-weight: 800; }

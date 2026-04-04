@@ -45,7 +45,7 @@ export default function MyApplications({}) {
                 className={`single-application-card ${activeCardId === id ? 'active' : ''}`}
                 onClick={() => setActiveCardId(id)}
             >
-                <span className="material-symbols-outlined">{getIconFromDocumentType(type)}</span>
+                <span className="material-symbols-outlined">{unfinished ? "edit_note" : getIconFromDocumentType(type)}</span>
 
                 <div style={{display: 'flex', flexDirection: 'column', flex: 1}}>
                     <h4> {documentName} </h4>
