@@ -3,9 +3,11 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from users.permissions import IsObjectOwner
 from . import services
-from .models import Enrollment, FormData
-from .serializers import AdminEnrollmentSerializer, FormDataCreateSerializer, FormDataRetreiveUpdateSerializer
+from .models import Enrollment, FormData, Address
+from .serializers import AdminEnrollmentSerializer, FormDataCreateSerializer, FormDataRetreiveUpdateSerializer, \
+    AddressSerializer
 from .services import get_enrollable_edition
 
 
@@ -34,6 +36,28 @@ class EnrollmentFormRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
         edition_pk = self.kwargs['edition_pk']
         get_enrollable_edition(edition_pk)
         services.update_enrollment_form(edition_pk, self.request.user, serializer)
+
+class AddressListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = AddressSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Address.objects.filter(
+            user=self.request.user
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class AddressRetreiveDestroyAPIView(generics.RetrieveDestroyAPIView):
+    serializer_class = AddressSerializer
+    permission_classes = [IsAuthenticated, IsObjectOwner]
+    lookup_url_kwarg = 'address_pk'
+
+    def get_queryset(self):
+        return Address.objects.filter(
+            user=self.request.user
+        )
 
 ## ADMIN
 

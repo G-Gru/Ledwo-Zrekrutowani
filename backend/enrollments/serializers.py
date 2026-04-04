@@ -1,7 +1,7 @@
 from random import choices
 
 from rest_framework import serializers
-from .models import Enrollment, Fees, SubmittedDocument, FormData
+from .models import Enrollment, Fees, SubmittedDocument, FormData, Address
 
 
 class AdminEnrollmentSerializer(serializers.ModelSerializer):
@@ -88,3 +88,9 @@ def form_data_validate(attrs):
             })
 
     return attrs
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        exclude = ('user', )
+        read_only = ('id', )
