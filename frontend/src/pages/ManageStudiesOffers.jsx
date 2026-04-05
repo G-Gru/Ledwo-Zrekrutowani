@@ -430,6 +430,34 @@ export default function ManageStudiesOffers() {
     }
   };
 
+  const onStaffDelete = async (staffItem) => {
+    if (!selectedEdition) return;
+    const fullName = [staffItem?.user?.first_name, staffItem?.user?.last_name].filter(Boolean).join(' ');
+    if (!window.confirm(`Czy na pewno usunąć ${fullName || 'tego pracownika'} z edycji?`)) return;
+
+    try {
+      const res = await fetch(`/admin/studies/editions/${selectedEdition.id}/staff/${staffItem.id}/`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (res.status === 403) {
+        setCanCreateEditionStaff(false);
+        setStaffPermissionMessage('Twoja rola nie ma uprawnień do usuwania pracowników z edycji.');
+        return;
+      }
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      fetchEditionStaff(selectedEdition.id);
+    } catch (err) {
+      console.error('Delete edition staff error:', err);
+      alert('Nie udało się usunąć pracownika z edycji.');
+    }
+  };
+
   const handleStudySubmit = async (e) => {
     e.preventDefault();
     setLoadingStudySubmit(true);
@@ -865,6 +893,7 @@ export default function ManageStudiesOffers() {
                       <th>Imie i nazwisko</th>
                       <th>E-mail</th>
                       <th>Telefon</th>
+                      <th>Akcje</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -879,6 +908,17 @@ export default function ManageStudiesOffers() {
                           <td>{fullName || '-'}</td>
                           <td>{staffItem?.user?.email || '-'}</td>
                           <td>{staffItem?.user?.phone || '-'}</td>
+                          <td>
+                            {canCreateEditionStaff && (
+                              <button
+                                type="button"
+                                className="button-danger"
+                                onClick={() => onStaffDelete(staffItem)}
+                              >
+                                Usuń
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       );
                     })}
