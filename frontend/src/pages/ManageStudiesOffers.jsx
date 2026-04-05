@@ -45,6 +45,43 @@ const sampleEditions = [
   }
 ];
 
+const sampleEditionStaffByEdition = {
+  1: [
+    {
+      id: 1,
+      role: 'STUDIES_DIRECTOR',
+      user: {
+        first_name: 'Anna',
+        last_name: 'Kowalska',
+        email: 'anna.kowalska@agh.edu.pl',
+        phone: '+48 600 111 222'
+      }
+    },
+    {
+      id: 2,
+      role: 'ADMINISTRATIVE_COORDINATOR',
+      user: {
+        first_name: 'Piotr',
+        last_name: 'Nowak',
+        email: 'piotr.nowak@agh.edu.pl',
+        phone: '+48 600 333 444'
+      }
+    }
+  ],
+  2: [
+    {
+      id: 3,
+      role: 'FINANCE_COORDINATOR',
+      user: {
+        first_name: 'Magdalena',
+        last_name: 'Wisniewska',
+        email: 'magdalena.wisniewska@agh.edu.pl',
+        phone: '+48 600 555 666'
+      }
+    }
+  ]
+};
+
 const emptyStudyForm = {
   name: '',
   terms_count: '',
@@ -63,6 +100,17 @@ const emptyEditionForm = {
   recruitment_end_date: ''
 };
 
+const emptyStaffForm = {
+  user_id: '',
+  role: 'ADMINISTRATIVE_COORDINATOR'
+};
+
+const staffRoleLabels = {
+  STUDIES_DIRECTOR: 'Kierownik studiow',
+  ADMINISTRATIVE_COORDINATOR: 'Koordynator administracyjny',
+  FINANCE_COORDINATOR: 'Koordynator finansowy'
+};
+
 export default function ManageStudiesOffers() {
   const [studies, setStudies] = useState([]);
   const [selectedStudy, setSelectedStudy] = useState(null);
@@ -70,18 +118,25 @@ export default function ManageStudiesOffers() {
   const [editions, setEditions] = useState([]);
   const [selectedEdition, setSelectedEdition] = useState(null);
   const [editionFormData, setEditionFormData] = useState(emptyEditionForm);
+  const [editionStaff, setEditionStaff] = useState([]);
+  const [staffFormData, setStaffFormData] = useState(emptyStaffForm);
   const [loadingStudySubmit, setLoadingStudySubmit] = useState(false);
   const [loadingEditionSubmit, setLoadingEditionSubmit] = useState(false);
+  const [loadingStaffSubmit, setLoadingStaffSubmit] = useState(false);
 
   const [studiesError, setStudiesError] = useState('');
   const [editionsError, setEditionsError] = useState('');
+  const [staffError, setStaffError] = useState('');
   const [studiesPermissionMessage, setStudiesPermissionMessage] = useState('');
   const [editionsPermissionMessage, setEditionsPermissionMessage] = useState('');
+  const [staffPermissionMessage, setStaffPermissionMessage] = useState('');
 
   const [canViewStudies, setCanViewStudies] = useState(true);
   const [canViewEditions, setCanViewEditions] = useState(true);
   const [canCreateEdition, setCanCreateEdition] = useState(true);
   const [canModifyEdition, setCanModifyEdition] = useState(true);
+  const [canViewEditionStaff, setCanViewEditionStaff] = useState(true);
+  const [canCreateEditionStaff, setCanCreateEditionStaff] = useState(true);
 
   const token = localStorage.getItem('token');
 
@@ -169,6 +224,40 @@ export default function ManageStudiesOffers() {
     }
   };
 
+  const fetchEditionStaff = async (editionId) => {
+    if (!editionId) {
+      setEditionStaff([]);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/admin/studies/editions/${editionId}/staff/`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (res.status === 403) {
+        setCanViewEditionStaff(false);
+        setEditionStaff([]);
+        setStaffPermissionMessage('Brak uprawnien do podgladu personelu tej edycji.');
+        return;
+      }
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      setEditionStaff(Array.isArray(data) ? data : []);
+      setCanViewEditionStaff(true);
+      setStaffPermissionMessage('');
+      setStaffError('');
+    } catch (err) {
+      console.error('Fetch edition staff error:', err);
+      setEditionStaff(sampleEditionStaffByEdition[editionId] || []);
+      setStaffError('Nie udalo sie zaladowac personelu edycji. Widoczne dane testowe.');
+    }
+  };
+
   useEffect(() => {
     fetchStudies();
     fetchEditions();
@@ -183,6 +272,12 @@ export default function ManageStudiesOffers() {
   const resetEditionForm = () => {
     setSelectedEdition(null);
     setEditionFormData(emptyEditionForm);
+    setEditionStaff([]);
+    setStaffFormData(emptyStaffForm);
+    setStaffPermissionMessage('');
+    setStaffError('');
+    setCanViewEditionStaff(true);
+    setCanCreateEditionStaff(true);
   };
 
   const startStudyEdit = (study) => {
@@ -219,6 +314,10 @@ export default function ManageStudiesOffers() {
   const startEdit = async (edition) => {
     setSelectedEdition(edition);
     setEditionFormData(mapEditionToForm(edition));
+    setStaffFormData(emptyStaffForm);
+    setCanViewEditionStaff(true);
+    setCanCreateEditionStaff(true);
+    fetchEditionStaff(edition.id);
 
     try {
       const res = await fetch(`/admin/studies/editions/${edition.id}/`, {
@@ -281,6 +380,54 @@ export default function ManageStudiesOffers() {
   const handleEditionChange = (e) => {
     const { name, value } = e.target;
     setEditionFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleStaffChange = (e) => {
+    const { name, value } = e.target;
+    setStaffFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleStaffSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedEdition) return;
+
+    setLoadingStaffSubmit(true);
+
+    try {
+      const payload = {
+        user_id: Number(staffFormData.user_id),
+        role: staffFormData.role
+      };
+
+      const res = await fetch(`/admin/studies/editions/${selectedEdition.id}/staff/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.status === 403) {
+        setCanCreateEditionStaff(false);
+        setStaffPermissionMessage('Twoja rola nie ma uprawnien do dodawania personelu.');
+        return;
+      }
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(JSON.stringify(err));
+      }
+
+      alert('Pracownik zostal dodany do edycji.');
+      setStaffFormData(emptyStaffForm);
+      fetchEditionStaff(selectedEdition.id);
+    } catch (err) {
+      console.error('Submit edition staff error:', err);
+      alert('Wystapil blad podczas dodawania pracownika do edycji.');
+    } finally {
+      setLoadingStaffSubmit(false);
+    }
   };
 
   const handleStudySubmit = async (e) => {
@@ -404,6 +551,7 @@ export default function ManageStudiesOffers() {
 
       {studiesError && <div className="error-message">{studiesError}</div>}
       {editionsError && <div className="error-message">{editionsError}</div>}
+      {staffError && <div className="error-message">{staffError}</div>}
 
       {canViewStudies ? (
         <>
@@ -701,6 +849,93 @@ export default function ManageStudiesOffers() {
                   </button>
                 </div>
               </form>
+            </section>
+          )}
+
+          {selectedEdition && (
+            <section className="bg-panel manage-table">
+              <h3>Zespol edycji: {selectedEdition.name}</h3>
+              {staffPermissionMessage && <div className="error-message">{staffPermissionMessage}</div>}
+
+              {canViewEditionStaff ? (
+                <table className="styled-table">
+                  <thead>
+                    <tr>
+                      <th>Rola</th>
+                      <th>Imie i nazwisko</th>
+                      <th>E-mail</th>
+                      <th>Telefon</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {editionStaff.map((staffItem) => {
+                      const fullName = [staffItem?.user?.first_name, staffItem?.user?.last_name]
+                        .filter(Boolean)
+                        .join(' ');
+
+                      return (
+                        <tr key={staffItem.id}>
+                          <td>{staffRoleLabels[staffItem.role] || staffItem.role || '-'}</td>
+                          <td>{fullName || '-'}</td>
+                          <td>{staffItem?.user?.email || '-'}</td>
+                          <td>{staffItem?.user?.phone || '-'}</td>
+                        </tr>
+                      );
+                    })}
+
+                    {editionStaff.length === 0 && (
+                      <tr>
+                        <td colSpan="4">Brak przypisanego personelu dla tej edycji.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              ) : (
+                <p>Brak uprawnien do podgladu personelu tej edycji.</p>
+              )}
+
+              {canViewEditionStaff && canCreateEditionStaff && (
+                <form onSubmit={handleStaffSubmit} className="form-container" style={{ marginTop: '1rem' }}>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="staff_user_id">ID uzytkownika *</label>
+                      <input
+                        type="number"
+                        id="staff_user_id"
+                        name="user_id"
+                        min="1"
+                        value={staffFormData.user_id}
+                        onChange={handleStaffChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="staff_role">Rola *</label>
+                      <select
+                        id="staff_role"
+                        name="role"
+                        value={staffFormData.role}
+                        onChange={handleStaffChange}
+                        required
+                      >
+                        <option value="STUDIES_DIRECTOR">Kierownik studiow</option>
+                        <option value="ADMINISTRATIVE_COORDINATOR">Koordynator administracyjny</option>
+                        <option value="FINANCE_COORDINATOR">Koordynator finansowy</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-actions">
+                    <button type="button" onClick={() => setStaffFormData(emptyStaffForm)} className="button-secondary">
+                      Wyczyść
+                    </button>
+                    <button type="submit" disabled={loadingStaffSubmit} className="button-primary">
+                      Dodaj pracownika
+                    </button>
+                  </div>
+                </form>
+              )}
             </section>
           )}
         </>
