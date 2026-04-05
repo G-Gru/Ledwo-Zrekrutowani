@@ -352,6 +352,42 @@ hr {
   gap: 1rem;
 }
 
+.detail-staff-section {
+  width: 100%;
+  max-width: 1100px;
+  margin-top: 0.75rem;
+}
+
+.detail-staff-section .section-title {
+  margin: 0 0 0.75rem;
+  color: var(--on-secondary-fixed-variant);
+}
+
+.detail-staff-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.08);
+}
+
+.detail-staff-table {
+  margin-bottom: 0;
+  min-width: 680px;
+}
+
+.detail-staff-table td,
+.detail-staff-table th {
+  white-space: nowrap;
+}
+
+.detail-staff-table td:first-child,
+.detail-staff-table th:first-child {
+  white-space: normal;
+  min-width: 170px;
+}
+
 .button-primary {
   display: inline-block;
   background-color: var(--primary);
@@ -421,8 +457,19 @@ hr {
   box-shadow: 0 0 0 2px rgba(112, 93, 0, 0.1);
 }
 
+@media (max-width: 900px) {
+  .detail-staff-section {
+    max-width: 100%;
+  }
+
+  .detail-staff-table {
+    min-width: 620px;
+  }
+}
+
 /* Hide number input arrows */
 .form-group input[type="number"] {
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 

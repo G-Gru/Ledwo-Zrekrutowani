@@ -17,22 +17,77 @@ const sampleEdition = {
   description: 'Programowanie, bazy danych, systemy operacyjne. Nauczysz się tworzyć aplikacje webowe, mobilne i desktopowe.',
 };
 
+const sampleStaff = [
+  {
+    id: 1,
+    role: 'STUDIES_DIRECTOR',
+    user: {
+      first_name: 'Anna',
+      last_name: 'Kowalska',
+      email: 'anna.kowalska@agh.edu.pl',
+      phone: '+48 600 111 222',
+    },
+  },
+  {
+    id: 2,
+    role: 'ADMINISTRATIVE_COORDINATOR',
+    user: {
+      first_name: 'Piotr',
+      last_name: 'Nowak',
+      email: 'piotr.nowak@agh.edu.pl',
+      phone: '+48 600 333 444',
+    },
+  },
+  {
+    id: 3,
+    role: 'FINANCE_COORDINATOR',
+    user: {
+      first_name: 'Magdalena',
+      last_name: 'Wiśniewska',
+      email: 'magdalena.wisniewska@agh.edu.pl',
+      phone: '+48 600 555 666',
+    },
+  },
+];
+
+const roleLabels = {
+  STUDIES_DIRECTOR: 'Kierownik studiów',
+  ADMINISTRATIVE_COORDINATOR: 'Koordynator administracyjny',
+  FINANCE_COORDINATOR: 'Koordynator finansowy',
+};
+
 export default function StudiesDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [edition, setEdition] = useState(null);
+  const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`/studies/editions/${id}/`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        setEdition(data);
+        const [editionResponse, staffResponse] = await Promise.all([
+          fetch(`/studies/editions/${id}/`),
+          fetch(`/studies/editions/${id}/staff/`),
+        ]);
+
+        if (!editionResponse.ok) {
+          throw new Error(`HTTP ${editionResponse.status}`);
+        }
+
+        const editionData = await editionResponse.json();
+        setEdition(editionData);
+
+        if (staffResponse.ok) {
+          const staffData = await staffResponse.json();
+          setStaff(Array.isArray(staffData) ? staffData : []);
+        } else {
+          setStaff([]);
+        }
       } catch (err) {
         console.warn('Error fetching edition details:', err);
         setEdition(sampleEdition);
+        setStaff(sampleStaff);
       } finally {
         setLoading(false);
       }
@@ -113,6 +168,44 @@ export default function StudiesDetailPage() {
           </div>
         </aside>
       </div>
+
+      <section className="detail-staff-section" aria-label="Zespół edycji studiów">
+        <h3 className="section-title">Zespół edycji</h3>
+        <div className="detail-staff-table-wrapper">
+          <table className="styled-table detail-staff-table">
+            <thead>
+              <tr>
+                <th scope="col">Rola</th>
+                <th scope="col">Imię i nazwisko</th>
+                <th scope="col">E-mail</th>
+                <th scope="col">Telefon</th>
+              </tr>
+            </thead>
+            <tbody>
+              {staff.length > 0 ? (
+                staff.map((member) => {
+                  const fullName = [member?.user?.first_name, member?.user?.last_name]
+                    .filter(Boolean)
+                    .join(' ');
+
+                  return (
+                    <tr key={member.id}>
+                      <td>{roleLabels[member.role] || member.role || '-'}</td>
+                      <td>{fullName || '-'}</td>
+                      <td>{member?.user?.email || '-'}</td>
+                      <td>{member?.user?.phone || '-'}</td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={4}>Brak przypisanego personelu dla tej edycji.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <div className="apply-section">
         <button
