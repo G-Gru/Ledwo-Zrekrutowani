@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from studies.models import Studies, StudiesEdition, StudiesEditionStaff, StudiesDocument
@@ -24,6 +25,38 @@ class StudiesEditionCreateSerializer(serializers.ModelSerializer):
         queryset=Studies.objects.all(),
         source='studies'
     )
+
+    def validate(self, attrs):
+        start = attrs.get("start_date")
+        end = attrs.get("end_date")
+        rec_start = attrs.get("recruitment_start_date")
+        rec_end = attrs.get("recruitment_end_date")
+
+        if end < start:
+            raise serializers.ValidationError({
+                "end_date": "Must be greater than start date"
+            })
+
+        if rec_end < rec_start:
+            raise serializers.ValidationError({
+                "recruitment_end_date": "Must be greater than start date"
+            })
+
+        if rec_end < start:
+            raise serializers.ValidationError({
+                "recruitment_end_date": "Must be greater than start date"
+            })
+
+        return attrs
+
+    @staticmethod
+    def validate_price(value):
+        if value < 0:
+            raise serializers.ValidationError({
+                "price": "Must be greater than zero"
+            })
+
+        return value
 
     class Meta:
         model = StudiesEdition
@@ -68,3 +101,10 @@ class StudiesDocumentSerializer(serializers.ModelSerializer):
         model = StudiesDocument
         exclude = ('studies_edition', )
         read_only = ('id', )
+
+    @staticmethod
+    def validate_due_date(value):
+        if value < timezone.now():
+            raise serializers.ValidationError({
+                "due_date": "Must be in the future"
+            })

@@ -79,7 +79,7 @@ class EnrollmentRetrieveAPIView(generics.RetrieveAPIView):
             user=self.request.user
         )
 
-class SubmittedDocumentsListAPIView(generics.ListAPIView):
+class SubmittedDocumentsListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = SubmittedDocumentsListCreateSerializer
     permission_classes = [IsAuthenticated]
 
@@ -88,10 +88,6 @@ class SubmittedDocumentsListAPIView(generics.ListAPIView):
             enrollment_id=self.kwargs['enrollment_pk'],
             enrollment__user=self.request.user,
         )
-
-class SubmittedDocumentsCreateAPIView(generics.CreateAPIView):
-    serializer_class = SubmittedDocumentsListCreateSerializer
-    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         get_object_or_404(

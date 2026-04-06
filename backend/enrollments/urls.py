@@ -1,7 +1,7 @@
 from django.urls import path
 from enrollments.views import EnrollmentFormCreateAPIView, EnrollmentFormRetrieveUpdateAPIView, \
     AddressListCreateAPIView, AddressRetreiveDestroyAPIView, EnrollmentListAPIView, EnrollmentRetrieveAPIView, \
-    SubmittedDocumentsListAPIView
+    SubmittedDocumentsListCreateAPIView
 
 urlpatterns = [
     path("editions/<int:edition_pk>/",
@@ -23,6 +23,6 @@ urlpatterns = [
          EnrollmentRetrieveAPIView.as_view(),
          name="enrollment-retrieve"),
     path("<int:enrollment_pk>/documents/",
-         SubmittedDocumentsListAPIView.as_view(),
+         SubmittedDocumentsListCreateAPIView.as_view(),
          name="submitted-documents-list"),
 ]

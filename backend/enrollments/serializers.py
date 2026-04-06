@@ -1,3 +1,4 @@
+from datetime import date
 from random import choices
 
 from rest_framework import serializers
@@ -58,6 +59,12 @@ class FormDataSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         return form_data_validate(attrs)
 
+    @staticmethod
+    def validate_birth_date(value):
+        if value and value > date.today():
+            raise serializers.ValidationError("Birth date cannot be in the future")
+        return value
+
     def create(self, validated_data):
         validated_data.pop("action")
         validated_data.pop("files", [])
@@ -104,5 +111,5 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 class SubmittedDocumentsListCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmittedDocument
-        exclude = ('id', 'enrollment')
-        read_only = ('status', 'submitted_date')
+        exclude = ('enrollment', )
+        read_only = ('id', 'status', 'submitted_date')

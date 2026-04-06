@@ -25,8 +25,7 @@ def create_enrollment_form(edition_id, user, serializer):
             enrollment = Enrollment.objects.create(user=user,
                                                    studies_edition_id=edition_id,
                                                    status=Enrollment.Status.DRAFT)
-            create_form_files(enrollment.id, serializer)
-            serializer.save(enrollment=enrollment)
+            save_form(serializer, enrollment)
     except IntegrityError:
         raise UserAlreadyEnrolledException()
 
@@ -38,12 +37,15 @@ def update_enrollment_form(edition_id, user, serializer):
         enrollment = (Enrollment.objects
                         .select_for_update()
                         .get(user=user, studies_edition_id=edition_id))
-
-        create_form_files(enrollment.id, serializer)
-        serializer.save(enrollment=enrollment)
+        save_form(serializer, enrollment)
 
     if is_enrolling_form(serializer):
         enroll(edition_id, enrollment.id)
+
+def save_form(serializer, enrollment):
+    serializer.is_valid(raise_exception=True)
+    serializer.save(enrollment=enrollment)
+    create_form_files(enrollment.id, serializer)
 
 def enroll(edition_id, enrollment_id):
     with transaction.atomic():
