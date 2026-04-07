@@ -6,9 +6,9 @@ from rest_framework.response import Response
 
 from users.permissions import IsObjectOwner
 from . import services
-from .models import Enrollment, FormData, Address, SubmittedDocument
+from .models import Enrollment, FormData, Address, SubmittedDocument, Fees
 from .serializers import AdminEnrollmentSerializer, FormDataSerializer, \
-    AddressSerializer, EnrollmentSerializer, SubmittedDocumentsListCreateSerializer
+    AddressSerializer, EnrollmentSerializer, SubmittedDocumentsListCreateSerializer, FeesSerializer
 from .services import get_enrollable_edition
 
 
@@ -97,6 +97,17 @@ class SubmittedDocumentsListCreateAPIView(generics.ListCreateAPIView):
         )
 
         serializer.save(enrollment_id=self.kwargs['enrollment_pk'])
+
+class FeesListAPIView(generics.ListAPIView):
+    serializer_class = FeesSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Fees.objects.filter(
+            enrollment_id=self.kwargs['enrollment_pk'],
+            enrollment__user=self.request.user
+        ).prefetch_related('payments')
+
 
 ## ADMIN
 

@@ -4,7 +4,7 @@ from random import choices
 from rest_framework import serializers
 
 from studies.serializers import StudiesEditionListSerializer
-from .models import Enrollment, Fees, SubmittedDocument, FormData, Address
+from .models import Enrollment, Fees, Payments, SubmittedDocument, FormData, Address
 
 
 class AdminEnrollmentSerializer(serializers.ModelSerializer):
@@ -113,3 +113,17 @@ class SubmittedDocumentsListCreateSerializer(serializers.ModelSerializer):
         model = SubmittedDocument
         exclude = ('enrollment', )
         read_only = ('id', 'status', 'submitted_date')
+
+
+class PaymentsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payments
+        fields = ('id', 'payment_method', 'reference_number', 'status')
+
+
+class FeesSerializer(serializers.ModelSerializer):
+    payments = PaymentsSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Fees
+        fields = ('id', 'title', 'amount', 'due_date', 'issued_date', 'paid_date', 'payments')
