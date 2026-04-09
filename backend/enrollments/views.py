@@ -8,7 +8,8 @@ from users.permissions import IsObjectOwner
 from . import services
 from .models import Enrollment, FormData, Address, SubmittedDocument, Fees
 from .serializers import AdminEnrollmentSerializer, FormDataSerializer, \
-    AddressSerializer, EnrollmentSerializer, SubmittedDocumentsListCreateSerializer, FeesSerializer
+    AddressSerializer, EnrollmentSerializer, ActiveEnrollmentSerializer, \
+    SubmittedDocumentsListCreateSerializer, FeesSerializer
 from .services import get_enrollable_edition
 
 
@@ -69,6 +70,15 @@ class EnrollmentListAPIView(generics.ListAPIView):
             user=self.request.user
         )
 
+class ActiveEnrollmentListAPIView(generics.ListAPIView):
+    serializer_class = ActiveEnrollmentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Enrollment.objects.filter(
+            user=self.request.user
+        ).exclude(status=Enrollment.Status.EXPELLED)
+
 class EnrollmentRetrieveAPIView(generics.RetrieveAPIView):
     serializer_class = EnrollmentSerializer
     permission_classes = [IsAuthenticated, IsObjectOwner]
@@ -97,6 +107,19 @@ class SubmittedDocumentsListCreateAPIView(generics.ListCreateAPIView):
         )
 
         serializer.save(enrollment_id=self.kwargs['enrollment_pk'])
+
+class EnrollmentRecruitmentEndDateAPIView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, enrollment_pk):
+        enrollment = get_object_or_404(
+            Enrollment,
+            pk=enrollment_pk,
+            user=request.user
+        )
+        return Response({
+            'recruitment_end_date': enrollment.studies_edition.recruitment_end_date
+        })
 
 class FeesListAPIView(generics.ListAPIView):
     serializer_class = FeesSerializer

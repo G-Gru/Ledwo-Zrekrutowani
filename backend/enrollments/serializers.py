@@ -3,6 +3,7 @@ from random import choices
 
 from rest_framework import serializers
 
+from studies.models import StudiesEdition
 from studies.serializers import StudiesEditionListSerializer
 from .models import Enrollment, Fees, Payments, SubmittedDocument, FormData, Address
 
@@ -102,6 +103,22 @@ class AddressSerializer(serializers.ModelSerializer):
 
 class EnrollmentSerializer(serializers.ModelSerializer):
     studies_edition = StudiesEditionListSerializer(read_only=True)
+
+    class Meta:
+        model = Enrollment
+        exclude = ('user', )
+
+
+class StudiesEditionForCandidateSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='studies.name', read_only=True)
+
+    class Meta:
+        model = StudiesEdition
+        fields = ('id', 'name', 'price', 'start_date', 'end_date', 'recruitment_end_date', 'status')
+
+
+class ActiveEnrollmentSerializer(serializers.ModelSerializer):
+    studies_edition = StudiesEditionForCandidateSerializer(read_only=True)
 
     class Meta:
         model = Enrollment
