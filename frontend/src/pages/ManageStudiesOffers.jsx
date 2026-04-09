@@ -101,7 +101,7 @@ const emptyEditionForm = {
 };
 
 const emptyStaffForm = {
-  user_id: '',
+  user_email: '',
   role: 'ADMINISTRATIVE_COORDINATOR'
 };
 
@@ -395,7 +395,7 @@ export default function ManageStudiesOffers() {
 
     try {
       const payload = {
-        user_id: Number(staffFormData.user_id),
+        user_email: staffFormData.user_email,
         role: staffFormData.role
       };
 
@@ -938,13 +938,13 @@ export default function ManageStudiesOffers() {
                 <form onSubmit={handleStaffSubmit} className="form-container" style={{ marginTop: '1rem' }}>
                   <div className="form-row">
                     <div className="form-group">
-                      <label htmlFor="staff_user_id">ID uzytkownika *</label>
+                      <label htmlFor="staff_user_email">E-mail pracownika *</label>
                       <input
-                        type="number"
-                        id="staff_user_id"
-                        name="user_id"
-                        min="1"
-                        value={staffFormData.user_id}
+                        type="email"
+                        id="staff_user_email"
+                        name="user_email"
+                        placeholder="pracownik@agh.edu.pl"
+                        value={staffFormData.user_email}
                         onChange={handleStaffChange}
                         required
                       />

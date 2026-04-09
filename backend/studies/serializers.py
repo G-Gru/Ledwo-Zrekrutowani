@@ -80,8 +80,9 @@ class StudiesEditionDetailsSerializer(serializers.ModelSerializer):
 
 
 class StudiesEditionStaffWriteSerializer(serializers.ModelSerializer):
-    user_id = serializers.PrimaryKeyRelatedField(
+    user_email = serializers.SlugRelatedField(
         source='user',
+        slug_field='email',
         queryset=User.objects.all()
     )
 

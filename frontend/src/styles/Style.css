@@ -200,6 +200,37 @@ p {
   margin: 0 auto;
 }
 
+.studies-page-bg {
+  position: relative;
+  min-height: calc(100vh - var(--header-height));
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.studies-page-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 5, 25, 0.68);
+  z-index: 0;
+}
+
+.studies-page-bg > .page-layout {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+.study-card-image {
+  height: 155px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px 12px 0 0;
+  flex-shrink: 0;
+}
+
 .study-card {
   min-height: 230px;
 }
