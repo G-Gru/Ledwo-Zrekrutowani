@@ -7,8 +7,8 @@ export default function Register() {
   const navigate = useNavigate();
   const { handleRegister } = useAuth();
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    first_name: "",
+    last_name: "",
     email: "",
     phone: "",
     password: "",
@@ -81,23 +81,23 @@ export default function Register() {
           <div className="section-title">Dane osobowe</div>
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="firstName">Imię</label>
+              <label htmlFor="first_name">Imię</label>
               <input
-                id="firstName"
-                name="firstName"
+                id="first_name"
+                name="first_name"
                 autoComplete="given-name"
-                value={formData.firstName}
+                value={formData.first_name}
                 onChange={handleChange}
                 required
               />
             </div>
             <div className="form-group">
-              <label htmlFor="lastName">Nazwisko</label>
+              <label htmlFor="last_name">Nazwisko</label>
               <input
-                id="lastName"
-                name="lastName"
+                id="last_name"
+                name="last_name"
                 autoComplete="family-name"
-                value={formData.lastName}
+                value={formData.last_name}
                 onChange={handleChange}
                 required
               />
