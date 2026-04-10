@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, status
+from rest_framework import generics, status, views
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -33,7 +33,7 @@ class PaymentUpcomingListAPIView(generics.ListAPIView):
                 .order_by('due_date'))
 
 
-class PayFeeAPIView(generics.GenericAPIView):
+class PayFeeAPIView(views.APIView):
     permission_classes = [IsAuthenticated, IsStudent]
 
     def post(self, request, fee_pk):

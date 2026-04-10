@@ -1,8 +1,9 @@
 from datetime import date, timedelta
 
 from django.core.management.base import BaseCommand
-from rest_framework.fields import empty
 
+from enrollments.models import Enrollment, Address, FormData
+from payments.models import Fees, Payments, PaymentsHistory
 from studies.models import Studies, StudiesEdition, StudiesEditionStaff
 from users.models import User, Employee
 
@@ -74,3 +75,107 @@ class Command(BaseCommand):
             StudiesEditionStaff(studies_edition=editions[2], user=finance, role='FINANCE_COORDINATOR'),
         ]
         StudiesEditionStaff.objects.bulk_create(staff)
+
+        # Enrollment dla student1 w edycji "Systemy ERP" (ACTIVE)
+        student1 = User.objects.get(email="student1@gmail.com")
+        active_edition = editions[1]  # Systemy ERP, ACTIVE
+
+        address = Address.objects.create(
+            user=student1,
+            street="Marszałkowska",
+            house_number="10",
+            city="Warszawa",
+            country="Polska",
+            postal_code="00-001",
+        )
+
+        enrollment = Enrollment.objects.create(
+            user=student1,
+            studies_edition=active_edition,
+            status=Enrollment.Status.CANDIDATE,
+            enrollment_date=date.today(),
+        )
+
+        FormData.objects.create(
+            enrollment=enrollment,
+            first_name="Student",
+            last_name="Pierwszy",
+            family_name="Pierwszy",
+            academic_title="mgr",
+            birth_date=date(1995, 5, 15),
+            birth_place="Warszawa",
+            pesel="95051512345",
+            citizenship="polskie",
+            residential_address=address,
+            registered_address=address,
+            email="student1@gmail.com",
+            phone="123456789",
+            education="wyższe",
+            education_country="Polska",
+        )
+
+        # Nieopłacona opłata
+        unpaid_fee = Fees.objects.create(
+            enrollment=enrollment,
+            title=f"Opłata za {active_edition.studies.name}",
+            amount=active_edition.price,
+            due_date=active_edition.start_date,
+        )
+
+        # Student2 — STUDENT z opłaconą płatnością
+        student2 = User.objects.get(email="student2@gmail.com")
+
+        address2 = Address.objects.create(
+            user=student2,
+            street="Krakowska",
+            house_number="5",
+            city="Kraków",
+            country="Polska",
+            postal_code="30-001",
+        )
+
+        enrollment2 = Enrollment.objects.create(
+            user=student2,
+            studies_edition=active_edition,
+            status=Enrollment.Status.STUDENT,
+            enrollment_date=date.today() - timedelta(days=5),
+        )
+
+        FormData.objects.create(
+            enrollment=enrollment2,
+            first_name="Student",
+            last_name="Drugi",
+            family_name="Drugi",
+            academic_title="inż",
+            birth_date=date(1993, 3, 20),
+            birth_place="Kraków",
+            pesel="93032012345",
+            citizenship="polskie",
+            residential_address=address2,
+            registered_address=address2,
+            email="student2@gmail.com",
+            phone="987654321",
+            education="wyższe",
+            education_country="Polska",
+        )
+
+        paid_fee = Fees.objects.create(
+            enrollment=enrollment2,
+            title=f"Opłata za {active_edition.studies.name}",
+            amount=active_edition.price,
+            due_date=active_edition.start_date,
+            paid_date=date.today() - timedelta(days=3),
+        )
+
+        payment = Payments.objects.create(
+            fee=paid_fee,
+            payment_method="MOCK",
+            reference_number=67,
+            status="COMPLETED",
+        )
+
+        PaymentsHistory.objects.create(
+            payment=payment,
+            previous_status=None,
+            new_status="COMPLETED",
+        )
