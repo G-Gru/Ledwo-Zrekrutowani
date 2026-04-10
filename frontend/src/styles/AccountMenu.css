@@ -1,6 +1,6 @@
 #account-page-column-left {
   background-color: #f2efee;
-  width: 25%;
+  max-width: 25%;
   min-width: 250px;
   padding: 20px 0;
 }
@@ -36,7 +36,6 @@
   color: #b08d57;
 }
 
-/* Wcięcie dla podsekcji */
 .menu-item.indent {
   padding-left: 45px;
 }

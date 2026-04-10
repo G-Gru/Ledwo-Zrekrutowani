@@ -14,12 +14,13 @@
 .single-application-card {
     padding: 10px;
     margin: 15px;
-    background-color: var(--surface-container-high);
+    background-color: var(--surface-container-low);
     border: none;
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 10px;
+    border: 2px lightgrey dashed;
 }
 .single-application-card p {
     color: var(--text-main);
@@ -35,15 +36,14 @@
 .single-application-card.active {
     border-left: 4px solid var(--primary);
     background: var(--surface-tint);
+    border: 2px var(--primary) dashed;
 }
 
-/* Kontener dla list statusów */
 .status-badges-container {
     display: flex;
     flex-wrap: wrap;
 }
 
-/* Same pigułki statusów */
 .application-status {
     padding: 4px 10px;
     border-radius: 12px;
@@ -61,6 +61,7 @@
 
 /* Układ prawej kolumny */
 #account-page-column-right {
+    right: 10px;
     display: flex;
     flex-direction: column;
     gap: 20px;

@@ -8,21 +8,14 @@
     overflow-y: auto;
 }
 
-.payments-page-header {
-    margin-bottom: 40px;
-    margin-left: 15%;
-}
-
-/* Layout Siatki dla górnych kart */
 .payments-grid-layout {
-    display: grid;
-    grid-template-columns: 350px 1fr; /* Karta sumy stała, tabela elastyczna */
+    display: flex;
+    flex-direction: row;
     gap: 30px;
     width: 100%;
     margin-bottom: 50px;
 }
 
-/* Karta Podsumowania */
 .summary-wide-card {
     background-color: var(--surface-container-lowest);
     display: flex;
@@ -30,12 +23,12 @@
     justify-content: space-between;
     padding: 30px !important;
     position: relative;
-    border: 1px solid var(--surface-border);
+    max-width: 33%;
 }
 
 .main-balance {
-    font-size: 1.75rem;
-    font-weight: 900;
+    font-size: 1.5rem;
+    font-weight: 700;
     margin: 15px 0;
     color: var(--on-surface);
 }
@@ -50,8 +43,8 @@
 .deadline-text {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
+    gap: 10px;
+    font-size: 0.75rem;
     color: var(--secondary);
 }
 
@@ -69,19 +62,8 @@
     border-radius: 8px;
 }
 
-.watermark-icon {
-    position: absolute;
-    bottom: -10px;
-    right: -10px;
-    font-size: 120px !important;
-    opacity: 0.04;
-    pointer-events: none;
-}
-
-/* Tabela */
 .active-table-card {
     padding: 30px !important;
-    width: 100%;
     box-sizing: border-box;
 }
 
@@ -91,28 +73,28 @@
     text-align: center;
 }
 
-.modern-table {
+.upcoming-payments-table {
     width: 100%;
-    border-collapse: collapse;
+    font-size: 0.6rem;
 }
 
-.modern-table th {
-    text-align: left;
-    font-size: 0.7rem;
+.upcoming-payments-table th {
+    text-align: center;
+    font-size: 0.5rem;
     color: var(--secondary);
-    padding: 12px;
+    /* padding: 12px; */
     border-bottom: 2px solid var(--surface-container);
 }
 
-.modern-table td {
-    padding: 20px 12px;
+.upcoming-payments-table td {
+    /* padding: 20px 12px; */
     border-bottom: 1px solid var(--surface-container-low);
 }
 
 .badge {
-    padding: 5px 12px;
+    padding: 2px 7px;
     border-radius: 20px;
-    font-size: 0.7rem;
+    font-size: 0.5rem;
     font-weight: 800;
     text-transform: uppercase;
 }
@@ -124,11 +106,10 @@
     background: transparent;
     border: 2px solid var(--primary-container);
     color: var(--primary);
-    padding: 6px 15px;
-    font-size: 0.75rem;
+    padding: 3px 10px;
+    font-size: 0.5rem;
 }
 
-/* Historia - Szeroka */
 .history-section-wide {
     width: 100%;
 }
@@ -212,3 +193,33 @@
 
 .bold-text { font-weight: 700; }
 .error-text { color: var(--error); font-weight: 800; }
+
+.payment-methods-panel {
+    display: flex;
+    width: 100%;
+    margin-bottom: 40px;
+    padding: 30px !important;
+    animation: slideDown 0.3s ease-out;
+}
+
+.method-title {
+    text-align: center;
+}
+
+.payment-divider {
+    background-color: var(--surface-container-high);
+    width: 3px;
+}
+
+.copy-box {
+    background-color: var(--surface-container-low);
+    padding: 3px;
+    border-radius: 5px;
+}
+
+.payment-method-column.left {
+    margin-right: 20px;
+}
+.payment-method-column.right {
+    margin-left: 20px;
+}

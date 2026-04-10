@@ -5,13 +5,14 @@ import AccountPageLeftMenu from '../../components/AccountPageLeftMenu'
 import '../../styles/MyApplications.css'
 import Timeline from '../../components/Timeline';
 import { serverApi } from '../../services/serverApi';
+import LoginRedirectPage from '../../components/LoginRedirectPage';
 
 function getStatusColorClass(statusText) {
     const text = statusText.toLowerCase();
     if (text.includes("brak zapłaty")) return "status-red";
     if (text.includes("oczekuje wypełnienia")) return "status-yellow";
     if (text.includes("odpowiedź")) return "status-blue";
-    return "status-grey"; // domyślny
+    return "status-grey";
 }
 
 function getIconFromDocumentType(docType) {
@@ -20,12 +21,21 @@ function getIconFromDocumentType(docType) {
 
 export default function MyApplications({}) {
     const [activeCardId, setActiveCardId] = React.useState(null);
+    
     const [unfinishedApplications, setUnfinishedApplications] = useState([])
+    const [userHasUnfinishedApplications, setUserHasUnfinishedApplications] = useState(false)
+    
     const [activeApplications, setActiveApplications] = useState([])
+    const [userHasActiveApplications, setUserHasActiveApplications] = useState(false)
+
+    const [userLoggedIn, setUserLoggedIn] = useState(false)
     
     const allApps = [...unfinishedApplications, ...activeApplications];
-    const activeApp = allApps.find(app => app.id === activeCardId);
+    const activeApp = activeCardId !== null && allApps[activeCardId] ? allApps[activeCardId] : null;
     const activeSchedule = activeApp ? activeApp.schedule : [];
+
+    const [error, setError] = useState("");
+
 
     /* Karta na wyswietlenie jednego wniosku */
     const ApplicationCard = ({ 
@@ -35,7 +45,7 @@ export default function MyApplications({}) {
 
         useEffect(() => {
             if (type === "rekr" && dataId !== null) {
-                const data = serverApi.getApplicationDataFromId(dataId);
+                const data = serverApi.getCourseInfo(dataId);
                 setAppData(data);
             }
         }, [type, dataId]);
@@ -75,64 +85,107 @@ export default function MyApplications({}) {
     /* Pobieranie wnioskow z servera */
     // dane: application { name: "", type: "", status: [""],  schedule: [name: "", startDate: "", endDate: "", flag: ""] }
     useEffect(() => {
-        // Uwaga: poprawiona składnia useEffect
-        setUnfinishedApplications(serverApi.getUserUnfinishedApplications());
-        setActiveApplications(serverApi.getUserActiveApplications());
+        // check user is logged in
+        let userToken = localStorage.getItem("user-access-token");
+
+        if (userToken == null) setUserLoggedIn(false)
+        else {
+            setUserLoggedIn(true)
+
+            async function fetchApplicationData() {
+                /* get unfinished applications */
+                let unfinishedAppsResponse = await serverApi.getUserUnfinishedApplications(userToken)
+                if (unfinishedAppsResponse != null) {
+                    setUserHasUnfinishedApplications(unfinishedAppsResponse.applications.length > 0)
+                    setUnfinishedApplications(unfinishedAppsResponse.applications)
+                    if (unfinishedAppsResponse["error"]) setError(unfinishedAppsResponse["errorMsg"]);
+                }
+                
+                /* get active applications */
+                let activeAppsResponse = await serverApi.getUserActiveApplications(userToken)
+                if (activeAppsResponse != null && activeAppsResponse.applications) {
+                    setUserHasActiveApplications(activeAppsResponse.applications.length > 0)
+                    setActiveApplications(activeAppsResponse.applications)
+                    if (activeAppsResponse["error"]) setError(activeAppsResponse["errorMsg"]);
+                }
+            }
+            fetchApplicationData()
+        }
+
     }, []);
 
     return (
-        <div className='account-page-layout'>
-            <AccountPageLeftMenu/>
+        <div>
+        { !userLoggedIn ? <LoginRedirectPage /> : (
+            <div className='account-page-layout'>
+                <AccountPageLeftMenu/>
 
-            <div className='account-column' id='account-page-column-middle'>
-                <div className='page-title'>Moje Wnioski</div>
-                <p>Zarządzaj swoimi procesami rekrutacyjnymi i monitoruj statusy dokumentów w jednym miejscu.</p>
+                <div className='account-column' id='account-page-column-middle'>
+                    {/* error msg */}
+                    {error && <div className="error-message">{error}</div>}
 
-                {/* Dokumenty niewysłane */}
-                <div className='bg-panel application-card'>
-                    <div className='section-title application-section-title'>Niewysłane</div>
-                    {unfinishedApplications.map((app, i) => (
-                        <ApplicationCard 
-                            key={i}
-                            id={i} 
-                            documentName={app.name}
-                            type={app.type}
-                            dataId={app.dataId}
-                            statuses={app.status}
-                            unfinished={true} 
-                        />
-                    ))}
+                    {/* Title */}
+                    <div className='page-title'>Moje Wnioski</div>
+                    <p style={{marginLeft: '30px', marginTop: 0}}>Zarządzaj swoimi procesami rekrutacyjnymi i monitoruj statusy dokumentów w jednym miejscu.</p>
+
+                    {/* Dokumenty niewysłane */}
+                    <div className='bg-panel application-card'>
+                        <div className='section-title application-section-title'>Niewysłane</div>
+                        
+                        { !userHasUnfinishedApplications ? (
+                            <p> Nie masz żadnych niewypełnionych wniosków </p>
+                        ) : (
+                            unfinishedApplications.map((app, i) => (
+                                <ApplicationCard 
+                                    key={i}
+                                    id={i} 
+                                    documentName={app.name}
+                                    type={app.type}
+                                    dataId={app.studies_edition}
+                                    statuses={app.status}
+                                    unfinished={true} 
+                                />
+                            ))
+                        )
+                        }
+                    </div>
+                    
+                    {/* Wnioski aktywne */}
+                    <div className='bg-panel application-card'>
+                        <div className='section-title application-section-title'>Aktywne wnioski</div>
+                        
+                        { !userHasActiveApplications ? (
+                            <p> Nie masz żadnych aktywnych wniosków </p>
+                        ) : (
+                            activeApplications.map((app, i) => (
+                                <ApplicationCard 
+                                    key={i + unfinishedApplications.length}
+                                    id={i + unfinishedApplications.length} 
+                                    documentName={app.name}
+                                    type={app.type}
+                                    dataId={app.studies_edition}
+                                    statuses={app.status}
+                                />
+                            ))
+                        )}   
+                    </div>
                 </div>
-                
-                {/* Wnioski aktywne */}
-                <div className='bg-panel application-card'>
-                    <div className='section-title application-section-title'>Aktywne wnioski</div>
-                    {activeApplications.map((app, i) => (
-                        <ApplicationCard 
-                            key={i + unfinishedApplications.length}
-                            id={i + unfinishedApplications.length} 
-                            documentName={app.name}
-                            type={app.type}
-                            dataId={app.dataId}
-                            statuses={app.status}
-                        />
-                    ))}
+
+                {/* Prawa kolumna - HARMONOGRAM */}
+                <div className='account-column' id='account-page-column-right'>
+                    {/* Przekazujemy harmonogram zależny od tego, która karta jest "active" */}
+                    <Timeline schedule={activeSchedule}/>
+
+                    <div className="right-panel help-panel">
+                        <h3 className="help-title">Potrzebujesz pomocy?</h3>
+                        <a href="#faq" className="help-link">
+                            <span>FAQ</span>
+                            <span className="material-symbols-outlined icon-small">open_in_new</span>
+                        </a>
+                    </div>
                 </div>
             </div>
-
-            {/* Prawa kolumna - HARMONOGRAM */}
-            <div className='account-column' id='account-page-column-right'>
-                {/* Przekazujemy harmonogram zależny od tego, która karta jest "active" */}
-                <Timeline schedule={activeSchedule}/>
-
-                <div className="right-panel help-panel">
-                    <h3 className="help-title">Potrzebujesz pomocy?</h3>
-                    <a href="#faq" className="help-link">
-                        <span>FAQ</span>
-                        <span className="material-symbols-outlined icon-small">open_in_new</span>
-                    </a>
-                </div>
-            </div>
+        )}
         </div>
-    );
+    )
 }

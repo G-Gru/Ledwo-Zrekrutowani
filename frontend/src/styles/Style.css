@@ -713,3 +713,13 @@ button:hover {
   width: 25%;
   background-color: var(--background)
 }
+
+.error-message {
+  background-color: #fee;
+  color: #c33;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  z-index: 10;
+}

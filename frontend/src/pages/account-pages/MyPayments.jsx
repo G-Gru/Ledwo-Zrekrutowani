@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import AccountPageLeftMenu from '../../components/AccountPageLeftMenu';
 import { serverApi } from '../../services/serverApi';
 import '../../styles/Payments.css';
+import DocumentUploadCard from '../../components/DocumentUploadCard'
 
 export default function Payments() {
     const [summary, setSummary] = useState({ totalToPay: '0.00', deadline: '' });
     const [activePayments, setActivePayments] = useState([]);
     const [history, setHistory] = useState([]);
+    // Stan do pokazywania panelu płatności
+    const [showPaymentOptions, setShowPaymentOptions] = useState(false);
 
     useEffect(() => {
-        // Pobieranie danych z Twojego serverApi
         setSummary(serverApi.getUserPaymentsSummary());
         setActivePayments(serverApi.getUserActivePayments());
         setHistory(serverApi.getUserPaymentsHistory());
@@ -19,16 +21,14 @@ export default function Payments() {
         <div className='account-page-layout'>
             <AccountPageLeftMenu />
 
-            {/* JEDEN GŁÓWNY OBSZAR ZAMIAST DWÓCH KOLUMN */}
             <div className='payments-main-container'>
-                
                 <header className='payments-page-header'>
                     <div className='page-title'>Płatności</div>
-                    <p className='page-subtitle'>Zarządzaj swoją dokumentacją finansową i monitoruj statusy opłat w jednym miejscu.</p>
+                    <p className='page-subtitle' style={{marginBottom: '50px'}}>Zarządzaj swoją dokumentacją finansową i monitoruj statusy opłat w jednym miejscu.</p>
                 </header>
 
                 <div className='payments-grid-layout'>
-                    {/* Karta Podsumowania (Lewa strona góry) */}
+                    {/* Karta Podsumowania */}
                     <div className='bg-panel summary-wide-card'>
                         <div className='summary-content'>
                             <span className='label-tiny'>DO ZAPŁATY ŁĄCZNIE</span>
@@ -38,16 +38,19 @@ export default function Payments() {
                                 Najbliższy termin: <strong>{summary.deadline}</strong>
                             </p>
                         </div>
-                        <button className='btn-primary-large'>
+                        <button 
+                            className={`btn-primary-large ${showPaymentOptions ? 'active-btn' : ''}`}
+                            onClick={() => setShowPaymentOptions(!showPaymentOptions)}
+                        >
                             <span className="material-symbols-outlined">payments</span>
-                            Zapłać za Wszystko
+                            {showPaymentOptions ? 'Ukryj opcje płatności' : 'Zapłać za Wszystko'}
                         </button>
                     </div>
 
-                    {/* Tabela Bieżących Zobowiązań (Prawa strona góry) */}
+                    {/* Tabela Bieżących Zobowiązań */}
                     <div className='bg-panel active-table-card'>
                         <h3 className='panel-h3'>Bieżące zobowiązania</h3>
-                        <table className='modern-table'>
+                        <table className='upcoming-payments-table'>
                             <thead>
                                 <tr>
                                     <th>PRZEDMIOT</th>
@@ -78,18 +81,48 @@ export default function Payments() {
                     </div>
                 </div>
 
-                {/* Sekcja Historii (Pełna szerokość na dole) */}
+                {/* Opcje płatności */}
+                {showPaymentOptions && (
+                    <div className='bg-panel payment-methods-panel'>
+                        <div className='payment-method-column left'>
+                            <h4 className='method-title'>Przelew tradycyjny</h4>
+                            <div className='transfer-details'>
+                                <p><strong>Odbiorca:</strong> <span className='copy-box'> AGH </span> </p>
+                                <p><strong>Nr konta:</strong> <span className='copy-box'> XXXXXXXXXXXXx XXXXXXXXXxx </span></p>
+                                <p><strong>Tytuł:</strong> <span className='copy-box'> Opłata - Jan Kowalski - ID 4432 </span></p>
+                                <p className='transfer-hint'>* Pamiętaj o dokładnym przepisaniu tytułu przelewu. </p>
+
+                                <DocumentUploadCard 
+                                    id="payment-confirm"
+                                    title="Potwierdzenie przelewu"
+                                    formats="PDF, JPG"
+                                    maxSize="5MB"
+                                    icon="description"
+                                    onFileSelect={null}
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className='payment-divider'></div>
+
+                        <div className='payment-method-column right'>
+                            <h4 className='method-title'>Płatność Online</h4>
+                            <p className='method-desc'>Szybka płatność kartą, BLIK lub przelewem natychmiastowym.</p>
+                            <button className='btn-online-pay'>
+                                PRZEJDŹ DO PŁATNOŚCI
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Sekcja Historii */}
                 <div className='history-section-wide'>
                     <div className='history-top-bar'>
-                        <h2 style={{textAlign: 'center'}}>Historia transakcji</h2>
-                        {/* <div className='filter-group'>
-                            <button className='icon-only-btn'><span className="material-symbols-outlined">filter_alt</span></button>
-                            <button className='icon-only-btn'><span className="material-symbols-outlined">download</span></button>
-                        </div> */}
+                        <h2 className='history-title'>Historia transakcji</h2>
                     </div>
 
                     <div className='bg-panel history-list-container'>
-                        {history.map((item, idx) => (
+                        {history.map((item) => (
                             <div key={item.id} className='history-row-item'>
                                 <div className='row-main-info'>
                                     <div className='status-icon-circle'>

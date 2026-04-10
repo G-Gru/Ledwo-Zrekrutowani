@@ -18,8 +18,8 @@ export const login = async (email, password) => {
     });
 
     // zapisz dane uzytkownika podczas sesji - troche niebezpieczne i nie ma czyszczenia ale na razie ok
-    localStorage.setItem('token', response.token);
-    localStorage.setItem('user', JSON.stringify(response.user));
+    localStorage.setItem('user-access-token', response["access"]);
+    localStorage.setItem('user-refresh-token', response["refresh"]);
 
     return response;
   } catch (error) {

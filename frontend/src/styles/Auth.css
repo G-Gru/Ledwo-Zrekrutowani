@@ -22,15 +22,6 @@
   cursor: not-allowed;
 }
 
-.error-message {
-  background-color: #fee;
-  color: #c33;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-}
-
 .auth-link {
   text-align: center;
   color: #7f8c8d;
