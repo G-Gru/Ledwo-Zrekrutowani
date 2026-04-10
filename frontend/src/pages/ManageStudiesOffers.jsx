@@ -101,9 +101,14 @@ const emptyEditionForm = {
 };
 
 const emptyStaffForm = {
-  user_email: '',
+  user_id: '',
   role: 'ADMINISTRATIVE_COORDINATOR'
 };
+
+const sampleUsers = [
+  { id: 1, first_name: 'Anna', last_name: 'Kowalska', email: 'anna.kowalska@agh.edu.pl' },
+  { id: 2, first_name: 'Piotr', last_name: 'Nowak', email: 'piotr.nowak@agh.edu.pl' },
+];
 
 const staffRoleLabels = {
   STUDIES_DIRECTOR: 'Kierownik studiow',
@@ -119,6 +124,7 @@ export default function ManageStudiesOffers() {
   const [selectedEdition, setSelectedEdition] = useState(null);
   const [editionFormData, setEditionFormData] = useState(emptyEditionForm);
   const [editionStaff, setEditionStaff] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [staffFormData, setStaffFormData] = useState(emptyStaffForm);
   const [loadingStudySubmit, setLoadingStudySubmit] = useState(false);
   const [loadingEditionSubmit, setLoadingEditionSubmit] = useState(false);
@@ -258,9 +264,28 @@ export default function ManageStudiesOffers() {
     }
   };
 
+  const fetchAllUsers = async () => {
+    try {
+      const res = await fetch('/auth/users/', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      setAllUsers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.warn('Fetch all users failed, using sample data', err);
+      setAllUsers(sampleUsers);
+    }
+  };
+
   useEffect(() => {
     fetchStudies();
     fetchEditions();
+    fetchAllUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -395,7 +420,7 @@ export default function ManageStudiesOffers() {
 
     try {
       const payload = {
-        user_email: staffFormData.user_email,
+        user_id: Number(staffFormData.user_id),
         role: staffFormData.role
       };
 
@@ -938,16 +963,21 @@ export default function ManageStudiesOffers() {
                 <form onSubmit={handleStaffSubmit} className="form-container" style={{ marginTop: '1rem' }}>
                   <div className="form-row">
                     <div className="form-group">
-                      <label htmlFor="staff_user_email">E-mail pracownika *</label>
-                      <input
-                        type="email"
-                        id="staff_user_email"
-                        name="user_email"
-                        placeholder="pracownik@agh.edu.pl"
-                        value={staffFormData.user_email}
+                      <label htmlFor="staff_user_id">Pracownik *</label>
+                      <select
+                        id="staff_user_id"
+                        name="user_id"
+                        value={staffFormData.user_id}
                         onChange={handleStaffChange}
                         required
-                      />
+                      >
+                        <option value="">Wybierz pracownika</option>
+                        {allUsers.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.first_name} {u.last_name} ({u.email})
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="form-group">
