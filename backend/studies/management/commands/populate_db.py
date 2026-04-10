@@ -1,9 +1,10 @@
 from datetime import date, timedelta
 
 from django.core.management.base import BaseCommand
+from rest_framework.fields import empty
 
 from studies.models import Studies, StudiesEdition, StudiesEditionStaff
-from users.models import User
+from users.models import User, Employee
 
 
 class Command(BaseCommand):
@@ -11,16 +12,24 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         users = [
-            User(email="admin@gmail.com", first_name="admin", last_name="admin", is_staff=True, is_superuser=True, is_active=True),
+            User(email="admin@gmail.com", first_name="admin", last_name="admin", is_staff=True, is_superuser=True, is_employee=True, is_active=True),
             User(email="student1@gmail.com", first_name="student1", last_name="student1"),
             User(email="student2@gmail.com", first_name="student2", last_name="student2"),
-            User(email="finansowy@gmail.com", first_name="finansowy", last_name="finansowy"),
-            User(email="administracyjny@gmail.com", first_name="administracyjny", last_name="administracyjny"),
-            User(email="kierownik@gmail.com", first_name="kierownik", last_name="kierownik"),
+            User(email="finansowy@gmail.com", first_name="finansowy", last_name="finansowy", is_employee=True),
+            User(email="administracyjny@gmail.com", first_name="administracyjny", last_name="administracyjny", is_employee=True),
+            User(email="kierownik@gmail.com", first_name="kierownik", last_name="kierownik", is_employee=True),
         ]
         for user in users:
             user.set_password('admin')
         User.objects.bulk_create(users)
+
+        employees = [
+            Employee(user=users[0]),
+            Employee(user=users[3]),
+            Employee(user=users[4]),
+            Employee(user=users[5]),
+        ]
+        Employee.objects.bulk_create(employees)
 
         studies = [
             Studies(name="Bazy danych", terms_count=3, description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque commodo facilisis orci ut faucibus. Sed posuere ligula nec massa feugiat, in bibendum nisi tincidunt. Nulla facilisi. Nulla facilisi. Praesent iaculis nisi diam, sed tempus erat scelerisque ac. Etiam ac felis enim. Praesent porta tortor mauris, sed tincidunt urna tempor in. Etiam non odio sollicitudin, maximus orci vel, feugiat lacus. Nunc placerat accumsan erat, nec dictum mauris porta a. Maecenas vitae fermentum risus. Nam malesuada dui et nisi commodo iaculis. Aliquam viverra dui sed libero sollicitudin euismod."),

@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from studies.models import Studies, StudiesEdition, StudiesEditionStaff, StudiesDocument
 from users.models import User
-from users.serializers import UserSerializer
+from users.serializers import EmployeeSerializer
 
 
 class StudiesSerializer(serializers.ModelSerializer):
@@ -80,9 +80,8 @@ class StudiesEditionDetailsSerializer(serializers.ModelSerializer):
 
 
 class StudiesEditionStaffWriteSerializer(serializers.ModelSerializer):
-    user_email = serializers.SlugRelatedField(
+    user_id = serializers.PrimaryKeyRelatedField(
         source='user',
-        slug_field='email',
         queryset=User.objects.all()
     )
 
@@ -91,7 +90,7 @@ class StudiesEditionStaffWriteSerializer(serializers.ModelSerializer):
         exclude = ('studies_edition', 'id', 'user')
 
 class StudiesEditionStaffReadSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    user = EmployeeSerializer(read_only=True)
 
     class Meta:
         model = StudiesEditionStaff

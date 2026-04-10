@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from users.permissions import IsObjectOwner
+from users.permissions import IsObjectOwner, IsStudent
 from . import services
 from .models import Enrollment, FormData, Address, SubmittedDocument, Fees
 from .serializers import AdminEnrollmentSerializer, FormDataSerializer, \
@@ -16,7 +16,7 @@ from .services import get_enrollable_edition
 ## PUBLIC
 class EnrollmentFormCreateAPIView(generics.CreateAPIView):
     serializer_class = FormDataSerializer
-    permission_classes = [IsAuthenticated] #todo students only
+    permission_classes = [IsAuthenticated, IsStudent]
 
     def perform_create(self, serializer):
         edition_pk = self.kwargs['edition_pk']
@@ -25,7 +25,7 @@ class EnrollmentFormCreateAPIView(generics.CreateAPIView):
 
 class EnrollmentFormRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = FormDataSerializer
-    permission_classes = [IsAuthenticated]  # todo students only
+    permission_classes = [IsAuthenticated, IsStudent]
 
     def get_object(self):
         edition_pk = self.kwargs['edition_pk']
@@ -41,7 +41,7 @@ class EnrollmentFormRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
 
 class AddressListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = AddressSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsStudent]
 
     def get_queryset(self):
         return Address.objects.filter(
@@ -53,7 +53,7 @@ class AddressListCreateAPIView(generics.ListCreateAPIView):
 
 class AddressRetreiveDestroyAPIView(generics.RetrieveDestroyAPIView):
     serializer_class = AddressSerializer
-    permission_classes = [IsAuthenticated, IsObjectOwner]
+    permission_classes = [IsAuthenticated, IsStudent, IsObjectOwner]
     lookup_url_kwarg = 'address_pk'
 
     def get_queryset(self):
@@ -63,7 +63,7 @@ class AddressRetreiveDestroyAPIView(generics.RetrieveDestroyAPIView):
 
 class EnrollmentListAPIView(generics.ListAPIView):
     serializer_class = EnrollmentSerializer
-    permission_classes = [IsAuthenticated, IsObjectOwner]
+    permission_classes = [IsAuthenticated, IsStudent, IsObjectOwner]
 
     def get_queryset(self):
         return Enrollment.objects.filter(
@@ -72,7 +72,7 @@ class EnrollmentListAPIView(generics.ListAPIView):
 
 class ActiveEnrollmentListAPIView(generics.ListAPIView):
     serializer_class = ActiveEnrollmentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsStudent, IsObjectOwner]
 
     def get_queryset(self):
         return Enrollment.objects.filter(
@@ -81,7 +81,7 @@ class ActiveEnrollmentListAPIView(generics.ListAPIView):
 
 class EnrollmentRetrieveAPIView(generics.RetrieveAPIView):
     serializer_class = EnrollmentSerializer
-    permission_classes = [IsAuthenticated, IsObjectOwner]
+    permission_classes = [IsAuthenticated, IsStudent, IsObjectOwner]
     lookup_url_kwarg = 'enrollment_pk'
 
     def get_queryset(self):
@@ -91,7 +91,7 @@ class EnrollmentRetrieveAPIView(generics.RetrieveAPIView):
 
 class SubmittedDocumentsListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = SubmittedDocumentsListCreateSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsStudent, IsObjectOwner]
 
     def get_queryset(self):
         return SubmittedDocument.objects.filter(
@@ -111,6 +111,7 @@ class SubmittedDocumentsListCreateAPIView(generics.ListCreateAPIView):
 class EnrollmentRecruitmentEndDateAPIView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
 
+    # TODO to działa wgl? + nie wystarczy serializera uzyc?
     def get(self, request, enrollment_pk):
         enrollment = get_object_or_404(
             Enrollment,
