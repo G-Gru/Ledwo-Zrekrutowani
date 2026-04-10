@@ -1,0 +1,44 @@
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+from payments import services
+from payments.models import Fees
+from payments.serializers import FeesWithEditionSerializer
+from users.permissions import IsStudent
+
+
+class PaymentHistoryListAPIView(generics.ListAPIView):
+    serializer_class = FeesWithEditionSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_queryset(self):
+        return (Fees.objects
+                .filter(enrollment__user=self.request.user, paid_date__isnull=False)
+                .select_related('enrollment__studies_edition__studies')
+                .prefetch_related('payments')
+                .order_by('-paid_date'))
+
+
+class PaymentUpcomingListAPIView(generics.ListAPIView):
+    serializer_class = FeesWithEditionSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_queryset(self):
+        return (Fees.objects
+                .filter(enrollment__user=self.request.user, paid_date__isnull=True)
+                .select_related('enrollment__studies_edition__studies')
+                .prefetch_related('payments')
+                .order_by('due_date'))
+
+
+class PayFeeAPIView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def post(self, request, fee_pk):
+        fee = get_object_or_404(Fees, pk=fee_pk, enrollment__user=request.user)
+        if fee.paid_date is not None:
+            return Response({"detail": "Ta opłata została już uregulowana."}, status=status.HTTP_400_BAD_REQUEST)
+        services.pay_fee(fee)
+        return Response({"detail": "Płatność zrealizowana."}, status=status.HTTP_200_OK)

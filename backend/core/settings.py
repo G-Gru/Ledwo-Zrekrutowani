@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "users",
     "studies",
     "enrollments",
+    "payments",
 
     "corsheaders",
 ]

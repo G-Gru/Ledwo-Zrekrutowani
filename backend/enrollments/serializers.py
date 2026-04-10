@@ -1,11 +1,10 @@
 from datetime import date
-from random import choices
 
 from rest_framework import serializers
 
 from studies.models import StudiesEdition
 from studies.serializers import StudiesEditionListSerializer
-from .models import Enrollment, Fees, Payments, SubmittedDocument, FormData, Address
+from .models import Enrollment, SubmittedDocument, FormData, Address
 
 
 class AdminEnrollmentSerializer(serializers.ModelSerializer):
@@ -95,6 +94,13 @@ def form_data_validate(attrs):
 
     return attrs
 
+class EnrollmentRecruitmentEndDateSerializer(serializers.ModelSerializer):
+    recruitment_end_date = serializers.DateTimeField(source='studies_edition.recruitment_end_date', read_only=True)
+
+    class Meta:
+        model = Enrollment
+        fields = ('recruitment_end_date',)
+
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
@@ -130,17 +136,3 @@ class SubmittedDocumentsListCreateSerializer(serializers.ModelSerializer):
         model = SubmittedDocument
         exclude = ('enrollment', )
         read_only = ('id', 'status', 'submitted_date')
-
-
-class PaymentsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Payments
-        fields = ('id', 'payment_method', 'reference_number', 'status')
-
-
-class FeesSerializer(serializers.ModelSerializer):
-    payments = PaymentsSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Fees
-        fields = ('id', 'title', 'amount', 'due_date', 'issued_date', 'paid_date', 'payments')
