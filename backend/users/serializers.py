@@ -1,11 +1,26 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User
+from .models import User, WorkPhoneNumber
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone')
+        fields = ('id', 'email', 'first_name', 'last_name', 'phone', 'is_employee')
+
+class WorkPhoneNumberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkPhoneNumber
+        fields = ('id', 'phone', )
+        read_only_fields = ('id',)
+
+class EmployeeSerializer(serializers.ModelSerializer):
+    academic_title = serializers.CharField(source='employee.academic_title', read_only=True)
+    work_phones = WorkPhoneNumberSerializer(source='employee.work_phones', many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'first_name', 'last_name', 'academic_title', 'work_phones')
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

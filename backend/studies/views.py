@@ -7,7 +7,7 @@ from studies.serializers import StudiesSerializer, StudiesEditionDetailsSerializ
     StudiesEditionListSerializer, StudiesEditionStaffWriteSerializer, \
     StudiesEditionStaffReadSerializer, StudiesDocumentSerializer
 from users.permissions import IsDirectorOrAdministrativeCoordinator, \
-    IsDirectorOrCoordinator
+    IsDirectorOrCoordinator, IsEmployee
 
 
 ## PUBLIC
@@ -80,7 +80,7 @@ class StudiesEditionListCreateAdminAPIView(generics.ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
-            return [IsDirectorOrCoordinator()]
+            return [IsEmployee(), IsDirectorOrCoordinator()]
         return [IsAdminUser()]
 
 
@@ -94,8 +94,8 @@ class StudiesEditionRetrieveUpdateDestroyAdminAPIView(generics.RetrieveUpdateAPI
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
-            return [IsDirectorOrCoordinator()]
-        return [IsDirectorOrAdministrativeCoordinator()]
+            return [IsEmployee(), IsDirectorOrCoordinator()]
+        return [IsEmployee(), IsDirectorOrAdministrativeCoordinator()]
 
 
 class StudiesEditionStaffListCreateAdminAPIView(generics.ListCreateAPIView):
@@ -115,8 +115,8 @@ class StudiesEditionStaffListCreateAdminAPIView(generics.ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
-            return [IsDirectorOrCoordinator()]
-        return [IsDirectorOrAdministrativeCoordinator()]
+            return [IsEmployee(), IsDirectorOrCoordinator()]
+        return [IsEmployee(), IsDirectorOrAdministrativeCoordinator()]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -126,7 +126,7 @@ class StudiesEditionStaffListCreateAdminAPIView(generics.ListCreateAPIView):
 
 class StudiesEditionStaffDestroyAdminAPIView(generics.DestroyAPIView):
     lookup_url_kwarg = "staff_pk"
-    permission_classes = [IsDirectorOrAdministrativeCoordinator]
+    permission_classes = [IsEmployee, IsDirectorOrAdministrativeCoordinator]
 
     def get_queryset(self):
         pk = self.kwargs['edition_pk']
@@ -153,13 +153,13 @@ class StudiesDocumentsListCreateAdminAPIView(generics.ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
-            return [IsDirectorOrCoordinator()]
-        return [IsDirectorOrAdministrativeCoordinator()]
+            return [IsEmployee(), IsDirectorOrCoordinator()]
+        return [IsEmployee(), IsDirectorOrAdministrativeCoordinator()]
 
 
 class StudiesDocumentsDestroyAdminAPIView(generics.DestroyAPIView):
     lookup_url_kwarg = "documents_pk"
-    permission_classes = [IsDirectorOrAdministrativeCoordinator]
+    permission_classes = [IsEmployee, IsDirectorOrAdministrativeCoordinator]
 
     def get_queryset(self):
         pk = self.kwargs['edition_pk']
