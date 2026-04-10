@@ -75,3 +75,15 @@
 .btn-secondary {
   color: #ffffff;
 }
+
+.profile-icon {
+  /* text-align: center;
+  justify-self: center;
+  justify-content: center;
+  align-self: center; */
+  transform: translate(+10%,0); /* nie rozumiem czemu to jest potrzebne zeby bylo na srodku */
+  
+  border: 1px lightgrey solid;
+  padding: 2px;
+  border-radius: 50%;
+}

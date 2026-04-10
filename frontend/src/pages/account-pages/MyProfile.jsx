@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import AccountPageLeftMenu from '../../components/AccountPageLeftMenu'
+import { logout } from '../../services/authService';
 
 export default function Profile({}) {
 
@@ -13,6 +14,10 @@ export default function Profile({}) {
             <div className='page-title'>
                 Mój Profil
             </div>
+
+            <button onClick={() => logout()}> 
+                Wyloguj się
+            </button>
         </div>
 
         <div className='account-column' id='account-page-column-right'>

@@ -17,15 +17,20 @@ export const login = async (email, password) => {
       body: JSON.stringify({ email, password }),
     });
 
-    // zapisz dane uzytkownika podczas sesji - troche niebezpieczne i nie ma czyszczenia ale na razie ok
+    // zapisz dane uzytkownika podczas sesji - troche niebezpieczne i nie ma czyszczenia ale na razie ok - jest juz wylogowanie to mozna :)
     localStorage.setItem('user-access-token', response["access"]);
     localStorage.setItem('user-refresh-token', response["refresh"]);
-
+    
     return response;
   } catch (error) {
     throw new Error(error.message || "Logowanie nie powiodło się");
   }
 };
+
+export const logout = () => {
+  localStorage.removeItem('user-access-token');
+  localStorage.removeItem('user-refresh-token');
+}
 
 /**
  * Rejestracja nowego użytkownika

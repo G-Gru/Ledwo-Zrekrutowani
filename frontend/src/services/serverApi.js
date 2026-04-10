@@ -27,10 +27,95 @@ export class serverApi {
     }
 
     static getUserData() {
-        return null
+        return {firstName: "Imie", lastName: "nazwisko", email: "ziomeczek@mail.com"}
     }   
-    static sendApplicationForm(applicationForm) {
-        return null
+    static async sendApplicationForm(token, applicationForm) {
+        /* Format danych wejsciowych */
+
+        // const [formData, setFormData] = useState({
+        //     firstName: "", lastName: "", email: "", // Pobierane z konta
+        //     title: "", familyName: "", birthdate: "", birthplace: "", pesel: "", nationality: "Polska",
+        //     residenceAddress: { street: "", house: "", apartment: "", city: "", country: "Polska", postalCode: "" },
+        //     correspondenceAddress: { street: "", house: "", apartment: "", city: "", country: "Polska", postalCode: "" },
+        //     phone: "",
+        //     studiesName: "", studiesLocation: "", studiesEndYear: 2024, highSchoolLocation: "Polska",
+        //     emergencyContact: { name: "", surname: "", phone: "" },
+        //     consents: { data: false, rules: false, rodo: false }
+        // });
+        
+        //  serverApi.sendApplicationForm({
+        //         formData,
+        //         studies_edition_id: courseId,
+        //         action: "SAVE",
+        //     })
+
+        if (!applicationForm) return;
+
+        /* Ustawienie adresow - wyslanie do bazy i pobranie wygenerowanego id */
+
+        // zamieszkania
+        let residenceAddressData = applicationForm.formData.residenceAddress
+        let residenceAddressId = null
+        let residenceAddressResponse = await this.apiRequest(`/api/enrollments/addresses/`, 'POST', {
+            street: residenceAddressData.street,
+            house_number: residenceAddressData.house,
+            flat_number: residenceAddressData.apartment,
+            city: residenceAddressData.city,
+            country: residenceAddressData.country,
+            postal_code: residenceAddressData.postalCode,
+        }, token)
+        
+        if (!residenceAddressResponse) {
+            console.error("Error sending user address data to server!")
+            return;
+        } else residenceAddressId = residenceAddressResponse.id;
+        
+        // korespondencja
+        let correspondenceAddressData = applicationForm.formData.residenceAddress
+        let correspondenceAddressId = null
+        if(correspondenceAddressData.street == "") { // puste tylko jesli addr korespondecji ten zam co zamieszkania
+            correspondenceAddressId = residenceAddressId
+        } 
+        else {
+            let correspondenceAddressResponse = await this.apiRequest(`/api/enrollments/addresses/`, 'POST', {
+                street: correspondenceAddressData.street,
+                house_number: correspondenceAddressData.house,
+                flat_number: correspondenceAddressData.apartment,
+                city: correspondenceAddressData.city,
+                country: correspondenceAddressData.country,
+                postal_code: correspondenceAddressData.postalCode,
+            }, token)
+
+            if (!correspondenceAddressResponse) {
+                console.error("Error sending user correspondence data to server!")
+                return;
+            } else residenceAddressId = correspondenceAddressResponse.id;
+        }
+
+        if (residenceAddressId == null || correspondenceAddressId == null ) return;
+
+        /* Wyslanie pelnego formularza do serwera */
+        this.apiRequest(`/api/enrollments/editions/${applicationForm.studies_edition_id}/form`, 'PUT', {
+            action: applicationForm.action,
+            first_name: applicationForm.formData.firstName,
+            second_name: "",
+            last_name: applicationForm.formData.lastName,
+            family_name: applicationForm.formData.familyName,
+            academic_title: applicationForm.formData.title,
+            birth_place: applicationForm.formData.birthplace,
+            birth_date: applicationForm.formData.birthdate,
+            pesel: applicationForm.formData.pesel,
+            citizenship: applicationForm.formData.nationality,
+            residential_address_id: residenceAddressId,
+            registered_address_id: correspondenceAddressId,
+            residential_address_id: 0,
+            registered_address_id: 0,
+            email: applicationForm.formData.email,
+            phone: applicationForm.formData.phone,
+            education: `${applicationForm.formData.studiesName} w ${applicationForm.formData.studiesLocation}, ukończono ${applicationForm.formData.studiesEndYear}`,
+            education_country: applicationForm.formData.education_country,
+            emergency_contact: `${applicationForm.formData.emergencyContact.name} ${applicationForm.formData.emergencyContact.surname} | tel:${applicationForm.formData.emergencyContact.phone}`,
+        }, token)
     } 
     static getCourseInfo(editionId) {
         return {major: "Nieznany kierunek", institute: "Nieznany wydział"}
@@ -94,11 +179,12 @@ export class serverApi {
 
     /* Payments */
     static getUserPaymentsSummary() {
-        return {
+        let mock_data = {
             totalToPay: "3,450.00 PLN",
             deadline: "15.10.2023",
             nextPaymentName: "Czesne (Semestr Zimowy)"
         };
+        return mock_data;
     }
 
     static getUserActivePayments() {
@@ -117,7 +203,8 @@ export class serverApi {
         return mock_data;
     }
 
-    static generateRecruitmentApplicationSchedule(userToken = null, application_id = null, isActive = true) {
+    /* HELPER schedule generator for applications */
+    static async generateRecruitmentApplicationSchedule(userToken = null, application_id = null, isActive = true) {
         
         /* general recruit schedule */
         const recruitmentSchedule = [
@@ -127,26 +214,26 @@ export class serverApi {
             { title: "DECYZJA KOMISJI", startDate: "--/--/--", endDate: "--/--/--", flag: "upcoming" }
         ]
 
-        // if (userToken == null || application_id == null) return recruitmentSchedule;
+        if (userToken == null || application_id == null) return recruitmentSchedule;
 
-        // /* set recruitment end date for all steps */
-        // recruitmentEndDateResponse = serverApi.apiRequest(`/api/enrollment/${application_id}/recruitment_end_date`, 'GET', null, userToken)
-        // if (recruitmentEndDateResponse) {
-        //     let recruitmentEndDate = recruitmentEndDateResponse["recruitment_end_date"]
-        //     if (recruitmentEndDate) {
-        //         recruitmentSchedule.forEach(step => step["endDate"] = recruitmentEndDate);
-        //     }
-        // }
+        /* set recruitment end date for all steps */
+        recruitmentEndDateResponse = await serverApi.apiRequest(`/api/enrollment/${application_id}/recruitment_end_date`, 'GET', null, userToken)
+        if (recruitmentEndDateResponse) {
+            let recruitmentEndDate = recruitmentEndDateResponse["recruitment_end_date"]
+            if (recruitmentEndDate) {
+                recruitmentSchedule.forEach(step => step["endDate"] = recruitmentEndDate);
+            }
+        }
         
-        // /* get recruitment payment data for application*/
-        // paymentInfoResponse = serverApi.apiRequest(`/api/enrollments/${application_id}/fees`, 'GET', null, userToken)
-        // if (paymentInfoResponse){
-        //     let recruitmentPaymentDate = paymentInfoResponse[0]["paid_date"] // tutaj zakladam ze oplata rekrutacyjna bedzie pierwsza w liscie, mam nadzieje ze tak bedzie lol
-        //     if (recruitmentPaymentDate) {
-        //         recruitmentSchedule[1]["endDate"] = recruitmentPaymentDate
-        //         recruitmentSchedule[1]["flag"] = "complete"
-        //     }
-        // }
+        /* get recruitment payment data for application*/
+        paymentInfoResponse = await serverApi.apiRequest(`/api/enrollments/${application_id}/fees`, 'GET', null, userToken)
+        if (paymentInfoResponse){
+            let recruitmentPaymentDate = paymentInfoResponse[0]["paid_date"] // tutaj zakladam ze oplata rekrutacyjna bedzie pierwsza w liscie, mam nadzieje ze tak bedzie lol
+            if (recruitmentPaymentDate) {
+                recruitmentSchedule[1]["endDate"] = recruitmentPaymentDate
+                recruitmentSchedule[1]["flag"] = "complete"
+            }
+        }
 
         return recruitmentSchedule;
     }
