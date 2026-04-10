@@ -11,7 +11,13 @@ export default function Header() {
 
     useEffect(() => {
         // check user is logged in
-        setUserLoggedIn(localStorage.getItem("user-access-token") != null)
+        const checkLoginStatus = () => {
+            setUserLoggedIn(localStorage.getItem("user-access-token") != null);
+        };
+        checkLoginStatus();
+        const interval = setInterval(checkLoginStatus, 250); // check every 250ms for login state
+
+        return () => { clearInterval(interval); };
     }, []);
 
     return (
@@ -24,7 +30,7 @@ export default function Header() {
             <Link to="/studies" className={`btn btn-secondary ${isActive('/studies') ? 'active' : ''}`}>
                 Oferty Studiów
             </Link>
-            <Link to={isUserLoggedIn ? "/my-profile" : "/login"} className={`btn btn-primary ${isActive('/login') || isActive('/my-profile') ? 'active' : ''}`}>
+            <Link to={isUserLoggedIn ? "/my-profile" : "/login"} className={`btn btn-primary ${(!isUserLoggedIn && isActive('/login')) || (isUserLoggedIn&&isActive('/my-profile')) ? 'active' : ''}`}>
                 { isUserLoggedIn ? (
                     <span className="material-symbols-outlined text-primary profile-icon">person</span>
                     ) : <div> Logowanie </div>
