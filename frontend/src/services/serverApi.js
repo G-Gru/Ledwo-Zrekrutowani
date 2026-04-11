@@ -237,4 +237,33 @@ export class serverApi {
 
         return recruitmentSchedule;
     }
+
+    static async getAdminEnrollments(token) {
+        return this.#getAdminEnrollmentsFromApi(token, false);
+    }
+
+    static async getAdminUnpaidEnrollments(token) {
+        return this.#getAdminEnrollmentsFromApi(token, true);
+    }
+
+    static async #getAdminEnrollmentsFromApi(token, unpaidOnly = false) {
+        const suffix = unpaidOnly ? '?unpaid_only=true' : '';
+        const endpoints = [
+            `/admin/enrollments/${suffix}`,
+            `/api/admin/enrollments/${suffix}`,
+        ];
+
+        for (const endpoint of endpoints) {
+            const res = await this.apiRequest(endpoint, 'GET', null, token);
+            if (!res.error) {
+                return { enrollments: res.data || [], error: false, errorMsg: '' };
+            }
+        }
+
+        return {
+            enrollments: [],
+            error: true,
+            errorMsg: 'Nie udało się pobrać listy zgłoszeń kandydatów.',
+        };
+    }
 }

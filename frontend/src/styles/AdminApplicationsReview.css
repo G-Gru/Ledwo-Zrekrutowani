@@ -1,0 +1,150 @@
+.admin-applications-panel {
+  width: 90%;
+  margin: 0 0 24px;
+  padding: 24px;
+}
+
+.admin-applications-subtitle {
+  margin: -10px 0 16px;
+  width: 90%;
+  text-align: left;
+  color: var(--text-muted);
+}
+
+.admin-applications-layout #account-page-column-middle {
+  width: 75%;
+  align-items: center;
+}
+
+.admin-applications-layout #account-page-column-right {
+  display: none;
+}
+
+.admin-summary-grid {
+  width: 90%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.admin-summary-card {
+  background-color: #f4f4f4;
+  border-radius: 2px;
+  padding: 18px 20px;
+  text-align: left;
+  border-left: 4px solid transparent;
+}
+
+.admin-summary-card-alert {
+  border-left-color: #d93025;
+}
+
+.admin-summary-label {
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #6f7780;
+}
+
+.admin-summary-value {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1f2328;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.admin-summary-value-alert {
+  color: #c5221f;
+}
+
+.admin-summary-note {
+  font-size: 0.85rem;
+  color: #7a6a00;
+  font-weight: 700;
+  text-transform: lowercase;
+}
+
+.admin-summary-note-alert {
+  color: #c5221f;
+}
+
+.admin-applications-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-preview-note {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid #f2d6a0;
+  border-radius: 8px;
+  background-color: #fff8e6;
+  color: #6d4e00;
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.admin-filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.admin-refresh-button {
+  margin: 0;
+  padding: 8px 14px;
+}
+
+.badge-unpaid,
+.badge-paid,
+.badge-missing,
+.badge-ok {
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-unpaid,
+.badge-missing {
+  color: #a60f24;
+  background-color: #ffe3e7;
+  border: 1px solid #f5b0b8;
+}
+
+.badge-paid,
+.badge-ok {
+  color: #1d5f2b;
+  background-color: #e7f7ec;
+  border: 1px solid #b9e3c3;
+}
+
+@media (max-width: 1100px) {
+  .admin-applications-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-applications-panel,
+  .admin-applications-subtitle,
+  .admin-summary-grid {
+    width: 96%;
+  }
+}
