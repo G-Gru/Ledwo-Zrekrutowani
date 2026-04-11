@@ -62,6 +62,10 @@ export default function Payments() {
 
             <div className='payments-main-container'>
                 <header className='payments-page-header'>
+                    {/* error msg */}
+                    {error && <div className="error-message">{error}</div>}
+
+                    {/* Title */}
                     <div className='page-title'>Płatności</div>
                     <p className='page-subtitle' style={{marginBottom: '50px'}}>Zarządzaj swoją dokumentacją finansową i monitoruj statusy opłat w jednym miejscu.</p>
                 </header>
@@ -89,34 +93,36 @@ export default function Payments() {
                     {/* Tabela Bieżących Zobowiązań */}
                     <div className='bg-panel active-table-card'>
                         <h3 className='panel-h3'>Bieżące zobowiązania</h3>
-                        <table className='upcoming-payments-table'>
-                            <thead>
-                                <tr>
-                                    <th>PRZEDMIOT</th>
-                                    <th>STATUS</th>
-                                    <th>KWOTA</th>
-                                    <th>TERMIN</th>
-                                    <th>AKCJA</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {upcomingPayments.map(pay => (
-                                    <tr key={pay.id}>
-                                        <td className='bold-text'>{pay.name}</td>
-                                        <td>
-                                            <span className={`badge ${pay.type}`}>
-                                                {pay.status}
-                                            </span>
-                                        </td>
-                                        <td className='bold-text'>{pay.amount}</td>
-                                        <td className={pay.type === 'overdue' ? 'error-text' : ''}>{pay.date}</td>
-                                        <td>
-                                            <button className='table-action-btn'>ZAPŁAĆ</button>
-                                        </td>
+                        { !userHasUpcomingPayments ? (<p> Brak nadchodzących płatności <br/> Dobra robota :) </p>) : (
+                            <table className='upcoming-payments-table'>
+                                <thead>
+                                    <tr>
+                                        <th>PRZEDMIOT</th>
+                                        <th>STATUS</th>
+                                        <th>KWOTA</th>
+                                        <th>TERMIN</th>
+                                        <th>AKCJA</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {upcomingPayments.map(pay => (
+                                        <tr key={pay.id}>
+                                            <td className='bold-text'>{pay.name}</td>
+                                            <td>
+                                                <span className={`badge ${pay.type}`}>
+                                                    {pay.status}
+                                                </span>
+                                            </td>
+                                            <td className='bold-text'>{pay.amount}</td>
+                                            <td className={pay.type === 'overdue' ? 'error-text' : ''}>{pay.date}</td>
+                                            <td>
+                                                <button className='table-action-btn'>ZAPŁAĆ</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 </div>
 
@@ -161,26 +167,28 @@ export default function Payments() {
                     </div>
 
                     <div className='bg-panel history-list-container'>
-                        {paymentHistory.map((item) => (
-                            <div key={item.id} className='history-row-item'>
-                                <div className='row-main-info'>
-                                    <div className='status-icon-circle'>
-                                        <span className="material-symbols-outlined">done_all</span>
+                        { !userHasPaymentHistory ? (<p style={{padding: '30px'}}> Brak historii płatności </p>) : (
+                            paymentHistory.map((item) => (
+                                <div key={item.id} className='history-row-item'>
+                                    <div className='row-main-info'>
+                                        <div className='status-icon-circle'>
+                                            <span className="material-symbols-outlined">done_all</span>
+                                        </div>
+                                        <div className='text-group'>
+                                            <div className='history-item-name'>{item.name}</div>
+                                            <div className='history-item-sub'>ID: {item.transId} • {item.date}</div>
+                                        </div>
                                     </div>
-                                    <div className='text-group'>
-                                        <div className='history-item-name'>{item.name}</div>
-                                        <div className='history-item-sub'>ID: {item.transId} • {item.date}</div>
+                                    <div className='row-amount-info'>
+                                        <div className='history-amount'>{item.amount}</div>
+                                        <div className='history-status-tag'>{item.status}</div>
                                     </div>
+                                    <button className='btn-ghost-icon'>
+                                        <span className="material-symbols-outlined">description</span>
+                                    </button>
                                 </div>
-                                <div className='row-amount-info'>
-                                    <div className='history-amount'>{item.amount}</div>
-                                    <div className='history-status-tag'>{item.status}</div>
-                                </div>
-                                <button className='btn-ghost-icon'>
-                                    <span className="material-symbols-outlined">description</span>
-                                </button>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

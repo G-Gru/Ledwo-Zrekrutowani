@@ -125,31 +125,30 @@ export class serverApi {
 
     /* Applications */
     // dane: application { name: "", type: "", status: [""],  schedule: [title: "", startDate: "", endDate: "", flag: ""] }
-    static getUserUnfinishedApplications(userToken) {
-        return {} // na razie funkcjonalnosc edytowania wnioskow nie dziala
-
-        // return {
-        //     applications: [
-        //         { name: "Niewypełniony wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje wypełnienia"], 
-        //         schedule: this.generateRecruitmentApplicationSchedule(null, null, false) }
-        //     ],
-        //     error: true,
-        //     errorMsg: "Pobieranie roboczych wniosków: Błąd komunikacji z serwerem, wyświetlane dane mock-owe."
-        // }
+    static async getUserUnfinishedApplications(userToken) {
+        let mock_schedule = await this.generateRecruitmentApplicationSchedule(null, null, false)
+        return {
+            applications: [
+                { name: "Niewypełniony wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje wypełnienia"], 
+                schedule: mock_schedule }
+            ],
+            error: true,
+            errorMsg: "Pobieranie roboczych wniosków: Funkcjonalnosc niezaimplementowana: wyświetlane dane mock-owe."
+        }
     }
     static async getUserActiveApplications(token) {
         
-        const res = await this.apiRequest('/api/enrollments/active', 'GET', null, token);
+        const res = await this.apiRequest('/api/enrollments/active/', 'GET', null, token);
         
         if (res.error) {
             /* mockowe dane */
             return {
                 applications: [
-                    //{ name: "Wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje odpowiedźi"], schedule: this.generateRecruitmentApplicationSchedule(), id: 1 },
-                    //{ name: "Wniosek rekrutacyjny", type: "rekr", status: ["Brak zapłaty"], schedule: this.generateRecruitmentApplicationSchedule(), id: 2 }
+                    { name: "Wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje odpowiedźi"], schedule: this.generateRecruitmentApplicationSchedule(), id: 1 },
+                    { name: "Wniosek rekrutacyjny", type: "rekr", status: ["Brak zapłaty"], schedule: this.generateRecruitmentApplicationSchedule(), id: 2 }
                 ],
                 error: true,
-                errorMsg: "Pobieranie aktywnych wniosków: Błąd komunikacji z serwerem."
+                errorMsg: `Pobieranie aktywnych wniosków: Błąd komunikacji z serwerem. Wyświetlane dane mock-owe (${res.errorMsg})`
             }
         }
 
@@ -167,24 +166,15 @@ export class serverApi {
 
     /* Payments */
     static async getUserActivePayments(token) {
-        let mock_data = [
-            { id: 1, name: "Czesne (Semestr Zimowy)", status: "Oczekuje", amount: "3,200.00 PLN", date: "15.10.2023", type: "pending" },
-            { id: 2, name: "Wpisowe", status: "Zaległe", amount: "250.00 PLN", date: "30.09.2023", type: "overdue" }
-        ];
-        return mock_data;
-    }
-    static async getUserPaymentsHistory(token) {
-        
-        let paymentsResponse = await serverApi.apiRequest('/api/payments/history/', 'GET', null, token)
+        let paymentsResponse = await serverApi.apiRequest('/api/payments/upcoming/', 'GET', null, token)
         
         if (paymentsResponse.error) {
             let mock_data = [
-                { id: 101, name: "Czesne (Semestr Letni)", transId: "#INF-992831", date: "12.06.2023", amount: "3,200.00 PLN", status: "Zaksięgowano" },
-                { id: 102, name: "Opłata za legitymację", transId: "#INF-981240", date: "01.06.2023", amount: "22.00 PLN", status: "Zaksięgowano" },
-                { id: 103, name: "Ubezpieczenie", transId: "#INF-980112", date: "15.05.2023", amount: "55.00 PLN", status: "Zaksięgowano" }
+                { id: 1, name: "Czesne (Semestr Zimowy)", status: "Oczekuje", amount: "3,200.00 PLN", date: "15.10.2023", type: "pending" },
+                { id: 2, name: "Wpisowe", status: "Zaległe", amount: "250.00 PLN", date: "30.09.2023", type: "overdue" }
             ];
             return {
-                payments: mock_data, error: true, errorMsg: "Pobieranie historii płatności: bład komunikacji z serwerem"
+                payments: mock_data, error: true, errorMsg: "Pobieranie nadchodzących płatności: bład komunikacji z serwerem, wyświetlane dane mock-owe."
             }
         }
         
@@ -198,7 +188,34 @@ export class serverApi {
         //     status: [item.status],
         //     schedule: generateRecruitmentApplicationSchedule(token, item.id)
         // }))
-        return { payments: [], error: false, errorMsg: "" }
+        return { payments: paymentsResponse.data, error: false, errorMsg: "" }
+    }
+    static async getUserPaymentsHistory(token) {
+        
+        let paymentsResponse = await serverApi.apiRequest('/api/payments/history/', 'GET', null, token)
+        
+        if (paymentsResponse.error) {
+            let mock_data = [
+                { id: 101, name: "Czesne (Semestr Letni)", transId: "#INF-992831", date: "12.06.2023", amount: "3,200.00 PLN", status: "Zaksięgowano" },
+                { id: 102, name: "Opłata za legitymację", transId: "#INF-981240", date: "01.06.2023", amount: "22.00 PLN", status: "Zaksięgowano" },
+                { id: 103, name: "Ubezpieczenie", transId: "#INF-980112", date: "15.05.2023", amount: "55.00 PLN", status: "Zaksięgowano" }
+            ];
+            return {
+                payments: mock_data, error: true, errorMsg: "Pobieranie historii płatności: bład komunikacji z serwerem, wyświetlane dane mock-owe."
+            }
+        }
+        
+        console.log(paymentsResponse);
+
+        // const mapped = paymentsResponse.data.map(item => ({
+        //     id: item.id,
+        //     name: item.studies_edition,
+        //     name: "Wniosek rekrutacyjny",
+        //     type: "rekr",
+        //     status: [item.status],
+        //     schedule: generateRecruitmentApplicationSchedule(token, item.id)
+        // }))
+        return { payments: paymentsResponse.data, error: false, errorMsg: "" }
 
     }
 
