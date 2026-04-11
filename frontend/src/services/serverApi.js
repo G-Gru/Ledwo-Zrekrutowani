@@ -54,48 +54,50 @@ export class serverApi {
         /* Ustawienie adresow - wyslanie do bazy i pobranie wygenerowanego id */
 
         // zamieszkania
-        let residenceAddressData = applicationForm.formData.residenceAddress
-        let residenceAddressId = null
-        let residenceAddressResponse = await this.apiRequest(`/api/enrollments/addresses/`, 'POST', {
-            street: residenceAddressData.street,
-            house_number: residenceAddressData.house,
-            flat_number: residenceAddressData.apartment,
-            city: residenceAddressData.city,
-            country: residenceAddressData.country,
-            postal_code: residenceAddressData.postalCode,
-        }, token)
+        // let residenceAddressData = applicationForm.formData.residenceAddress
+        // let residenceAddressId = null
+        // let residenceAddressResponse = await this.apiRequest(`/api/enrollments/addresses/`, 'POST', {
+        //     id: 0,
+        //     street: residenceAddressData.street,
+        //     house_number: residenceAddressData.house,
+        //     flat_number: residenceAddressData.apartment,
+        //     city: residenceAddressData.city,
+        //     country: residenceAddressData.country,
+        //     postal_code: residenceAddressData.postalCode,
+        // }, token)
         
-        if (!residenceAddressResponse) {
-            console.error("Error sending user address data to server!")
-            return;
-        } else residenceAddressId = residenceAddressResponse.id;
+        // // if (!residenceAddressResponse) {
+        // //     console.error("Error sending user address data to server!")
+        // //     return;
+        // // } else residenceAddressId = residenceAddressResponse.id;
         
-        // korespondencja
-        let correspondenceAddressData = applicationForm.formData.residenceAddress
-        let correspondenceAddressId = null
-        if(correspondenceAddressData.street == "") { // puste tylko jesli addr korespondecji ten zam co zamieszkania
-            correspondenceAddressId = residenceAddressId
-        } 
-        else {
-            let correspondenceAddressResponse = await this.apiRequest(`/api/enrollments/addresses/`, 'POST', {
-                street: correspondenceAddressData.street,
-                house_number: correspondenceAddressData.house,
-                flat_number: correspondenceAddressData.apartment,
-                city: correspondenceAddressData.city,
-                country: correspondenceAddressData.country,
-                postal_code: correspondenceAddressData.postalCode,
-            }, token)
+        // // korespondencja
+        // let correspondenceAddressData = applicationForm.formData.residenceAddress
+        // let correspondenceAddressId = null
+        // if(correspondenceAddressData.street == "") { // puste tylko jesli addr korespondecji ten zam co zamieszkania
+        //     correspondenceAddressId = residenceAddressId
+        // } 
+        // else {
+        //     let correspondenceAddressResponse = await this.apiRequest(`/api/enrollments/addresses/`, 'POST', {
+        //         id: 1,
+        //         street: correspondenceAddressData.street,
+        //         house_number: correspondenceAddressData.house,
+        //         flat_number: correspondenceAddressData.apartment,
+        //         city: correspondenceAddressData.city,
+        //         country: correspondenceAddressData.country,
+        //         postal_code: correspondenceAddressData.postalCode,
+        //     }, token)
 
-            if (!correspondenceAddressResponse) {
-                console.error("Error sending user correspondence data to server!")
-                return;
-            } else residenceAddressId = correspondenceAddressResponse.id;
-        }
+        //     // if (!correspondenceAddressResponse) {
+        //     //     console.error("Error sending user correspondence data to server!")
+        //     //     return;
+        //     // } else residenceAddressId = correspondenceAddressResponse.id;
+        // }
 
-        if (residenceAddressId == null || correspondenceAddressId == null ) return;
+        // if (residenceAddressId == null || correspondenceAddressId == null ) return;
 
         /* Wyslanie pelnego formularza do serwera */
-        this.apiRequest(`/api/enrollments/editions/${applicationForm.studies_edition_id}/form`, 'PUT', {
+        this.apiRequest(`/api/enrollments/editions/${applicationForm.studies_edition_id}/`, 'POST', {
             action: applicationForm.action,
             first_name: applicationForm.formData.firstName,
             second_name: "",
@@ -106,10 +108,10 @@ export class serverApi {
             birth_date: applicationForm.formData.birthdate,
             pesel: applicationForm.formData.pesel,
             citizenship: applicationForm.formData.nationality,
-            residential_address_id: residenceAddressId,
-            registered_address_id: correspondenceAddressId,
+            // residential_address_id: residenceAddressId,z
+            // registered_address_id: correspondenceAddressId,
             residential_address_id: 0,
-            registered_address_id: 0,
+            registered_address_id: 1,
             email: applicationForm.formData.email,
             phone: applicationForm.formData.phone,
             education: `${applicationForm.formData.studiesName} w ${applicationForm.formData.studiesLocation}, ukończono ${applicationForm.formData.studiesEndYear}`,
@@ -124,44 +126,30 @@ export class serverApi {
     /* Applications */
     // dane: application { name: "", type: "", status: [""],  schedule: [title: "", startDate: "", endDate: "", flag: ""] }
     static getUserUnfinishedApplications(userToken) {
-        return {
-            applications: [
-                { name: "Niewypełniony wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje wypełnienia"], 
-                schedule: this.generateRecruitmentApplicationSchedule(null, null, false) }
-            ],
-            error: true,
-            errorMsg: "Pobieranie roboczych wniosków: Błąd komunikacji z serwerem, wyświetlane dane mock-owe."
-        }
-    }
-    static getUserActiveApplications(userToken) {
-        const tmpSchedule = [
-            { title: "SKŁADANIE WNIOSKÓW", startDate: "2026-01-01", endDate: "2026-01-31", flag: "complete" },
-            { title: "OPŁATA REKRUTACYJNA", startDate: "2026-02-01", endDate: "2026-04-30", flag: "in-progress" },
-            { title: "DECYZJA KOMISJI", startDate: "2026-05-05", endDate: "2026-05-10", flag: "upcoming" }
-        ]
-        
-        return {
-            applications: [
-                { name: "Wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje odpowiedźi"], schedule: tmpSchedule, id: 1 },
-                { name: "Wniosek rekrutacyjny", type: "rekr", status: ["Brak zapłaty"], schedule: tmpSchedule, id: 2 }
-            ],
-            error: true,
-            errorMsg: "Błąd komunikacji z serwerem, wyświetlane dane mock-owe."
-        }
+        return {} // na razie funkcjonalnosc edytowania wnioskow nie dziala
+
+        // return {
+        //     applications: [
+        //         { name: "Niewypełniony wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje wypełnienia"], 
+        //         schedule: this.generateRecruitmentApplicationSchedule(null, null, false) }
+        //     ],
+        //     error: true,
+        //     errorMsg: "Pobieranie roboczych wniosków: Błąd komunikacji z serwerem, wyświetlane dane mock-owe."
+        // }
     }
     static async getUserActiveApplications(token) {
         
-        const res = await this.apiRequest('/enrollments/', 'GET', null, token); // wylaczone na razie
+        const res = await this.apiRequest('/api/enrollments/active', 'GET', null, token);
         
         if (res.error) {
             /* mockowe dane */
             return {
                 applications: [
-                    { name: "Wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje odpowiedźi"], schedule: this.generateRecruitmentApplicationSchedule(), id: 1 },
-                    { name: "Wniosek rekrutacyjny", type: "rekr", status: ["Brak zapłaty"], schedule: this.generateRecruitmentApplicationSchedule(), id: 2 }
+                    //{ name: "Wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje odpowiedźi"], schedule: this.generateRecruitmentApplicationSchedule(), id: 1 },
+                    //{ name: "Wniosek rekrutacyjny", type: "rekr", status: ["Brak zapłaty"], schedule: this.generateRecruitmentApplicationSchedule(), id: 2 }
                 ],
                 error: true,
-                errorMsg: "Pobieranie aktywnych wniosków: Błąd komunikacji z serwerem, wyświetlane dane mock-owe."
+                errorMsg: "Pobieranie aktywnych wniosków: Błąd komunikacji z serwerem."
             }
         }
 
@@ -178,29 +166,40 @@ export class serverApi {
     }
 
     /* Payments */
-    static getUserPaymentsSummary() {
-        let mock_data = {
-            totalToPay: "3,450.00 PLN",
-            deadline: "15.10.2023",
-            nextPaymentName: "Czesne (Semestr Zimowy)"
-        };
-        return mock_data;
-    }
-
-    static getUserActivePayments() {
+    static async getUserActivePayments(token) {
         let mock_data = [
             { id: 1, name: "Czesne (Semestr Zimowy)", status: "Oczekuje", amount: "3,200.00 PLN", date: "15.10.2023", type: "pending" },
             { id: 2, name: "Wpisowe", status: "Zaległe", amount: "250.00 PLN", date: "30.09.2023", type: "overdue" }
         ];
         return mock_data;
     }
-    static getUserPaymentsHistory() {
-        let mock_data = [
-            { id: 101, name: "Czesne (Semestr Letni)", transId: "#INF-992831", date: "12.06.2023", amount: "3,200.00 PLN", status: "Zaksięgowano" },
-            { id: 102, name: "Opłata za legitymację", transId: "#INF-981240", date: "01.06.2023", amount: "22.00 PLN", status: "Zaksięgowano" },
-            { id: 103, name: "Ubezpieczenie", transId: "#INF-980112", date: "15.05.2023", amount: "55.00 PLN", status: "Zaksięgowano" }
-        ];
-        return mock_data;
+    static async getUserPaymentsHistory(token) {
+        
+        let paymentsResponse = await serverApi.apiRequest('/api/payments/history/', 'GET', null, token)
+        
+        if (paymentsResponse.error) {
+            let mock_data = [
+                { id: 101, name: "Czesne (Semestr Letni)", transId: "#INF-992831", date: "12.06.2023", amount: "3,200.00 PLN", status: "Zaksięgowano" },
+                { id: 102, name: "Opłata za legitymację", transId: "#INF-981240", date: "01.06.2023", amount: "22.00 PLN", status: "Zaksięgowano" },
+                { id: 103, name: "Ubezpieczenie", transId: "#INF-980112", date: "15.05.2023", amount: "55.00 PLN", status: "Zaksięgowano" }
+            ];
+            return {
+                payments: mock_data, error: true, errorMsg: "Pobieranie historii płatności: bład komunikacji z serwerem"
+            }
+        }
+        
+        console.log(paymentsResponse);
+
+        // const mapped = paymentsResponse.data.map(item => ({
+        //     id: item.id,
+        //     name: item.studies_edition,
+        //     name: "Wniosek rekrutacyjny",
+        //     type: "rekr",
+        //     status: [item.status],
+        //     schedule: generateRecruitmentApplicationSchedule(token, item.id)
+        // }))
+        return { payments: [], error: false, errorMsg: "" }
+
     }
 
     /* HELPER schedule generator for applications */

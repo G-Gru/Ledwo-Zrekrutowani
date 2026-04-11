@@ -6,15 +6,54 @@ import DocumentUploadCard from '../../components/DocumentUploadCard'
 
 export default function Payments() {
     const [summary, setSummary] = useState({ totalToPay: '0.00', deadline: '' });
-    const [activePayments, setActivePayments] = useState([]);
-    const [history, setHistory] = useState([]);
-    // Stan do pokazywania panelu płatności
+
+    const [upcomingPayments, setUpcomingPayments] = useState([]);
+    const [userHasUpcomingPayments, setUserHasUpcomingPayments] = useState(false);
+
+    const [paymentHistory, setPaymentHistory] = useState([]);
+    const [userHasPaymentHistory, setUserHasPaymentHistory] = useState(false);
+
+    const [userToken, setUserToken] = useState(null);
+    const [userLoggedIn, setUserLoggedIn] = useState(false)
+    const [error, setError] = useState("");
+
     const [showPaymentOptions, setShowPaymentOptions] = useState(false);
 
     useEffect(() => {
-        setSummary(serverApi.getUserPaymentsSummary());
-        setActivePayments(serverApi.getUserActivePayments());
-        setHistory(serverApi.getUserPaymentsHistory());
+        // if user not logged
+        let userToken = localStorage.getItem("user-access-token");
+        if (userToken == null) { setUserLoggedIn(false); return; }
+        
+        // else
+        setUserLoggedIn(true)
+        async function fetchPaymentData() {
+            /* get user upcoming payments */
+            let upcomingPaymentsResponse = await serverApi.getUserActivePayments(userToken)
+            if (upcomingPaymentsResponse != null && upcomingPaymentsResponse.payments) {
+                setUserHasUpcomingPayments(upcomingPaymentsResponse.payments.length > 0)
+                setUpcomingPayments(upcomingPaymentsResponse.payments)
+                if (upcomingPaymentsResponse.error) setError(upcomingPaymentsResponse.errorMsg);
+            }
+
+            /* get user payment history */
+            let paymentHistoryResponse = await serverApi.getUserPaymentsHistory(userToken)
+            if (paymentHistoryResponse != null && paymentHistoryResponse.payments) {
+                setUserHasPaymentHistory(paymentHistoryResponse.payments.length > 0)
+                setPaymentHistory(paymentHistoryResponse.payments)
+                if (paymentHistoryResponse.error) setError(paymentHistoryResponse.errorMsg);
+            }
+        }
+        function getUserPaymentsSummary(token) {
+            let mock_data = {
+                totalToPay: "3,450.00 PLN",
+                deadline: "15.10.2023",
+                nextPaymentName: "Czesne (Semestr Zimowy)"
+            };
+            return mock_data;
+        }
+        fetchPaymentData()
+        setSummary( getUserPaymentsSummary(userToken) );
+    
     }, []);
 
     return (
@@ -61,7 +100,7 @@ export default function Payments() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {activePayments.map(pay => (
+                                {upcomingPayments.map(pay => (
                                     <tr key={pay.id}>
                                         <td className='bold-text'>{pay.name}</td>
                                         <td>
@@ -122,7 +161,7 @@ export default function Payments() {
                     </div>
 
                     <div className='bg-panel history-list-container'>
-                        {history.map((item) => (
+                        {paymentHistory.map((item) => (
                             <div key={item.id} className='history-row-item'>
                                 <div className='row-main-info'>
                                     <div className='status-icon-circle'>
