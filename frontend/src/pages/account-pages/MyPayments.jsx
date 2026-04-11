@@ -18,6 +18,10 @@ export default function Payments() {
     const [error, setError] = useState("");
 
     const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+    const [payAll, setPayAll] = useState(true);
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [paymentMessage, setPaymentMessage] = useState("");
+    const [paymentSuccess, setPaymentSuccess] = useState(null);
 
     useEffect(() => {
         // if user not logged
@@ -32,6 +36,7 @@ export default function Payments() {
             if (upcomingPaymentsResponse != null && upcomingPaymentsResponse.payments) {
                 setUserHasUpcomingPayments(upcomingPaymentsResponse.payments.length > 0)
                 setUpcomingPayments(upcomingPaymentsResponse.payments)
+                setSelectedIds(upcomingPaymentsResponse.payments.map(p => p.id)); // Set default to all
                 if (upcomingPaymentsResponse.error) setError(upcomingPaymentsResponse.errorMsg);
             }
 
@@ -42,17 +47,38 @@ export default function Payments() {
                 setPaymentHistory(paymentHistoryResponse.payments)
                 if (paymentHistoryResponse.error) setError(paymentHistoryResponse.errorMsg);
             }
-        }
-        function getUserPaymentsSummary(token) {
-            let mock_data = {
-                totalToPay: "3,450.00 PLN",
-                deadline: "15.10.2023",
-                nextPaymentName: "Czesne (Semestr Zimowy)"
-            };
-            return mock_data;
+
+            /* generate payments summary */
+            if (upcomingPaymentsResponse && !upcomingPaymentsResponse.error && upcomingPaymentsResponse.payments && upcomingPaymentsResponse.payments.length > 0) {
+                const payments = upcomingPaymentsResponse.payments;
+                // Calculate total to pay
+                const total = payments.reduce((sum, p) => {
+                    const amtStr = p.amount || p.amout || '0'; // handle typo in amout
+                    const amt = parseFloat(amtStr.replace(/[^\d.,]/g, '').replace(',', '.'));
+                    return sum + (isNaN(amt) ? 0 : amt);
+                }, 0);
+                const totalToPay = total.toFixed(2).replace('.', ',') + ' PLN';
+
+                // Find earliest deadline and its title
+                const earliest = payments.reduce((min, p) => {
+                    const date = new Date(p.due_date);
+                    return date < min.date ? { date, title: p.title } : min;
+                }, { date: new Date('9999-12-31'), title: '' });
+
+                const deadline = earliest.date.toLocaleDateString('pl-PL'); // Format as DD.MM.YYYY
+                const nextPaymentName = earliest.title;
+                setSummary({ totalToPay, deadline, nextPaymentName });
+            } else {
+                // Fallback to mock data if no upcoming payments or error
+                let mock_data = {
+                    totalToPay: "3,450.00 PLN",
+                    deadline: "01.01.2000",
+                    nextPaymentName: "Czesne (Semestr Zimowy)"
+                };
+                setSummary(mock_data);
+            }
         }
         fetchPaymentData()
-        setSummary( getUserPaymentsSummary(userToken) );
     
     }, []);
 
@@ -83,7 +109,13 @@ export default function Payments() {
                         </div>
                         <button 
                             className={`btn-primary-large ${showPaymentOptions ? 'active-btn' : ''}`}
-                            onClick={() => setShowPaymentOptions(!showPaymentOptions)}
+                            onClick={() => {
+                                setPayAll(true);
+                                setSelectedIds(upcomingPayments.map(p => p.id));
+                                setShowPaymentOptions(!showPaymentOptions);
+                                setPaymentMessage("");
+                                setPaymentSuccess(null);
+                            }}
                         >
                             <span className="material-symbols-outlined">payments</span>
                             {showPaymentOptions ? 'Ukryj opcje płatności' : 'Zapłać za Wszystko'}
@@ -97,7 +129,7 @@ export default function Payments() {
                             <table className='upcoming-payments-table'>
                                 <thead>
                                     <tr>
-                                        <th>PRZEDMIOT</th>
+                                        <th>TYTUŁ</th>
                                         <th>STATUS</th>
                                         <th>KWOTA</th>
                                         <th>TERMIN</th>
@@ -107,16 +139,22 @@ export default function Payments() {
                                 <tbody>
                                     {upcomingPayments.map(pay => (
                                         <tr key={pay.id}>
-                                            <td className='bold-text'>{pay.name}</td>
+                                            <td className='bold-text'>{pay.title}</td>
                                             <td>
                                                 <span className={`badge ${pay.type}`}>
                                                     {pay.status}
                                                 </span>
                                             </td>
                                             <td className='bold-text'>{pay.amount}</td>
-                                            <td className={pay.type === 'overdue' ? 'error-text' : ''}>{pay.date}</td>
+                                            <td className={pay.type === 'overdue' ? 'error-text' : ''}>{pay.due_date}</td>
                                             <td>
-                                                <button className='table-action-btn'>ZAPŁAĆ</button>
+                                                <button className='table-action-btn' onClick={() => {
+                                                    setPayAll(false);
+                                                    setSelectedIds([pay.id]);
+                                                    setShowPaymentOptions(true);
+                                                    setPaymentMessage("");
+                                                    setPaymentSuccess(null);
+                                                }}>ZAPŁAĆ</button>
                                             </td>
                                         </tr>
                                     ))}
@@ -127,38 +165,64 @@ export default function Payments() {
                 </div>
 
                 {/* Opcje płatności */}
-                {showPaymentOptions && (
-                    <div className='bg-panel payment-methods-panel'>
-                        <div className='payment-method-column left'>
-                            <h4 className='method-title'>Przelew tradycyjny</h4>
-                            <div className='transfer-details'>
-                                <p><strong>Odbiorca:</strong> <span className='copy-box'> AGH </span> </p>
-                                <p><strong>Nr konta:</strong> <span className='copy-box'> XXXXXXXXXXXXx XXXXXXXXXxx </span></p>
-                                <p><strong>Tytuł:</strong> <span className='copy-box'> Opłata - Jan Kowalski - ID 4432 </span></p>
-                                <p className='transfer-hint'>* Pamiętaj o dokładnym przepisaniu tytułu przelewu. </p>
+                {showPaymentOptions && (() => {
+                    const selectedPayments = upcomingPayments.filter(p => selectedIds.includes(p.id));
+                    const totalAmount = selectedPayments.reduce((sum, p) => {
+                        const amt = parseFloat(p.amount.replace(/[^\d.,]/g, '').replace(',', '.'));
+                        return sum + amt;
+                    }, 0).toFixed(2).replace('.', ',') + ' PLN';
+                    const idsString = selectedIds.join(', ');
+                    const userData = serverApi.getUserData(userToken) // to bedzie async w przyszlosci i wsztyko zepsuje
+                    const transferTitle = `Opłata-${userData.firstName}${userData.lastName}-ID${idsString}`;
 
-                                <DocumentUploadCard 
-                                    id="payment-confirm"
-                                    title="Potwierdzenie przelewu"
-                                    formats="PDF, JPG"
-                                    maxSize="5MB"
-                                    icon="description"
-                                    onFileSelect={null}
-                                />
+                    return (
+                        <div className='bg-panel payment-methods-panel'>
+                            {/* Error transakcji */}
+                            {paymentMessage && (
+                                <div className="error-message" style={{borderColor: paymentSuccess ? 'green' : 'red'}}>
+                                    {paymentMessage}
+                                </div>
+                            )}
+
+                            <div style={{display: 'flex', flexDirection:'row'}}>
+                                <div className='payment-method-column left'>
+                                    <h4 className='method-title'>Przelew tradycyjny</h4>
+                                    <div className='transfer-details'>
+                                        <p><strong>Kwota:</strong> <span className='copy-box'>{totalAmount}</span></p>
+                                        <p><strong>Odbiorca:</strong> <span className='copy-box'> AGH </span> </p>
+                                        <p><strong>Nr konta:</strong> <span className='copy-box'> XXXXXXXXXXXXx XXXXXXXXXxx </span></p>
+                                        <p><strong>Tytuł:</strong> <span className='copy-box'> {transferTitle} </span></p>
+                                        <p className='transfer-hint'>* Pamiętaj o dokładnym przepisaniu tytułu przelewu. </p>
+
+                                        <DocumentUploadCard 
+                                            id="payment-confirm"
+                                            title="Potwierdzenie przelewu"
+                                            formats="PDF, JPG"
+                                            maxSize="5MB"
+                                            icon="description"
+                                            onFileSelect={null}
+                                        />
+                                    </div>
+                                </div>
+                                
+                                <div className='payment-divider'></div>
+
+                                <div className='payment-method-column right'>
+                                    <h4 className='method-title'>Płatność Online</h4>
+                                    <p className='method-desc'>Szybka płatność kartą, BLIK lub przelewem natychmiastowym.</p>
+                                    <p><strong>Kwota do zapłaty:</strong> {totalAmount}</p>
+                                    <button className='btn-online-pay' onClick={async () => {
+                                        const res = await serverApi.userPayment(userToken, selectedIds);
+                                        setPaymentSuccess(res.success);
+                                        setPaymentMessage(res.success ? "Płatność została pomyślnie zrealizowana!" : res.errorMsg);
+                                    }}>
+                                        PRZEJDŹ DO PŁATNOŚCI
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div className='payment-divider'></div>
-
-                        <div className='payment-method-column right'>
-                            <h4 className='method-title'>Płatność Online</h4>
-                            <p className='method-desc'>Szybka płatność kartą, BLIK lub przelewem natychmiastowym.</p>
-                            <button className='btn-online-pay'>
-                                PRZEJDŹ DO PŁATNOŚCI
-                            </button>
-                        </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 {/* Sekcja Historii */}
                 <div className='history-section-wide'>
@@ -175,8 +239,8 @@ export default function Payments() {
                                             <span className="material-symbols-outlined">done_all</span>
                                         </div>
                                         <div className='text-group'>
-                                            <div className='history-item-name'>{item.name}</div>
-                                            <div className='history-item-sub'>ID: {item.transId} • {item.date}</div>
+                                            <div className='history-item-name'>{item.title}</div>
+                                            <div className='history-item-sub'>ID: {item.id} • {item.paid_date}</div>
                                         </div>
                                     </div>
                                     <div className='row-amount-info'>

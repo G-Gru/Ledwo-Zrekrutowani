@@ -27,8 +27,17 @@ export class serverApi {
     }
 
     static getUserData() {
-        return {firstName: "Imie", lastName: "nazwisko", email: "ziomeczek@mail.com"}
-    }   
+        return {firstName: "Imie", lastName: "Nazwisko", email: "ziomeczek@mail.com"}
+    }
+
+    static todayIsBefore(dateString) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day for date comparison
+        const givenDate = new Date(dateString);
+        givenDate.setHours(0, 0, 0, 0);
+        return today < givenDate;
+    }
+   
     static async sendApplicationForm(token, applicationForm) {
         /* Format danych wejsciowych */
 
@@ -174,21 +183,19 @@ export class serverApi {
                 { id: 2, name: "Wpisowe", status: "Zaległe", amount: "250.00 PLN", date: "30.09.2023", type: "overdue" }
             ];
             return {
-                payments: mock_data, error: true, errorMsg: "Pobieranie nadchodzących płatności: bład komunikacji z serwerem, wyświetlane dane mock-owe."
+                payments: mock_data, error: true, errorMsg: `Pobieranie nadchodzących płatności: bład komunikacji z serwerem, wyświetlane dane mock-owe. ${paymentsResponse.errorMsg}`
             }
         }
         
-        console.log(paymentsResponse);
-
-        // const mapped = paymentsResponse.data.map(item => ({
-        //     id: item.id,
-        //     name: item.studies_edition,
-        //     name: "Wniosek rekrutacyjny",
-        //     type: "rekr",
-        //     status: [item.status],
-        //     schedule: generateRecruitmentApplicationSchedule(token, item.id)
-        // }))
-        return { payments: paymentsResponse.data, error: false, errorMsg: "" }
+        const mapped = paymentsResponse.data.map(item => ({
+            id: item.id,
+            title: item.title,
+            amount: item.amount + " PLN",
+            due_date: item.due_date,
+            status: serverApi.todayIsBefore(item.due_date) ? "Oczekuje" : "Po terminie ostatecznym",
+            type: serverApi.todayIsBefore(item.due_date) ? "pending" : "overdue",
+        }))
+        return { payments: mapped, error: false, errorMsg: "" }
     }
     static async getUserPaymentsHistory(token) {
         
@@ -196,27 +203,42 @@ export class serverApi {
         
         if (paymentsResponse.error) {
             let mock_data = [
-                { id: 101, name: "Czesne (Semestr Letni)", transId: "#INF-992831", date: "12.06.2023", amount: "3,200.00 PLN", status: "Zaksięgowano" },
-                { id: 102, name: "Opłata za legitymację", transId: "#INF-981240", date: "01.06.2023", amount: "22.00 PLN", status: "Zaksięgowano" },
-                { id: 103, name: "Ubezpieczenie", transId: "#INF-980112", date: "15.05.2023", amount: "55.00 PLN", status: "Zaksięgowano" }
+                { id: 101, title: "Czesne (Semestr Letni)", paid_date: "12.06.2023", amount: "3,200.00 PLN", status: "Zaksięgowano" },
+                { id: 102, title: "Opłata za legitymację", paid_date: "01.06.2023", amount: "22.00 PLN", status: "Zaksięgowano" },
+                { id: 103, title: "Ubezpieczenie", paid_date: "15.05.2023", amount: "55.00 PLN", status: "Zaksięgowano" }
             ];
             return {
-                payments: mock_data, error: true, errorMsg: "Pobieranie historii płatności: bład komunikacji z serwerem, wyświetlane dane mock-owe."
+                payments: mock_data, error: true, errorMsg: `Pobieranie historii płatności: bład komunikacji z serwerem, wyświetlane dane mock-owe. ${paymentsResponse.errorMsg}`
             }
         }
         
-        console.log(paymentsResponse);
+        const mapped = paymentsResponse.data.map(item => ({
+            id: item.id,
+            title: item.title,
+            amount: item.amount + " PLN",
+            paid_date: item.paid_date,
+            status: "Zaksięgowano" // na raize wszytkie takie
+        }))
+        return { payments: mapped, error: false, errorMsg: "" }
 
-        // const mapped = paymentsResponse.data.map(item => ({
-        //     id: item.id,
-        //     name: item.studies_edition,
-        //     name: "Wniosek rekrutacyjny",
-        //     type: "rekr",
-        //     status: [item.status],
-        //     schedule: generateRecruitmentApplicationSchedule(token, item.id)
-        // }))
-        return { payments: paymentsResponse.data, error: false, errorMsg: "" }
+    }
+    static async userPayment(token, paymentIds) {
+        if (!Array.isArray(paymentIds) || paymentIds.length === 0) {
+            return { success: false, errorMsg: "Brak ID płatności do opłacenia." };
+        }
 
+        const results = [];
+        for (const feePk of paymentIds) {
+            const res = await serverApi.apiRequest(`/api/payments/${feePk}/pay/`, 'POST', null, token);
+            results.push({ id: feePk, success: !res.error, errorMsg: res.error ? res.errorMsg : "" });
+        }
+
+        const failed = results.filter(r => !r.success);
+        if (failed.length > 0) {
+            return { success: false, errorMsg: `Błąd podczas opłacania płatności: ${failed[0].errorMsg}` };
+        }
+
+        return { success: true, errorMsg: "" };
     }
 
     /* HELPER schedule generator for applications */
