@@ -21,6 +21,7 @@ export default function MainPage() {
             <button onClick={() => navigate('/my-documents')}>Moje dokumenty</button>
             <button onClick={() => navigate('/my-profile')}>Profil</button>
             <button onClick={() => navigate('/admin/candidates')}>Admin Kandydaci</button>
+            <button onClick={() => navigate('/admin/applications')}>Admin przegląd zgłoszeń</button>
             <button onClick={() => navigate('/admin/finances')}>Admin finananse</button>
             <button onClick={() => navigate('/admin/export')}>Admin eksport danych</button>
         </div>

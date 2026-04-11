@@ -4,12 +4,14 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from payments.models import Fees
+from payments.serializers import FeesSerializer
 from users.permissions import IsObjectOwner, IsStudent
 from . import services
-from .models import Enrollment, FormData, Address, SubmittedDocument, Fees
+from .models import Enrollment, FormData, Address, SubmittedDocument
 from .serializers import AdminEnrollmentSerializer, FormDataSerializer, \
     AddressSerializer, EnrollmentSerializer, ActiveEnrollmentSerializer, \
-    SubmittedDocumentsListCreateSerializer, FeesSerializer
+    SubmittedDocumentsListCreateSerializer, EnrollmentRecruitmentEndDateSerializer
 from .services import get_enrollable_edition
 
 
@@ -109,18 +111,14 @@ class SubmittedDocumentsListCreateAPIView(generics.ListCreateAPIView):
         serializer.save(enrollment_id=self.kwargs['enrollment_pk'])
 
 class EnrollmentRecruitmentEndDateAPIView(generics.RetrieveAPIView):
+    serializer_class = EnrollmentRecruitmentEndDateSerializer
     permission_classes = [IsAuthenticated]
+    lookup_url_kwarg = 'enrollment_pk'
 
-    # TODO to działa wgl? + nie wystarczy serializera uzyc?
-    def get(self, request, enrollment_pk):
-        enrollment = get_object_or_404(
-            Enrollment,
-            pk=enrollment_pk,
-            user=request.user
-        )
-        return Response({
-            'recruitment_end_date': enrollment.studies_edition.recruitment_end_date
-        })
+    def get_queryset(self):
+        return Enrollment.objects.filter(
+            user=self.request.user
+        ).select_related('studies_edition')
 
 class FeesListAPIView(generics.ListAPIView):
     serializer_class = FeesSerializer

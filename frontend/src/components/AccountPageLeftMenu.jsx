@@ -42,6 +42,7 @@ export default function AccountPageLeftMenu() {
         {isAdminOpen && (
           <div className="sub-menu">
             <NavLink to="/admin/candidates" icon="group" label="Kandydaci" indent />
+            <NavLink to="/admin/applications" icon="fact_check" label="Przegląd zgłoszeń" indent />
             <NavLink to="/admin/finances" icon="account_balance_wallet" label="Finanse" indent />
             <NavLink to="/admin/export" icon="ios_share" label="Eksport danych" indent />
           </div>

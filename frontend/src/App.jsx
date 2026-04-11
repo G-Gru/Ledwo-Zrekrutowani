@@ -17,6 +17,7 @@ import Documents from './pages/account-pages/MyDocuments';
 import DataExport from './pages/admin-pages/DataExport';
 import Finanses from './pages/admin-pages/Finances';
 import Candidates from './pages/admin-pages/Candidates';
+import ApplicationsReview from './pages/admin-pages/ApplicationsReview';
 
 function App() {
   const token = localStorage.getItem('token');
@@ -42,6 +43,7 @@ function App() {
         <Route path="/my-profile" element={<Profile />} />
 
         <Route path="/admin/candidates" element={<Candidates />} />
+        <Route path="/admin/applications" element={<ApplicationsReview />} />
         <Route path="/admin/finances" element={<Finanses />} />
         <Route path="/admin/export" element={<DataExport />} />
 
