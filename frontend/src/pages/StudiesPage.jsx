@@ -14,6 +14,7 @@ const CARD_IMAGES = [
 ];
 
 const PAGE_BG_IMAGE = 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1920&q=60';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 const sampleOffers = [
   { id: 1, name: 'Informatyka', price: '5000.00', start_date: '2024-10-01', status: 'ACTIVE' },
@@ -30,7 +31,7 @@ export default function StudiesPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/studies/editions/');
+        const response = await fetch(`${API_BASE_URL}/api/studies/editions/`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         if (!Array.isArray(data) || data.length === 0) {
@@ -40,7 +41,7 @@ export default function StudiesPage() {
         setOffers(data);
         setError('');
       } catch (err) {
-        console.warn('fetch /studies failed, using sample data', err);
+        console.warn('fetch /api/studies/editions failed, using sample data', err);
         setError('Brak połączenia z backendem; wyświetlane dane testowe.');
         setOffers(sampleOffers);
       } finally {

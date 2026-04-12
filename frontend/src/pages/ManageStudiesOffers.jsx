@@ -116,6 +116,9 @@ const staffRoleLabels = {
   FINANCE_COORDINATOR: 'Koordynator finansowy'
 };
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const getApiUrl = (path) => `${API_BASE_URL}/api${path}`;
+
 export default function ManageStudiesOffers() {
   const [studies, setStudies] = useState([]);
   const [selectedStudy, setSelectedStudy] = useState(null);
@@ -144,7 +147,7 @@ export default function ManageStudiesOffers() {
   const [canViewEditionStaff, setCanViewEditionStaff] = useState(true);
   const [canCreateEditionStaff, setCanCreateEditionStaff] = useState(true);
 
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('user-access-token') || localStorage.getItem('token');
 
   const toDateTimeLocal = (value) => {
     if (!value) return '';
@@ -174,7 +177,7 @@ export default function ManageStudiesOffers() {
 
   const fetchStudies = async () => {
     try {
-      const res = await fetch('/admin/studies/', {
+      const res = await fetch(getApiUrl('/admin/studies/'), {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -203,7 +206,7 @@ export default function ManageStudiesOffers() {
 
   const fetchEditions = async () => {
     try {
-      const res = await fetch('/admin/studies/editions/', {
+      const res = await fetch(getApiUrl('/admin/studies/editions/'), {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -237,7 +240,7 @@ export default function ManageStudiesOffers() {
     }
 
     try {
-      const res = await fetch(`/admin/studies/editions/${editionId}/staff/`, {
+      const res = await fetch(getApiUrl(`/admin/studies/editions/${editionId}/staff/`), {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -266,7 +269,7 @@ export default function ManageStudiesOffers() {
 
   const fetchAllUsers = async () => {
     try {
-      const res = await fetch('/auth/users/', {
+      const res = await fetch(getApiUrl('/admin/users/employees/'), {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -314,7 +317,7 @@ export default function ManageStudiesOffers() {
     if (!window.confirm(`Czy na pewno usunąć kierunek "${study.name}"?`)) return;
 
     try {
-      const res = await fetch(`/admin/studies/${study.id}/`, {
+      const res = await fetch(getApiUrl(`/admin/studies/${study.id}/`), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
@@ -345,7 +348,7 @@ export default function ManageStudiesOffers() {
     fetchEditionStaff(edition.id);
 
     try {
-      const res = await fetch(`/admin/studies/editions/${edition.id}/`, {
+      const res = await fetch(getApiUrl(`/admin/studies/editions/${edition.id}/`), {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -374,7 +377,7 @@ export default function ManageStudiesOffers() {
     if (!window.confirm(`Czy na pewno usunąć ofertę “${edition.name}”?`)) return;
 
     try {
-      const res = await fetch(`/admin/studies/editions/${edition.id}/`, {
+      const res = await fetch(getApiUrl(`/admin/studies/editions/${edition.id}/`), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
@@ -424,7 +427,7 @@ export default function ManageStudiesOffers() {
         role: staffFormData.role
       };
 
-      const res = await fetch(`/admin/studies/editions/${selectedEdition.id}/staff/`, {
+      const res = await fetch(getApiUrl(`/admin/studies/editions/${selectedEdition.id}/staff/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -461,7 +464,7 @@ export default function ManageStudiesOffers() {
     if (!window.confirm(`Czy na pewno usunąć ${fullName || 'tego pracownika'} z edycji?`)) return;
 
     try {
-      const res = await fetch(`/admin/studies/editions/${selectedEdition.id}/staff/${staffItem.id}/`, {
+      const res = await fetch(getApiUrl(`/admin/studies/editions/${selectedEdition.id}/staff/${staffItem.id}/`), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
@@ -490,8 +493,8 @@ export default function ManageStudiesOffers() {
     try {
       const method = selectedStudy ? 'PUT' : 'POST';
       const url = selectedStudy
-        ? `/admin/studies/${selectedStudy.id}/`
-        : '/admin/studies/';
+        ? getApiUrl(`/admin/studies/${selectedStudy.id}/`)
+        : getApiUrl('/admin/studies/');
 
       const payload = {
         name: studyFormData.name,
@@ -536,8 +539,8 @@ export default function ManageStudiesOffers() {
     try {
       const method = selectedEdition ? 'PUT' : 'POST';
       const url = selectedEdition
-        ? `/admin/studies/editions/${selectedEdition.id}/`
-        : '/admin/studies/editions/';
+        ? getApiUrl(`/admin/studies/editions/${selectedEdition.id}/`)
+        : getApiUrl('/admin/studies/editions/');
 
       const payload = selectedEdition
         ? {

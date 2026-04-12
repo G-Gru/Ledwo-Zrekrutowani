@@ -55,6 +55,7 @@ const roleLabels = {
   ADMINISTRATIVE_COORDINATOR: 'Koordynator administracyjny',
   FINANCE_COORDINATOR: 'Koordynator finansowy',
 };
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 export default function StudiesDetailPage() {
   const { id } = useParams();
@@ -67,8 +68,8 @@ export default function StudiesDetailPage() {
     const fetchData = async () => {
       try {
         const [editionResponse, staffResponse] = await Promise.all([
-          fetch(`/studies/editions/${id}/`),
-          fetch(`/studies/editions/${id}/staff/`),
+          fetch(`${API_BASE_URL}/api/studies/editions/${id}/`),
+          fetch(`${API_BASE_URL}/api/studies/editions/${id}/staff/`),
         ]);
 
         if (!editionResponse.ok) {

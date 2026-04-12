@@ -1,6 +1,6 @@
 from django.utils import timezone
 from rest_framework import serializers
-
+from datetime import datetime
 from studies.models import Studies, StudiesEdition, StudiesEditionStaff, StudiesDocument
 from users.models import User
 from users.serializers import EmployeeSerializer
@@ -32,6 +32,9 @@ class StudiesEditionCreateSerializer(serializers.ModelSerializer):
         rec_start = attrs.get("recruitment_start_date")
         rec_end = attrs.get("recruitment_end_date")
 
+        rec_start_date = rec_start.date() if isinstance(rec_start, datetime) else rec_start
+        rec_end_date = rec_end.date() if isinstance(rec_end, datetime) else rec_end
+
         if end < start:
             raise serializers.ValidationError({
                 "end_date": "Must be greater than start date"
@@ -39,12 +42,12 @@ class StudiesEditionCreateSerializer(serializers.ModelSerializer):
 
         if rec_end < rec_start:
             raise serializers.ValidationError({
-                "recruitment_end_date": "Must be greater than start date"
+                "recruitment_end_date": "Must be greater than recruitment start date"
             })
 
-        if rec_end < start:
+        if rec_end_date > start:
             raise serializers.ValidationError({
-                "recruitment_end_date": "Must be greater than start date"
+                "recruitment_end_date": "Recruitment must end before or on studies start date"
             })
 
         return attrs
