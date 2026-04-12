@@ -1,41 +1,27 @@
-import { login, register } from "../services/authService";
+import * as authService from "../services/authService";
 
 export const useAuth = () => {
   const handleLogin = async (email, password) => {
-    const data = await login(email, password);
-    if (data.token) {
-      localStorage.setItem("token", data.token);
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-      }
-    }
+    const data = await authService.login(email, password);
     return data;
   };
 
   const handleRegister = async (userData) => {
-    const data = await register(userData);
-    if (data.token) {
-      localStorage.setItem("token", data.token);
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-      }
-    }
+    const data = await authService.register(userData);
     return data;
   };
 
-  const isAuthenticated = () => {
-    return !!localStorage.getItem("token");
-  };
+  const isAuthenticated = () => authService.isLoggedIn();
 
-  const getUser = () => {
-    const user = localStorage.getItem("user");
-    return user ? JSON.parse(user) : null;
-  };
+  const getUser = () => authService.getUser();
+
+  const logout = () => authService.logout();
 
   return { 
     handleLogin, 
     handleRegister, 
     isAuthenticated,
-    getUser 
+    getUser,
+    logout
   };
 };

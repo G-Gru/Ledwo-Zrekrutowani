@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import AccountPageLeftMenu from '../../components/AccountPageLeftMenu';
 import '../../styles/AdminApplicationsReview.css';
 import { serverApi } from '../../services/serverApi';
+import { getAccessToken, isLoggedIn } from '../../services/authService';
 import LoginRedirectPage from '../../components/LoginRedirectPage';
 
 const ENABLE_DEV_AUTH_BYPASS = true;
@@ -54,7 +55,7 @@ export default function ApplicationsReview() {
   const [enrollments, setEnrollments] = useState([]);
 
   useEffect(() => {
-    const token = localStorage.getItem('user-access-token');
+    const token = getAccessToken();
     const bypassEnabled = import.meta.env.DEV && ENABLE_DEV_AUTH_BYPASS;
     setIsBypassMode(!token && bypassEnabled);
     setUserLoggedIn(!!token || bypassEnabled);
@@ -90,6 +91,14 @@ export default function ApplicationsReview() {
     }
 
     fetchEnrollments();
+
+    const watchInterval = setInterval(() => {
+      if (!isLoggedIn() && !bypassEnabled) {
+        setUserLoggedIn(false);
+      }
+    }, 30000);
+
+    return () => clearInterval(watchInterval);
   }, [onlyUnpaid, refreshTick]);
 
   const summary = useMemo(() => {

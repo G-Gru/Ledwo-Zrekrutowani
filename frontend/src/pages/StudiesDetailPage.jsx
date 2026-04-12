@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../styles/Style.css';
+import { serverApi } from '../services/serverApi';
 
 const sampleEdition = {
   id: 1,
@@ -66,21 +67,19 @@ export default function StudiesDetailPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [editionResponse, staffResponse] = await Promise.all([
-          fetch(`/studies/editions/${id}/`),
-          fetch(`/studies/editions/${id}/staff/`),
+        const [editionRes, staffRes] = await Promise.all([
+          serverApi.apiRequest(`/api/studies/editions/${id}/`),
+          serverApi.apiRequest(`/api/studies/editions/${id}/staff/`),
         ]);
 
-        if (!editionResponse.ok) {
-          throw new Error(`HTTP ${editionResponse.status}`);
+        if (editionRes.error) {
+          throw new Error(`HTTP ${editionRes.errorMsg}`);
         }
 
-        const editionData = await editionResponse.json();
-        setEdition(editionData);
+        setEdition(editionRes.data);
 
-        if (staffResponse.ok) {
-          const staffData = await staffResponse.json();
-          setStaff(Array.isArray(staffData) ? staffData : []);
+        if (!staffRes.error && Array.isArray(staffRes.data)) {
+          setStaff(staffRes.data);
         } else {
           setStaff([]);
         }

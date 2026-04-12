@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import AccountPageLeftMenu from '../../components/AccountPageLeftMenu';
+import LoginRedirectPage from '../../components/LoginRedirectPage';
 import { serverApi } from '../../services/serverApi';
+import { getAccessToken, isLoggedIn } from '../../services/authService';
 import '../../styles/Payments.css';
 import DocumentUploadCard from '../../components/DocumentUploadCard'
 
 export default function Payments() {
-    const [summary, setSummary] = useState({ totalToPay: '0.00', deadline: '' });
+    const [summary, setSummary] = useState({ totalToPay: '0.00', deadline: '', nextPaymentName: ''});
 
     const [upcomingPayments, setUpcomingPayments] = useState([]);
     const [userHasUpcomingPayments, setUserHasUpcomingPayments] = useState(false);
@@ -22,17 +24,17 @@ export default function Payments() {
     const [selectedIds, setSelectedIds] = useState([]);
     const [paymentMessage, setPaymentMessage] = useState("");
     const [paymentSuccess, setPaymentSuccess] = useState(null);
+    const [paymentProofFile, setPaymentProofFile] = useState(null);
 
     useEffect(() => {
-        // if user not logged
-        let userToken = localStorage.getItem("user-access-token");
-        if (userToken == null) { setUserLoggedIn(false); return; }
-        
-        // else
-        setUserLoggedIn(true)
+        const token = getAccessToken();
+        if (!token) { setUserLoggedIn(false); return; }
+        setUserToken(token);
+        setUserLoggedIn(true);
+
         async function fetchPaymentData() {
             /* get user upcoming payments */
-            let upcomingPaymentsResponse = await serverApi.getUserActivePayments(userToken)
+            let upcomingPaymentsResponse = await serverApi.getUserActivePayments(token)
             if (upcomingPaymentsResponse != null && upcomingPaymentsResponse.payments) {
                 setUserHasUpcomingPayments(upcomingPaymentsResponse.payments.length > 0)
                 setUpcomingPayments(upcomingPaymentsResponse.payments)
@@ -41,7 +43,7 @@ export default function Payments() {
             }
 
             /* get user payment history */
-            let paymentHistoryResponse = await serverApi.getUserPaymentsHistory(userToken)
+            let paymentHistoryResponse = await serverApi.getUserPaymentsHistory(token)
             if (paymentHistoryResponse != null && paymentHistoryResponse.payments) {
                 setUserHasPaymentHistory(paymentHistoryResponse.payments.length > 0)
                 setPaymentHistory(paymentHistoryResponse.payments)
@@ -49,7 +51,22 @@ export default function Payments() {
             }
 
             /* generate payments summary */
-            if (upcomingPaymentsResponse && !upcomingPaymentsResponse.error && upcomingPaymentsResponse.payments && upcomingPaymentsResponse.payments.length > 0) {
+            if (!upcomingPaymentsResponse || upcomingPaymentsResponse.error) {
+                // Fallback to mock data if error
+                let mock_data = {
+                    totalToPay: "3,450.00 PLN",
+                    deadline: "01.01.2000",
+                    nextPaymentName: "Czesne (Semestr Zimowy)"
+                };
+                setSummary(mock_data);
+            } else if (!upcomingPaymentsResponse.payments || upcomingPaymentsResponse.payments.length === 0) {
+                let empty_payments = {
+                    totalToPay: "Brak zapłat",
+                    deadline: "--/--/----",
+                    nextPaymentName: ""
+                };
+                setSummary(empty_payments);
+            } else {
                 const payments = upcomingPaymentsResponse.payments;
                 // Calculate total to pay
                 const total = payments.reduce((sum, p) => {
@@ -57,7 +74,7 @@ export default function Payments() {
                     const amt = parseFloat(amtStr.replace(/[^\d.,]/g, '').replace(',', '.'));
                     return sum + (isNaN(amt) ? 0 : amt);
                 }, 0);
-                const totalToPay = total.toFixed(2).replace('.', ',') + ' PLN';
+                const totalToPay = `${total.toFixed(2).replace('.', ',')} PLN`;
 
                 // Find earliest deadline and its title
                 const earliest = payments.reduce((min, p) => {
@@ -68,21 +85,30 @@ export default function Payments() {
                 const deadline = earliest.date.toLocaleDateString('pl-PL'); // Format as DD.MM.YYYY
                 const nextPaymentName = earliest.title;
                 setSummary({ totalToPay, deadline, nextPaymentName });
-            } else {
-                // Fallback to mock data if no upcoming payments or error
-                let mock_data = {
-                    totalToPay: "3,450.00 PLN",
-                    deadline: "01.01.2000",
-                    nextPaymentName: "Czesne (Semestr Zimowy)"
-                };
-                setSummary(mock_data);
             }
         }
-        fetchPaymentData()
-    
+        fetchPaymentData();
+
+        const watchInterval = setInterval(() => {
+            if (!isLoggedIn()) {
+                setUserLoggedIn(false);
+            }
+        }, 30000);
+
+        return () => clearInterval(watchInterval);
     }, []);
 
+    // Obsługa pliku potwierdzenia przelewu
+    const handlePaymentProofFileSelect = (id, file) => {
+        setPaymentProofFile(file);
+    };
+
+    const handlePaymentProofFileRemove = (id) => {
+        setPaymentProofFile(null);
+    };
+
     return (
+        !userLoggedIn ? <LoginRedirectPage /> : (
         <div className='account-page-layout'>
             <AccountPageLeftMenu />
 
@@ -93,7 +119,7 @@ export default function Payments() {
 
                     {/* Title */}
                     <div className='page-title'>Płatności</div>
-                    <p className='page-subtitle' style={{marginBottom: '50px'}}>Zarządzaj swoją dokumentacją finansową i monitoruj statusy opłat w jednym miejscu.</p>
+                    <p className='page-subtitle'>Monitoruj statusy opłat i wykonuj łączne transakcje w jednym miejscu.</p>
                 </header>
 
                 <div className='payments-grid-layout'>
@@ -200,8 +226,24 @@ export default function Payments() {
                                             formats="PDF, JPG"
                                             maxSize="5MB"
                                             icon="description"
-                                            onFileSelect={null}
+                                            onFileSelect={handlePaymentProofFileSelect}
+                                            onFileRemove={handlePaymentProofFileRemove}
                                         />
+                                        {paymentProofFile && (
+                                            <button 
+                                                className='btn-primary-large'
+                                                onClick={async () => {
+                                                    const res = await serverApi.userPayment(userToken, selectedIds)
+                                                    setPaymentSuccess(res.success)
+                                                    setPaymentMessage(res.success ? "Płatność została pomyślnie zrealizowana!" : res.errorMsg)
+                                                    handlePaymentProofFileRemove()
+                                                }}
+                                                style={{ marginTop: '16px', width: '100%' }}
+                                            >
+                                                <span className="material-symbols-outlined">check_circle</span>
+                                                Zatwierdź płatność
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                                 
@@ -257,5 +299,6 @@ export default function Payments() {
                 </div>
             </div>
         </div>
+        )
     );
 }

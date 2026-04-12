@@ -14,8 +14,8 @@ export default function MainPage() {
             <button onClick={() => navigate('/manage-studies')}>Zarządzanie ofertami studiów</button>
             <button onClick={() => navigate('/login')}>Login Page</button>
             <button onClick={() => navigate('/register')}>Register Page</button>
-            <button onClick={() => navigate('/applicationForm')}>Formularz Zgloszeniowy</button>
-            <button onClick={() => navigate('/applicationSent')}>Po wyslaniu Formularza</button>
+            <button onClick={() => navigate('/applicationForm?edition_id=1')}>Formularz Zgloszeniowy</button>
+            <button onClick={() => navigate('/applicationSent?edition_id=1')}>Po wyslaniu Formularza</button>
             <button onClick={() => navigate('/my-applications')}>Moje Wnioski</button>
             <button onClick={() => navigate('/my-payments')}>Moje platnosci</button>
             <button onClick={() => navigate('/my-documents')}>Moje dokumenty</button>

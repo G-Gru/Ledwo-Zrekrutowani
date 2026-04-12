@@ -5,6 +5,7 @@ import AccountPageLeftMenu from '../../components/AccountPageLeftMenu'
 import '../../styles/MyApplications.css'
 import Timeline from '../../components/Timeline';
 import { serverApi } from '../../services/serverApi';
+import { getAccessToken, isLoggedIn } from '../../services/authService';
 import LoginRedirectPage from '../../components/LoginRedirectPage';
 
 function getStatusColorClass(statusText) {
@@ -39,17 +40,8 @@ export default function MyApplications({}) {
 
     /* Karta na wyswietlenie jednego wniosku */
     const ApplicationCard = ({ 
-        id, documentName, type, dataId, statuses=[], unfinished=false 
+        id, documentName, type, studies_edition, statuses=[], unfinished=false 
     }) => {
-        const [appData, setAppData] = useState({ major: '', institute: '' });
-
-        useEffect(() => {
-            if (type === "rekr" && dataId !== null) {
-                const data = serverApi.getCourseInfo(dataId);
-                setAppData(data);
-            }
-        }, [type, dataId]);
-
         return (
             <div 
                 className={`single-application-card ${activeCardId === id ? 'active' : ''}`}
@@ -62,8 +54,8 @@ export default function MyApplications({}) {
                     
                     {type === "rekr" && (
                         <>
-                            <p><span className='line-item-title'>KIERUNEK:</span> {appData.major}</p>
-                            <p><span className='line-item-title'>WYDZIAŁ:</span> {appData.institute}</p>
+                            <p><span className='line-item-title'>KIERUNEK:</span> {studies_edition ? studies_edition.name : "Nieznany kierunek"}</p>
+                            <p><span className='line-item-title'>WYDZIAŁ:</span> Nieznany Wydzial </p>
                         </>
                     )}
 
@@ -85,33 +77,40 @@ export default function MyApplications({}) {
     /* Pobieranie wnioskow z servera */
     // dane: application { name: "", type: "", status: [""],  schedule: [name: "", startDate: "", endDate: "", flag: ""] }
     useEffect(() => {
-        // check user is logged in
-        let userToken = localStorage.getItem("user-access-token");
-
-        if (userToken == null) setUserLoggedIn(false)
-        else {
-            setUserLoggedIn(true)
-
-            async function fetchApplicationData() {
-                /* get unfinished applications */
-                let unfinishedAppsResponse = await serverApi.getUserUnfinishedApplications(userToken)
-                if (unfinishedAppsResponse != null) {
-                    setUserHasUnfinishedApplications(unfinishedAppsResponse.applications.length > 0)
-                    setUnfinishedApplications(unfinishedAppsResponse.applications)
-                    if (unfinishedAppsResponse["error"]) setError(unfinishedAppsResponse["errorMsg"]);
-                }
-                
-                /* get active applications */
-                let activeAppsResponse = await serverApi.getUserActiveApplications(userToken)
-                if (activeAppsResponse != null && activeAppsResponse.applications) {
-                    setUserHasActiveApplications(activeAppsResponse.applications.length > 0)
-                    setActiveApplications(activeAppsResponse.applications)
-                    if (activeAppsResponse["error"]) setError(activeAppsResponse["errorMsg"]);
-                }
-            }
-            fetchApplicationData()
+        const token = getAccessToken();
+        if (!token) {
+            setUserLoggedIn(false);
+            return;
         }
 
+        setUserLoggedIn(true);
+
+        async function fetchApplicationData() {
+            /* get unfinished applications */
+            let unfinishedAppsResponse = await serverApi.getUserUnfinishedApplications(token)
+            if (unfinishedAppsResponse != null) {
+                setUserHasUnfinishedApplications(unfinishedAppsResponse.applications.length > 0)
+                setUnfinishedApplications(unfinishedAppsResponse.applications)
+                if (unfinishedAppsResponse["error"]) setError(unfinishedAppsResponse["errorMsg"]);
+            }
+            
+            /* get active applications */
+            let activeAppsResponse = await serverApi.getUserActiveApplications(token)
+            if (activeAppsResponse != null && activeAppsResponse.applications) {
+                setUserHasActiveApplications(activeAppsResponse.applications.length > 0)
+                setActiveApplications(activeAppsResponse.applications)
+                if (activeAppsResponse["error"]) setError(activeAppsResponse["errorMsg"]);
+            }
+        }
+        fetchApplicationData();
+
+        const watchInterval = setInterval(() => {
+            if (!isLoggedIn()) {
+                setUserLoggedIn(false);
+            }
+        }, 30000);
+
+        return () => clearInterval(watchInterval);
     }, []);
 
     return (
@@ -141,7 +140,7 @@ export default function MyApplications({}) {
                                     id={i} 
                                     documentName={app.name}
                                     type={app.type}
-                                    dataId={app.studies_edition}
+                                    studies_edition={app.studies_edition}
                                     statuses={app.status}
                                     unfinished={true} 
                                 />
@@ -163,7 +162,7 @@ export default function MyApplications({}) {
                                     id={i + unfinishedApplications.length} 
                                     documentName={app.name}
                                     type={app.type}
-                                    dataId={app.studies_edition}
+                                    studies_edition={app.studies_edition}
                                     statuses={app.status}
                                 />
                             ))

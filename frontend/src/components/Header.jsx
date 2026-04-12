@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import '../styles/Header.css';
 import { useState, useEffect } from 'react';
+import { isLoggedIn } from '../services/authService';
 
 export default function Header() {
     const location = useLocation();
@@ -10,12 +11,12 @@ export default function Header() {
     const [isUserLoggedIn, setUserLoggedIn] = useState(false)
 
     useEffect(() => {
-        // check user is logged in
+        // check user is logged in and token expiration
         const checkLoginStatus = () => {
-            setUserLoggedIn(localStorage.getItem("user-access-token") != null);
+            setUserLoggedIn(isLoggedIn());
         };
         checkLoginStatus();
-        const interval = setInterval(checkLoginStatus, 250); // check every 250ms for login state
+        const interval = setInterval(checkLoginStatus, 1000);
 
         return () => { clearInterval(interval); };
     }, []);

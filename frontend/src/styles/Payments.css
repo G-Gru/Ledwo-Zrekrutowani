@@ -223,3 +223,12 @@
 .payment-method-column.right {
     margin-left: 20px;
 }
+
+.payments-page-header {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 30px;
+}
+.page-subtitle {
+    text-align: center;
+}

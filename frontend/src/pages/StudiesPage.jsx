@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Style.css';
+import { serverApi } from '../services/serverApi';
 
 const CARD_IMAGES = [
   'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&q=80', // kod na ekranie
@@ -30,9 +31,7 @@ export default function StudiesPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/studies/editions/');
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
+        const data = await serverApi.getCoursesInfo()
         if (!Array.isArray(data) || data.length === 0) {
           throw new Error('Brak danych od backendu');
         }
