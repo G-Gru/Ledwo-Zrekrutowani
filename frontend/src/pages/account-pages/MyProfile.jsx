@@ -35,8 +35,8 @@ export default function Profile({}) {
             </div>
 
             <div className='bg-panel' style={{padding: '5px 20px'}}>
-                <p><strong>Imię:</strong> {user.firstName || 'Brak danych'}</p>
-                <p><strong>Nazwisko:</strong> {user.lastName || 'Brak danych'}</p>
+                <p><strong>Imię:</strong> {user.first_name || 'Brak danych'}</p>
+                <p><strong>Nazwisko:</strong> {user.last_name || 'Brak danych'}</p>
                 <p><strong>Email:</strong> {user.email || 'Brak danych'}</p>
             </div>
 
