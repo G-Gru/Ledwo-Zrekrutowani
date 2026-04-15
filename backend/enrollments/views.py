@@ -9,7 +9,7 @@ from payments.serializers import FeesSerializer
 from users.permissions import IsObjectOwner, IsStudent
 from . import services
 from .models import Enrollment, FormData, Address, SubmittedDocument
-from .serializers import AdminEnrollmentSerializer, FormDataSerializer, \
+from .serializers import AdminEnrollmentSerializer, AdminEnrollmentDetailSerializer, FormDataSerializer, \
     AddressSerializer, EnrollmentSerializer, ActiveEnrollmentSerializer, \
     SubmittedDocumentsListCreateSerializer, EnrollmentRecruitmentEndDateSerializer
 from .services import get_enrollable_edition
@@ -137,7 +137,18 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
     # W przyszłości dodać permission_classes = [IsAdminUser]
     serializer_class = AdminEnrollmentSerializer
 
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return AdminEnrollmentDetailSerializer
+        return AdminEnrollmentSerializer
+
     def get_queryset(self):
+        if self.action == 'retrieve':
+            return Enrollment.objects.all().select_related(
+                'user', 'studies_edition',
+                'formdata', 'formdata__residential_address', 'formdata__registered_address',
+            ).prefetch_related('fees', 'submitteddocument_set')
+
         qs = Enrollment.objects.all().select_related('user', 'studies_edition').prefetch_related('fees')
         
         # Filtrowanie po nieopłaconych, jeśli w URL pojawi się ?unpaid_only=true
@@ -145,6 +156,27 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
         if unpaid_only == 'true':
             qs = qs.filter(fees__paid_date__isnull=True).distinct()
         return qs
+
+    @action(detail=True, methods=['post'], url_path='decide')
+    def decide(self, request, pk=None):
+        enrollment = self.get_object()
+        decision = request.data.get('decision')
+        note = request.data.get('note', '')
+
+        if decision not in ('accept', 'reject'):
+            return Response(
+                {'error': 'decision must be "accept" or "reject"'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        enrollment.status = (
+            Enrollment.Status.STUDENT if decision == 'accept' else Enrollment.Status.EXPELLED
+        )
+        enrollment.status_note = note
+        enrollment.save(update_fields=['status', 'status_note'])
+
+        serializer = AdminEnrollmentDetailSerializer(enrollment)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'], url_path='send-payment-reminder')
     def send_payment_reminder(self, request, pk=None):

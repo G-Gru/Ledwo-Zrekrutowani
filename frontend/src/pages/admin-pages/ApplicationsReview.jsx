@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import AccountPageLeftMenu from '../../components/AccountPageLeftMenu';
 import '../../styles/AdminApplicationsReview.css';
 import { serverApi } from '../../services/serverApi';
@@ -6,36 +7,6 @@ import { getAccessToken, isLoggedIn } from '../../services/authService';
 import LoginRedirectPage from '../../components/LoginRedirectPage';
 
 const ENABLE_DEV_AUTH_BYPASS = true;
-
-const MOCK_ENROLLMENTS = [
-  {
-    id: 101,
-    student_name: 'Jan Kowalski',
-    status: 'W_TRAKCIE',
-    enrollment_date: '2026-03-20',
-    is_fully_paid: false,
-    missing_documents: true,
-    system_status: 'NIESPELNIONE WYMOGI (Brak Oplat/Dokumentow)',
-  },
-  {
-    id: 102,
-    student_name: 'Anna Nowak',
-    status: 'W_TRAKCIE',
-    enrollment_date: '2026-03-22',
-    is_fully_paid: true,
-    missing_documents: false,
-    system_status: 'KOMPLETNE - GOTOWE DO DECYZJI',
-  },
-  {
-    id: 103,
-    student_name: 'Piotr Zielinski',
-    status: 'W_TRAKCIE',
-    enrollment_date: '2026-03-24',
-    is_fully_paid: false,
-    missing_documents: false,
-    system_status: 'NIESPELNIONE WYMOGI (Brak Oplat/Dokumentow)',
-  },
-];
 
 function paymentStatusLabel(isFullyPaid) {
   return isFullyPaid ? 'Opłacone' : 'Nieopłacone';
@@ -48,6 +19,7 @@ function docsStatusLabel(hasMissingDocuments) {
 export default function ApplicationsReview() {
   const [userLoggedIn, setUserLoggedIn] = useState(false);
   const [isBypassMode, setIsBypassMode] = useState(false);
+  const [isMockData, setIsMockData] = useState(false);
   const [onlyUnpaid, setOnlyUnpaid] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -60,17 +32,7 @@ export default function ApplicationsReview() {
     setIsBypassMode(!token && bypassEnabled);
     setUserLoggedIn(!!token || bypassEnabled);
 
-    if (!token && bypassEnabled) {
-      const mocked = onlyUnpaid
-        ? MOCK_ENROLLMENTS.filter((item) => !item.is_fully_paid)
-        : MOCK_ENROLLMENTS;
-      setEnrollments(mocked);
-      setLoading(false);
-      setError('');
-      return;
-    }
-
-    if (!token) return;
+    if (!token && !bypassEnabled) return;
 
     async function fetchEnrollments() {
       setLoading(true);
@@ -82,9 +44,11 @@ export default function ApplicationsReview() {
 
       if (response.error) {
         setEnrollments([]);
+        setIsMockData(false);
         setError(response.errorMsg || 'Wystąpił błąd podczas pobierania zgłoszeń.');
       } else {
         setEnrollments(response.enrollments || []);
+        setIsMockData(Boolean(response.isMock));
       }
 
       setLoading(false);
@@ -144,9 +108,9 @@ export default function ApplicationsReview() {
         </div>
 
         <div className='bg-panel admin-applications-panel'>
-          {isBypassMode && (
+          {(isBypassMode || isMockData) && (
             <div className='admin-preview-note'>
-              Tryb podglądu: strona działa bez logowania i pokazuje dane testowe.
+              Tryb podglądu: lista korzysta z danych testowych albo fallbacku, więc możesz sprawdzić nowy widok bez backendu.
             </div>
           )}
 
@@ -186,6 +150,7 @@ export default function ApplicationsReview() {
                       <th>Dokumenty</th>
                       <th>Data zgłoszenia</th>
                       <th>Status systemowy</th>
+                      <th>Szczegóły</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -206,6 +171,11 @@ export default function ApplicationsReview() {
                         </td>
                         <td>{item.enrollment_date || '-'}</td>
                         <td>{item.system_status || '-'}</td>
+                        <td>
+                          <Link className='admin-details-link' to={`/admin/applications/${item.id}`}>
+                            Zobacz szczegóły
+                          </Link>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

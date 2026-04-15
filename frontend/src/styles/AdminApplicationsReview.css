@@ -107,6 +107,16 @@
   padding: 8px 14px;
 }
 
+.admin-details-link {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.admin-details-link:hover {
+  text-decoration: underline;
+}
+
 .badge-unpaid,
 .badge-paid,
 .badge-missing,

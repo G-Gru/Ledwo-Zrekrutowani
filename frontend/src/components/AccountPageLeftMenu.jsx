@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { getMockAdminEnrollmentPreviewId } from '../mocks/adminEnrollmentMocks';
 import '../styles/AccountMenu.css'
 
 export default function AccountPageLeftMenu() {
@@ -7,7 +8,8 @@ export default function AccountPageLeftMenu() {
   // Stan do rozwijania panelu administratora
   const [isAdminOpen, setIsAdminOpen] = useState(true);
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => location.pathname === path || (path !== '/' && location.pathname.startsWith(`${path}/`));
+  const previewEnrollmentId = getMockAdminEnrollmentPreviewId();
 
   // Pomocnicza funkcja do renderowania linku
   const NavLink = ({ to, icon, label, indent = false }) => (
@@ -43,6 +45,7 @@ export default function AccountPageLeftMenu() {
           <div className="sub-menu">
             <NavLink to="/admin/candidates" icon="group" label="Kandydaci" indent />
             <NavLink to="/admin/applications" icon="fact_check" label="Przegląd zgłoszeń" indent />
+            <NavLink to={`/admin/applications/${previewEnrollmentId}`} icon="preview" label="Podgląd szczegółów" indent />
             <NavLink to="/admin/finances" icon="account_balance_wallet" label="Finanse" indent />
             <NavLink to="/admin/export" icon="ios_share" label="Eksport danych" indent />
           </div>

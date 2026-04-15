@@ -1,5 +1,10 @@
 
 import { getUser } from './authService';
+import {
+    getMockAdminEnrollmentDetails,
+    getMockAdminEnrollmentList,
+    saveMockAdminEnrollmentDecision,
+} from '../mocks/adminEnrollmentMocks';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -83,6 +88,93 @@ export class serverApi {
         const givenDate = new Date(dateString);
         givenDate.setHours(0, 0, 0, 0);
         return today < givenDate;
+    }
+
+    static #buildEmptyAdminEnrollmentDetails(summary = {}) {
+        return {
+            id: summary.id || null,
+            student_name: summary.student_name || 'Nieznany kandydat',
+            status: summary.status || '-',
+            status_note: summary.status_note || '',
+            enrollment_date: summary.enrollment_date || null,
+            is_fully_paid: Boolean(summary.is_fully_paid),
+            missing_documents: Boolean(summary.missing_documents),
+            system_status: summary.system_status || '-',
+            studies_name: summary.studies_name || 'Nieznany kierunek',
+            edition_name: summary.edition_name || 'Nieznana edycja',
+            personal: {
+                first_name: '',
+                second_name: '',
+                last_name: '',
+                family_name: '',
+                academic_title: '',
+                birth_date: '',
+                birth_place: '',
+                pesel: '',
+                citizenship: '',
+            },
+            contact: {
+                email: '',
+                phone: '',
+            },
+            residential_address: null,
+            registered_address: null,
+            education: {
+                description: '',
+                country: '',
+            },
+            emergency_contact: {
+                name: '',
+                surname: '',
+                relation: '',
+                phone: '',
+            },
+            documents: [],
+            fees: [],
+        };
+    }
+
+    static #normalizeAdminEnrollmentDetails(detailData, documents = [], fees = []) {
+        if (!detailData || typeof detailData !== 'object') {
+            return null;
+        }
+
+        const normalized = this.#buildEmptyAdminEnrollmentDetails({
+            id: detailData.id,
+            student_name: detailData.student_name,
+            status: detailData.status,
+            status_note: detailData.status_note,
+            enrollment_date: detailData.enrollment_date,
+            is_fully_paid: detailData.is_fully_paid,
+            missing_documents: detailData.missing_documents,
+            system_status: detailData.system_status,
+            studies_name: detailData.studies_name || detailData.studies_edition?.name,
+            edition_name: detailData.edition_name || detailData.studies_edition?.name,
+        });
+
+        normalized.documents = Array.isArray(documents)
+            ? documents.map((item, index) => ({
+                id: item.id || `doc-${index}`,
+                title: item.studies_document?.name || item.title || item.name || 'Dokument',
+                required: Boolean(item.required || item.studies_document?.required),
+                status: item.status || 'SUBMITTED',
+                file_name: item.file_name || item.file || item.original_name || '-',
+                submitted_date: item.submitted_date || null,
+            }))
+            : [];
+
+        normalized.fees = Array.isArray(fees)
+            ? fees.map((item, index) => ({
+                id: item.id || `fee-${index}`,
+                title: item.title || 'Opłata',
+                amount: item.amount ? `${item.amount} PLN` : '-',
+                due_date: item.due_date || null,
+                paid_date: item.paid_date || null,
+                status: item.paid_date ? 'Opłacona' : 'Nieopłacona',
+            }))
+            : [];
+
+        return normalized;
     }
    
     static async sendApplicationForm(token, applicationForm) {
@@ -401,6 +493,90 @@ export class serverApi {
         return this.#getAdminEnrollmentsFromApi(token, true);
     }
 
+    static async getAdminEnrollmentDetails(token, enrollmentId) {
+        const detailEndpoints = [
+            `/api/admin/enrollments/${enrollmentId}/details/`,
+            `/api/admin/enrollments/${enrollmentId}/`,
+            `/admin/enrollments/${enrollmentId}/details/`,
+            `/admin/enrollments/${enrollmentId}/`,
+        ];
+        const documentsEndpoints = [
+            `/api/admin/enrollments/${enrollmentId}/documents/`,
+            `/admin/enrollments/${enrollmentId}/documents/`,
+        ];
+        const feesEndpoints = [
+            `/api/admin/enrollments/${enrollmentId}/fees/`,
+            `/admin/enrollments/${enrollmentId}/fees/`,
+        ];
+
+        const detailResult = await this.#getFirstSuccessfulRequest(detailEndpoints, token);
+        const documentsResult = await this.#getFirstSuccessfulRequest(documentsEndpoints, token);
+        const feesResult = await this.#getFirstSuccessfulRequest(feesEndpoints, token);
+
+        if (!detailResult.error) {
+            const normalized = this.#normalizeAdminEnrollmentDetails(
+                detailResult.data,
+                documentsResult.error ? [] : documentsResult.data,
+                feesResult.error ? [] : feesResult.data,
+            );
+
+            if (normalized) {
+                return { enrollment: normalized, error: false, errorMsg: '', isMock: false };
+            }
+        }
+
+        const mock = getMockAdminEnrollmentDetails(enrollmentId);
+        if (mock) {
+            return { enrollment: mock, error: false, errorMsg: '', isMock: true };
+        }
+
+        if (!detailResult.error && detailResult.data) {
+            return {
+                enrollment: this.#buildEmptyAdminEnrollmentDetails(detailResult.data),
+                error: false,
+                errorMsg: '',
+                isMock: false,
+            };
+        }
+
+        return {
+            enrollment: null,
+            error: true,
+            errorMsg: 'Nie udało się pobrać szczegółów zgłoszenia.',
+            isMock: false,
+        };
+    }
+
+    static async reviewAdminEnrollment(token, enrollmentId, decision, statusNote = '') {
+        const decisionEndpoints = [
+            { endpoint: `/api/admin/enrollments/${enrollmentId}/${decision}/`, body: { status_note: statusNote } },
+            { endpoint: `/admin/enrollments/${enrollmentId}/${decision}/`, body: { status_note: statusNote } },
+            { endpoint: `/api/admin/enrollments/${enrollmentId}/decision/`, body: { decision, status_note: statusNote } },
+            { endpoint: `/admin/enrollments/${enrollmentId}/decision/`, body: { decision, status_note: statusNote } },
+        ];
+
+        for (const candidate of decisionEndpoints) {
+            const response = await this.apiRequest(candidate.endpoint, 'POST', candidate.body, token);
+            if (!response.error) {
+                const detailResponse = await this.getAdminEnrollmentDetails(token, enrollmentId);
+                return {
+                    enrollment: detailResponse.enrollment,
+                    error: false,
+                    errorMsg: '',
+                    isMock: false,
+                };
+            }
+        }
+
+        const mock = saveMockAdminEnrollmentDecision(enrollmentId, decision, statusNote);
+        return {
+            enrollment: mock,
+            error: false,
+            errorMsg: '',
+            isMock: true,
+        };
+    }
+
     static async #getAdminEnrollmentsFromApi(token, unpaidOnly = false) {
         const suffix = unpaidOnly ? '?unpaid_only=true' : '';
         const endpoints = [
@@ -411,14 +587,26 @@ export class serverApi {
         for (const endpoint of endpoints) {
             const res = await this.apiRequest(endpoint, 'GET', null, token);
             if (!res.error) {
-                return { enrollments: res.data || [], error: false, errorMsg: '' };
+                return { enrollments: res.data || [], error: false, errorMsg: '', isMock: false };
             }
         }
 
         return {
-            enrollments: [],
-            error: true,
-            errorMsg: 'Nie udało się pobrać listy zgłoszeń kandydatów.',
+            enrollments: getMockAdminEnrollmentList({ unpaidOnly }),
+            error: false,
+            errorMsg: '',
+            isMock: true,
         };
+    }
+
+    static async #getFirstSuccessfulRequest(endpoints, token) {
+        for (const endpoint of endpoints) {
+            const response = await this.apiRequest(endpoint, 'GET', null, token);
+            if (!response.error) {
+                return response;
+            }
+        }
+
+        return { data: null, error: true, errorMsg: 'Request failed' };
     }
 }

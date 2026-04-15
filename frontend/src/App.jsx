@@ -18,6 +18,7 @@ import DataExport from './pages/admin-pages/DataExport';
 import Finanses from './pages/admin-pages/Finances';
 import Candidates from './pages/admin-pages/Candidates';
 import ApplicationsReview from './pages/admin-pages/ApplicationsReview';
+import ApplicationReviewDetails from './pages/admin-pages/ApplicationReviewDetails';
 
 function App() {
   const token = localStorage.getItem('token');
@@ -44,6 +45,7 @@ function App() {
 
         <Route path="/admin/candidates" element={<Candidates />} />
         <Route path="/admin/applications" element={<ApplicationsReview />} />
+        <Route path="/admin/applications/:id" element={<ApplicationReviewDetails />} />
         <Route path="/admin/finances" element={<Finanses />} />
         <Route path="/admin/export" element={<DataExport />} />
 

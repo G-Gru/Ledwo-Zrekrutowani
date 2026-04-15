@@ -136,3 +136,38 @@ class SubmittedDocumentsListCreateSerializer(serializers.ModelSerializer):
         model = SubmittedDocument
         exclude = ('enrollment', )
         read_only = ('id', 'status', 'submitted_date')
+
+
+class AdminFormDataSerializer(serializers.ModelSerializer):
+    residential_address = AddressSerializer(read_only=True)
+    registered_address = AddressSerializer(read_only=True)
+
+    class Meta:
+        model = FormData
+        exclude = ('enrollment',)
+
+
+class AdminSubmittedDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubmittedDocument
+        fields = '__all__'
+
+
+class AdminEnrollmentDetailSerializer(AdminEnrollmentSerializer):
+    form_data = serializers.SerializerMethodField()
+    documents = serializers.SerializerMethodField()
+    studies_edition = StudiesEditionListSerializer(read_only=True)
+
+    class Meta(AdminEnrollmentSerializer.Meta):
+        fields = AdminEnrollmentSerializer.Meta.fields + ['form_data', 'documents', 'studies_edition']
+
+    def get_form_data(self, obj):
+        try:
+            return AdminFormDataSerializer(obj.formdata).data
+        except FormData.DoesNotExist:
+            return None
+
+    def get_documents(self, obj):
+        return AdminSubmittedDocumentSerializer(
+            obj.submitteddocument_set.all(), many=True
+        ).data
