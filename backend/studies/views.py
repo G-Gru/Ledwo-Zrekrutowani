@@ -83,6 +83,10 @@ class StudiesEditionListCreateAdminAPIView(generics.ListCreateAPIView):
             return [IsEmployee(), IsDirectorOrCoordinator()]
         return [IsAdminUser()]
 
+    def perform_create(self, serializer):
+        edition = serializer.save()
+        services.create_auto_documents(edition)
+
 
 class StudiesEditionRetrieveUpdateDestroyAdminAPIView(generics.RetrieveUpdateAPIView):
     lookup_url_kwarg = "edition_pk"

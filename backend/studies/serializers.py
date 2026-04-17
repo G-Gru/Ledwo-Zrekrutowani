@@ -70,7 +70,7 @@ class StudiesEditionListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudiesEdition
-        fields = ('id', 'name', 'price', 'start_date', 'status')
+        fields = ('id', 'name', 'price', 'start_date', 'status', 'academic_year')
 
 class StudiesEditionDetailsSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='studies.name', read_only=True)
@@ -103,7 +103,7 @@ class StudiesDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudiesDocument
         exclude = ('studies_edition', )
-        read_only = ('id', )
+        read_only = ('id', 'is_read_only')
 
     @staticmethod
     def validate_due_date(value):

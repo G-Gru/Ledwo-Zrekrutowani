@@ -28,7 +28,8 @@ class Enrollment(models.Model):
     def has_all_documents(self):
         required_documents = StudiesDocument.objects.filter(
             studies_edition=self.studies_edition,
-            required=True
+            required=True,
+            is_read_only=False
         )
 
         missing = required_documents.exclude(
@@ -49,6 +50,7 @@ class SubmittedDocument(models.Model):
         ACCEPTED = 'ACCEPTED'
         VERIFIED = 'VERIFIED'
         REJECTED = 'REJECTED'
+        DELIVERY = 'SIGN & DELIVER'
 
     studies_document = models.ForeignKey(StudiesDocument, on_delete=models.RESTRICT, related_name='submitted_documents')
     enrollment = models.ForeignKey(Enrollment, on_delete=models.RESTRICT)
@@ -79,6 +81,10 @@ class Address(models.Model):
     country = models.CharField(max_length=50)
     postal_code = models.CharField(max_length=10, blank=True)
 
+    def __str__(self):
+        return (f"{self.street} {self.house_number}{'/' + self.flat_number if self.flat_number else ''}, "
+                f"{self.postal_code if self.postal_code else ''} {self.city}")
+
 class FormData(models.Model):
     REQUIRED_FIELDS = [
             "first_name",
@@ -101,7 +107,7 @@ class FormData(models.Model):
         SAVE = 'SAVE'
         ENROLL = 'ENROLL'
 
-    enrollment = models.OneToOneField(Enrollment, on_delete=models.RESTRICT, primary_key=True)
+    enrollment = models.OneToOneField(Enrollment, on_delete=models.RESTRICT, primary_key=True, related_name="form")
     first_name = models.CharField(max_length=50, blank=True)
     second_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50, blank=True)

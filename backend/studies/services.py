@@ -2,7 +2,8 @@ from django.db import transaction
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 
-from studies.models import StudiesEdition, STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES, STUDIES_EDITION_ENROLLABLE_STATUSES
+from studies.models import StudiesEdition, STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES, STUDIES_EDITION_ENROLLABLE_STATUSES, \
+    StudiesDocument
 
 
 def get_user_editions_queryset(user):
@@ -37,3 +38,13 @@ def add_to_edition(edition_id, user, serializer):
         )
 
         serializer.save(studies_edition=edition)
+
+DELIVERY_DOCUMENT_NAME = "Dostarczenie wydruku formularza"
+def create_auto_documents(edition: StudiesEdition):
+    StudiesDocument.objects.create(
+        studies_edition=edition,
+        name=DELIVERY_DOCUMENT_NAME,
+        required=True,
+        due_date=edition.recruitment_end_date,
+        is_read_only=True
+    )

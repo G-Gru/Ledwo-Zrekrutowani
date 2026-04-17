@@ -1,6 +1,7 @@
 from rest_framework import permissions
 from rest_framework.permissions import BasePermission
 
+from enrollments.models import SubmittedDocument
 from studies.models import StudiesEditionStaff
 
 class IsEmployee(permissions.BasePermission):
@@ -30,6 +31,23 @@ class IsObjectOwner(BasePermission):
             return True
 
         return obj.user == request.user
+
+class CanViewDocument(BasePermission):
+    def has_object_permission(self, request, view, obj: SubmittedDocument):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        if request.user.is_staff: #Admin
+            return True
+
+        if obj.enrollment.user == request.user:
+            return True
+
+        return (obj.studies_document.studies_edition.studies_edition_staff
+                .filter(
+                    id=request.user.id
+                )
+                .exists())
 
 class IsEditionStaffWithRole(BasePermission):
     allowed_roles = []

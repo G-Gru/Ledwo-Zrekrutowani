@@ -1,8 +1,9 @@
 from django.urls import path
+
 from enrollments.views import EnrollmentFormCreateAPIView, EnrollmentFormRetrieveUpdateAPIView, \
     AddressListCreateAPIView, AddressRetreiveDestroyAPIView, EnrollmentListAPIView, EnrollmentRetrieveAPIView, \
     ActiveEnrollmentListAPIView, EnrollmentRecruitmentEndDateAPIView, \
-    SubmittedDocumentsListCreateAPIView, FeesListAPIView
+    SubmittedDocumentsListCreateAPIView, FeesListAPIView, FileDownloadApiView
 
 urlpatterns = [
     path("editions/<int:edition_pk>/",
@@ -35,4 +36,7 @@ urlpatterns = [
     path("<int:enrollment_pk>/fees/",
          FeesListAPIView.as_view(),
          name="fees-list"),
+    path("files/<int:document_pk>/",
+         FileDownloadApiView.as_view(),
+         name="enrollment-file-download"),
 ]

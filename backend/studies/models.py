@@ -7,6 +7,7 @@ from users.models import User
 # Create your models here.
 class Studies(models.Model):
     name = models.CharField(max_length=100)
+    organizational_unit = models.CharField(max_length=200)
     terms_count = models.PositiveIntegerField()
     description = models.TextField()
 
@@ -25,6 +26,7 @@ class StudiesEdition(models.Model):
     syllabus_url = models.URLField()
     recruitment_start_date = models.DateTimeField()
     recruitment_end_date = models.DateTimeField()
+    academic_year = models.CharField(max_length=10)
 
     class Meta:
         constraints = [
@@ -60,6 +62,7 @@ class StudiesDocument(models.Model):
     name = models.CharField(max_length=100)
     required = models.BooleanField()
     due_date = models.DateTimeField()
+    is_read_only = models.BooleanField(default=False)
 
     class Meta:
         constraints = [

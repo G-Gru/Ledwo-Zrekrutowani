@@ -1,3 +1,4 @@
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
@@ -6,12 +7,12 @@ from rest_framework.response import Response
 
 from payments.models import Fees
 from payments.serializers import FeesSerializer
-from users.permissions import IsObjectOwner, IsStudent
+from users.permissions import IsObjectOwner, IsStudent, CanViewDocument
 from . import services
 from .models import Enrollment, FormData, Address, SubmittedDocument
 from .serializers import AdminEnrollmentSerializer, AdminEnrollmentDetailSerializer, FormDataSerializer, \
     AddressSerializer, EnrollmentSerializer, ActiveEnrollmentSerializer, \
-    SubmittedDocumentsListCreateSerializer, EnrollmentRecruitmentEndDateSerializer
+    EnrollmentRecruitmentEndDateSerializer, SubmittedDocumentsCreateSerializer, SubmittedDocumentsListSerializer
 from .services import get_enrollable_edition
 
 
@@ -92,8 +93,12 @@ class EnrollmentRetrieveAPIView(generics.RetrieveAPIView):
         )
 
 class SubmittedDocumentsListCreateAPIView(generics.ListCreateAPIView):
-    serializer_class = SubmittedDocumentsListCreateSerializer
-    permission_classes = [IsAuthenticated, IsStudent, IsObjectOwner]
+    permission_classes = [IsAuthenticated, IsStudent, CanViewDocument]
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return SubmittedDocumentsCreateSerializer
+        return SubmittedDocumentsListSerializer
 
     def get_queryset(self):
         return SubmittedDocument.objects.filter(
@@ -130,6 +135,21 @@ class FeesListAPIView(generics.ListAPIView):
             enrollment__user=self.request.user
         ).prefetch_related('payments')
 
+
+class FileDownloadApiView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated, CanViewDocument]
+
+    def get(self, request, *args, **kwargs):
+        document = get_object_or_404(
+            SubmittedDocument,
+            pk=self.kwargs['document_pk'],
+        )
+
+        return FileResponse(
+            document.file.open('rb'),
+            as_attachment=False,
+            filename=document.file.name.split('/')[-1]
+        )
 
 ## ADMIN
 

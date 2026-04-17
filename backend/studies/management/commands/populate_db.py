@@ -4,7 +4,8 @@ from django.core.management.base import BaseCommand
 
 from enrollments.models import Enrollment, Address, FormData
 from payments.models import Fees, Payments, PaymentsHistory
-from studies.models import Studies, StudiesEdition, StudiesEditionStaff
+from studies.models import Studies, StudiesEdition, StudiesEditionStaff, StudiesDocument
+from studies.services import DELIVERY_DOCUMENT_NAME
 from users.models import User, Employee
 
 
@@ -33,8 +34,10 @@ class Command(BaseCommand):
         Employee.objects.bulk_create(employees)
 
         studies = [
-            Studies(name="Bazy danych", terms_count=3, description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque commodo facilisis orci ut faucibus. Sed posuere ligula nec massa feugiat, in bibendum nisi tincidunt. Nulla facilisi. Nulla facilisi. Praesent iaculis nisi diam, sed tempus erat scelerisque ac. Etiam ac felis enim. Praesent porta tortor mauris, sed tincidunt urna tempor in. Etiam non odio sollicitudin, maximus orci vel, feugiat lacus. Nunc placerat accumsan erat, nec dictum mauris porta a. Maecenas vitae fermentum risus. Nam malesuada dui et nisi commodo iaculis. Aliquam viverra dui sed libero sollicitudin euismod."),
-            Studies(name="Systemy ERP", terms_count=2, description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque commodo facilisis orci ut faucibus. Sed posuere ligula nec massa feugiat, in bibendum nisi tincidunt. Nulla facilisi. Nulla facilisi. Praesent iaculis nisi diam, sed tempus erat scelerisque ac. Etiam ac felis enim. Praesent porta tortor mauris, sed tincidunt urna tempor in. Etiam non odio sollicitudin, maximus orci vel, feugiat lacus. Nunc placerat accumsan erat, nec dictum mauris porta a. Maecenas vitae fermentum risus. Nam malesuada dui et nisi commodo iaculis. Aliquam viverra dui sed libero sollicitudin euismod."),
+            Studies(name="Bazy danych", terms_count=3, organizational_unit="Wydział Informatyki",
+                    description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque commodo facilisis orci ut faucibus. Sed posuere ligula nec massa feugiat, in bibendum nisi tincidunt. Nulla facilisi. Nulla facilisi. Praesent iaculis nisi diam, sed tempus erat scelerisque ac. Etiam ac felis enim. Praesent porta tortor mauris, sed tincidunt urna tempor in. Etiam non odio sollicitudin, maximus orci vel, feugiat lacus. Nunc placerat accumsan erat, nec dictum mauris porta a. Maecenas vitae fermentum risus. Nam malesuada dui et nisi commodo iaculis. Aliquam viverra dui sed libero sollicitudin euismod."),
+            Studies(name="Systemy ERP", terms_count=2, organizational_unit="Wydział Informatyki",
+                    description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque commodo facilisis orci ut faucibus. Sed posuere ligula nec massa feugiat, in bibendum nisi tincidunt. Nulla facilisi. Nulla facilisi. Praesent iaculis nisi diam, sed tempus erat scelerisque ac. Etiam ac felis enim. Praesent porta tortor mauris, sed tincidunt urna tempor in. Etiam non odio sollicitudin, maximus orci vel, feugiat lacus. Nunc placerat accumsan erat, nec dictum mauris porta a. Maecenas vitae fermentum risus. Nam malesuada dui et nisi commodo iaculis. Aliquam viverra dui sed libero sollicitudin euismod."),
         ]
         Studies.objects.bulk_create(studies)
         studies = list(Studies.objects.all())
@@ -43,19 +46,19 @@ class Command(BaseCommand):
             StudiesEdition(studies=studies[0], price=2137, max_participants=5,
                            start_date=date.today() + timedelta(days=30),
                            end_date=date.today() + timedelta(days=90),
-                           status='HIDDEN', syllabus_url="niema",
+                           status='HIDDEN', syllabus_url="niema", academic_year="2025/2026",
                            recruitment_start_date=date.today() + timedelta(days=3),
                            recruitment_end_date=date.today() + timedelta(days=10)),
             StudiesEdition(studies=studies[1], price=420, max_participants=5,
                            start_date=date.today() + timedelta(days=30),
                            end_date=date.today() + timedelta(days=90),
-                           status='ACTIVE', syllabus_url="niema",
+                           status='ACTIVE', syllabus_url="niema", academic_year="2025/2026",
                            recruitment_start_date=date.today() - timedelta(days=2),
                            recruitment_end_date=date.today() + timedelta(days=10)),
             StudiesEdition(studies=studies[0], price=2137, max_participants=5,
                            start_date=date.today() - timedelta(days=30),
                            end_date=date.today() + timedelta(days=90),
-                           status='CLOSED', syllabus_url="niema",
+                           status='CLOSED', syllabus_url="niema", academic_year="2025/2026",
                            recruitment_start_date=date.today() - timedelta(days=60),
                            recruitment_end_date=date.today() - timedelta(days=50))
         ]
@@ -75,6 +78,11 @@ class Command(BaseCommand):
             StudiesEditionStaff(studies_edition=editions[2], user=finance, role='FINANCE_COORDINATOR'),
         ]
         StudiesEditionStaff.objects.bulk_create(staff)
+
+        documents = [
+            StudiesDocument(studies_edition=editions[1], name="Ważny dokument", required=True, due_date=date.today() + timedelta(days=10))
+        ]
+        StudiesDocument.objects.bulk_create(documents)
 
         # Enrollment dla student1 w edycji "Systemy ERP" (ACTIVE)
         student1 = User.objects.get(email="student1@gmail.com")

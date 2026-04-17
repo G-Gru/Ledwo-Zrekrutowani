@@ -1,6 +1,7 @@
-Django
-djangorestframework
+Django~=6.0.3
+djangorestframework~=3.17.1
 psycopg2-binary
-python-dotenv
+python-dotenv~=1.2.2
 djangorestframework-simplejwt
 django-cors-headers
+docxtpl~=0.20.2
