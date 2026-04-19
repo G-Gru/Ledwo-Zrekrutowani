@@ -4,6 +4,7 @@ import AccountPageLeftMenu from '../../components/AccountPageLeftMenu';
 import LoginRedirectPage from '../../components/LoginRedirectPage';
 import { serverApi } from '../../services/serverApi';
 import { getAccessToken } from '../../services/authService';
+import { formatDateInWarsaw, formatDateTimeInWarsaw } from '../../utils/dateTime';
 import '../../styles/AdminApplicationDetails.css';
 
 const ENABLE_DEV_AUTH_BYPASS = true;
@@ -28,42 +29,6 @@ function documentBadgeClass(status) {
   }
 
   return 'badge-unpaid';
-}
-
-function formatDate(value) {
-  if (!value) {
-    return '-';
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat('pl-PL', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(date);
-}
-
-function formatDateTime(value) {
-  if (!value) {
-    return '-';
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat('pl-PL', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
 }
 
 function formatAddress(address) {
@@ -227,7 +192,7 @@ export default function ApplicationReviewDetails() {
               <section className='bg-panel admin-details-section'>
                 <h2>Podsumowanie zgłoszenia</h2>
                 <InfoRow label='ID zgłoszenia' value={String(enrollment.id)} />
-                <InfoRow label='Data wysłania' value={formatDate(enrollment.enrollment_date)} />
+                <InfoRow label='Data wysłania' value={formatDateInWarsaw(enrollment.enrollment_date)} />
                 <InfoRow label='Status systemowy' value={enrollment.system_status} />
                 <InfoRow label='Edycja' value={enrollment.edition_name} />
                 <InfoRow label='Notatka administracyjna' value={enrollment.status_note || 'Brak notatki'} />
@@ -256,7 +221,7 @@ export default function ApplicationReviewDetails() {
                 <InfoRow label='Nazwisko' value={enrollment.personal?.last_name} />
                 <InfoRow label='Nazwisko rodowe' value={enrollment.personal?.family_name} />
                 <InfoRow label='Tytuł' value={enrollment.personal?.academic_title} />
-                <InfoRow label='Data urodzenia' value={formatDate(enrollment.personal?.birth_date)} />
+                <InfoRow label='Data urodzenia' value={formatDateInWarsaw(enrollment.personal?.birth_date)} />
                 <InfoRow label='Miejsce urodzenia' value={enrollment.personal?.birth_place} />
                 <InfoRow label='PESEL' value={enrollment.personal?.pesel} />
                 <InfoRow label='Obywatelstwo' value={enrollment.personal?.citizenship} />
@@ -314,7 +279,7 @@ export default function ApplicationReviewDetails() {
                           <span className={documentBadgeClass(document.status)}>{document.status}</span>
                         </td>
                         <td>{document.file_name || '-'}</td>
-                        <td>{formatDateTime(document.submitted_date)}</td>
+                        <td>{formatDateTimeInWarsaw(document.submitted_date)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -346,8 +311,8 @@ export default function ApplicationReviewDetails() {
                       <tr key={fee.id}>
                         <td>{fee.title}</td>
                         <td>{fee.amount}</td>
-                        <td>{formatDate(fee.due_date)}</td>
-                        <td>{formatDate(fee.paid_date)}</td>
+                        <td>{formatDateInWarsaw(fee.due_date)}</td>
+                        <td>{formatDateInWarsaw(fee.paid_date)}</td>
                         <td>{fee.status || '-'}</td>
                       </tr>
                     ))}

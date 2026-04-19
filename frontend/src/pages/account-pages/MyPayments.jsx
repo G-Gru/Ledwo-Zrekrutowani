@@ -3,6 +3,7 @@ import AccountPageLeftMenu from '../../components/AccountPageLeftMenu';
 import LoginRedirectPage from '../../components/LoginRedirectPage';
 import { serverApi } from '../../services/serverApi';
 import { getAccessToken, isLoggedIn } from '../../services/authService';
+import { formatDateInWarsaw } from '../../utils/dateTime';
 import '../../styles/Payments.css';
 import DocumentUploadCard from '../../components/DocumentUploadCard'
 
@@ -82,7 +83,7 @@ export default function Payments() {
                     return date < min.date ? { date, title: p.title } : min;
                 }, { date: new Date('9999-12-31'), title: '' });
 
-                const deadline = earliest.date.toLocaleDateString('pl-PL'); // Format as DD.MM.YYYY
+                const deadline = formatDateInWarsaw(earliest.date); // Format as DD.MM.YYYY
                 const nextPaymentName = earliest.title;
                 setSummary({ totalToPay, deadline, nextPaymentName });
             }
@@ -172,7 +173,7 @@ export default function Payments() {
                                                 </span>
                                             </td>
                                             <td className='bold-text'>{pay.amount}</td>
-                                            <td className={pay.type === 'overdue' ? 'error-text' : ''}>{pay.due_date}</td>
+                                            <td className={pay.type === 'overdue' ? 'error-text' : ''}>{formatDateInWarsaw(pay.due_date)}</td>
                                             <td>
                                                 <button className='table-action-btn' onClick={() => {
                                                     setPayAll(false);
@@ -282,7 +283,7 @@ export default function Payments() {
                                         </div>
                                         <div className='text-group'>
                                             <div className='history-item-name'>{item.title}</div>
-                                            <div className='history-item-sub'>ID: {item.id} • {item.paid_date}</div>
+                                            <div className='history-item-sub'>ID: {item.id} • {formatDateInWarsaw(item.paid_date)}</div>
                                         </div>
                                     </div>
                                     <div className='row-amount-info'>

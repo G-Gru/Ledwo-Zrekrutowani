@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import '../styles/Style.css';
+import { toDateTimeLocalInWarsaw } from '../utils/dateTime';
 
 const sampleStudies = [
   {
@@ -150,11 +151,7 @@ export default function ManageStudiesOffers() {
   const token = localStorage.getItem('user-access-token') || localStorage.getItem('token');
 
   const toDateTimeLocal = (value) => {
-    if (!value) return '';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return toDateTimeLocalInWarsaw(value);
   };
 
   const mapStudyToForm = (study) => ({

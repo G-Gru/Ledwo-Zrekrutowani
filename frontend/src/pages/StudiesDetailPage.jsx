@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../styles/Style.css';
 import { serverApi } from '../services/serverApi';
+import { formatDateInWarsaw } from '../utils/dateTime';
 
 const sampleEdition = {
   id: 1,
@@ -99,10 +100,10 @@ export default function StudiesDetailPage() {
   if (!edition) return <div className="page-layout"><p>Edycja nie znaleziona.</p></div>;
 
   const recruitmentStart = edition.recruitment_start_date
-    ? new Date(edition.recruitment_start_date).toLocaleDateString()
+    ? formatDateInWarsaw(edition.recruitment_start_date)
     : '-';
   const recruitmentEnd = edition.recruitment_end_date
-    ? new Date(edition.recruitment_end_date).toLocaleDateString()
+    ? formatDateInWarsaw(edition.recruitment_end_date)
     : '-';
 
   return (
@@ -138,12 +139,12 @@ export default function StudiesDetailPage() {
               <hr />
               <div className="date-row">
                 <p className="date-label">Rozpoczęcie</p>
-                <p className="date-value">{edition.start_date || '-'}</p>
+                <p className="date-value">{formatDateInWarsaw(edition.start_date)}</p>
               </div>
               <div className="date-divider"></div>
               <div className="date-row">
                 <p className="date-label">Zakończenie</p>
-                <p className="date-value">{edition.end_date || '-'}</p>
+                <p className="date-value">{formatDateInWarsaw(edition.end_date)}</p>
               </div>
             </div>
           </div>

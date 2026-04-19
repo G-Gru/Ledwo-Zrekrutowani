@@ -5,6 +5,7 @@ import '../../styles/AdminApplicationsReview.css';
 import { serverApi } from '../../services/serverApi';
 import { getAccessToken, isLoggedIn } from '../../services/authService';
 import LoginRedirectPage from '../../components/LoginRedirectPage';
+import { formatDateTimeInWarsaw } from '../../utils/dateTime';
 
 const ENABLE_DEV_AUTH_BYPASS = true;
 
@@ -157,7 +158,7 @@ export default function ApplicationsReview() {
       enrollmentStatusLabel(e.status),
       e.is_fully_paid ? 'Opłacone' : 'Nieopłacone',
       e.missing_documents ? 'Braki' : 'Komplet',
-      e.enrollment_date || '',
+      formatDateTimeInWarsaw(e.enrollment_date, ''),
     ]);
     const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -291,7 +292,7 @@ export default function ApplicationsReview() {
                             {docsStatusLabel(item.missing_documents)}
                           </span>
                         </td>
-                        <td>{item.enrollment_date || '-'}</td>
+                        <td>{formatDateTimeInWarsaw(item.enrollment_date)}</td>
                         <td>
                           <Link className='admin-details-link' to={`/admin/applications/${item.id}`}>
                             Zobacz szczegóły
