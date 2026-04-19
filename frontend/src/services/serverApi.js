@@ -493,6 +493,20 @@ export class serverApi {
         return this.#getAdminEnrollmentsFromApi(token, true);
     }
 
+    static async sendPaymentReminder(token, enrollmentId) {
+        const endpoints = [
+            `/admin/enrollments/${enrollmentId}/send-payment-reminder/`,
+            `/api/admin/enrollments/${enrollmentId}/send-payment-reminder/`,
+        ];
+        for (const endpoint of endpoints) {
+            const res = await this.apiRequest(endpoint, 'POST', {}, token);
+            if (!res.error) {
+                return { data: res.data, error: false, errorMsg: '' };
+            }
+        }
+        return { data: null, error: true, errorMsg: 'Nie udało się wysłać przypomnienia.' };
+    }
+
     static async getAdminEnrollmentDetails(token, enrollmentId) {
         const detailEndpoints = [
             `/api/admin/enrollments/${enrollmentId}/details/`,

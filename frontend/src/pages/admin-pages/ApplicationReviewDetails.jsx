@@ -202,7 +202,6 @@ export default function ApplicationReviewDetails() {
         )}
 
         {error && <div className='error-message admin-details-width'>{error}</div>}
-        {actionMessage && <div className='admin-success-message admin-details-width'>{actionMessage}</div>}
         {loading && <p className='admin-details-width'>Ładowanie szczegółów zgłoszenia...</p>}
 
         {!loading && enrollment && (
@@ -360,7 +359,6 @@ export default function ApplicationReviewDetails() {
             <section className='bg-panel admin-details-section admin-details-width admin-decision-panel'>
               <div className='admin-section-heading-row'>
                 <h2>Decyzja administracyjna</h2>
-                <span className='admin-details-counter'>Akcja tymczasowo wspiera fallback mockowy</span>
               </div>
 
               <label className='admin-details-note-label' htmlFor='decision-note'>
@@ -393,6 +391,8 @@ export default function ApplicationReviewDetails() {
                 </button>
               </div>
             </section>
+
+            {actionMessage && <div className='admin-success-message admin-details-width'>{actionMessage}</div>}
           </>
         )}
       </div>

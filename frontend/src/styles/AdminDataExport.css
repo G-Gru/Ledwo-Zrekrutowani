@@ -1,0 +1,87 @@
+.admin-export-layout #account-page-column-middle {
+  width: 75%;
+  align-items: center;
+}
+
+.admin-export-layout #account-page-column-right {
+  display: none;
+}
+
+.admin-export-subtitle {
+  margin: -10px 0 18px;
+  width: 90%;
+  text-align: left;
+  color: var(--text-muted);
+}
+
+.admin-export-panel {
+  width: 90%;
+  margin: 0 0 18px;
+  padding: 20px;
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.admin-export-section-title {
+  margin: 0 0 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 1rem;
+  color: var(--on-secondary-container);
+}
+
+.admin-export-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 380px);
+  gap: 12px;
+}
+
+.admin-export-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.admin-export-field span {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--on-secondary-container);
+}
+
+.admin-export-field select {
+  width: 100%;
+  height: 40px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  background: var(--surface-container-lowest);
+  color: var(--text-main);
+  padding: 0 10px;
+  font-weight: 600;
+}
+
+.admin-export-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-export-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+}
+
+@media (max-width: 1100px) {
+  .admin-export-layout #account-page-column-middle,
+  .admin-export-subtitle,
+  .admin-export-panel {
+    width: 96%;
+  }
+
+  .admin-export-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
