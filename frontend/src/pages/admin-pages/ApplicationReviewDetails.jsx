@@ -8,6 +8,11 @@ import { formatDateInWarsaw, formatDateTimeInWarsaw } from '../../utils/dateTime
 import '../../styles/AdminApplicationDetails.css';
 
 const ENABLE_DEV_AUTH_BYPASS = true;
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
+function buildDocumentUrl(documentId) {
+  return `${API_BASE_URL}/api/enrollments/files/${documentId}/`;
+}
 
 function paymentBadgeClass(isPaid) {
   return isPaid ? 'badge-paid' : 'badge-unpaid';
@@ -63,9 +68,6 @@ export default function ApplicationReviewDetails() {
   const [error, setError] = useState('');
   const [enrollment, setEnrollment] = useState(null);
   const [isMockData, setIsMockData] = useState(false);
-  const [decisionNote, setDecisionNote] = useState('');
-  const [submittingDecision, setSubmittingDecision] = useState(false);
-  const [actionMessage, setActionMessage] = useState('');
 
   useEffect(() => {
     const token = getAccessToken();
@@ -81,7 +83,6 @@ export default function ApplicationReviewDetails() {
     async function fetchDetails() {
       setLoading(true);
       setError('');
-      setActionMessage('');
 
       const response = await serverApi.getAdminEnrollmentDetails(token, id);
 
@@ -90,7 +91,6 @@ export default function ApplicationReviewDetails() {
         setError(response.errorMsg || 'Nie udało się pobrać szczegółów zgłoszenia.');
       } else {
         setEnrollment(response.enrollment);
-        setDecisionNote(response.enrollment?.status_note || '');
         setIsMockData(Boolean(response.isMock));
       }
 
@@ -114,33 +114,6 @@ export default function ApplicationReviewDetails() {
     };
   }, [enrollment]);
 
-  async function handleDecision(decision) {
-    if (!enrollment) {
-      return;
-    }
-
-    setSubmittingDecision(true);
-    setError('');
-    setActionMessage('');
-
-    const token = getAccessToken();
-    const response = await serverApi.reviewAdminEnrollment(token, enrollment.id, decision, decisionNote);
-
-    if (response.error) {
-      setError(response.errorMsg || 'Nie udało się zapisać decyzji.');
-    } else {
-      setEnrollment(response.enrollment || enrollment);
-      setIsMockData(Boolean(response.isMock));
-      setActionMessage(
-        decision === 'accept'
-          ? 'Zgłoszenie zostało oznaczone jako zaakceptowane.'
-          : 'Zgłoszenie zostało oznaczone jako odrzucone.',
-      );
-    }
-
-    setSubmittingDecision(false);
-  }
-
   if (!userLoggedIn) {
     return <LoginRedirectPage />;
   }
@@ -158,6 +131,11 @@ export default function ApplicationReviewDetails() {
           <p className='admin-applications-subtitle'>
             Pełny podgląd formularza, dokumentów i statusu procesu rekrutacyjnego.
           </p>
+          {enrollment?.id && (
+            <Link className='admin-inline-link' to={`/admin/candidates/${enrollment.id}`}>
+              Przejdź do profilu kandydata
+            </Link>
+          )}
         </div>
 
         {isMockData && !loading && (
@@ -264,22 +242,46 @@ export default function ApplicationReviewDetails() {
                   <thead>
                     <tr>
                       <th>Dokument</th>
-                      <th>Wymagany</th>
                       <th>Status</th>
                       <th>Plik</th>
                       <th>Data przesłania</th>
+                      <th>Akcje</th>
                     </tr>
                   </thead>
                   <tbody>
                     {enrollment.documents.map((document) => (
                       <tr key={document.id}>
                         <td>{document.title}</td>
-                        <td>{document.required ? 'Tak' : 'Nie'}</td>
                         <td>
                           <span className={documentBadgeClass(document.status)}>{document.status}</span>
                         </td>
                         <td>{document.file_name || '-'}</td>
                         <td>{formatDateTimeInWarsaw(document.submitted_date)}</td>
+                        <td>
+                          <div className='doc-actions'>
+                            <a
+                              className='admin-details-link'
+                              href={buildDocumentUrl(document.id)}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                            >
+                              Podgląd
+                            </a>
+                            <a
+                              className='admin-details-link'
+                              href={buildDocumentUrl(document.id)}
+                              download
+                            >
+                              Pobierz
+                            </a>
+                            <button type='button' className='button-secondary' disabled>
+                              Akceptuj
+                            </button>
+                            <button type='button' className='button-danger' disabled>
+                              Odrzuć
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -321,43 +323,6 @@ export default function ApplicationReviewDetails() {
               )}
             </section>
 
-            <section className='bg-panel admin-details-section admin-details-width admin-decision-panel'>
-              <div className='admin-section-heading-row'>
-                <h2>Decyzja administracyjna</h2>
-              </div>
-
-              <label className='admin-details-note-label' htmlFor='decision-note'>
-                Notatka do decyzji
-              </label>
-              <textarea
-                id='decision-note'
-                className='admin-details-textarea'
-                value={decisionNote}
-                onChange={(event) => setDecisionNote(event.target.value)}
-                placeholder='Dodaj uzasadnienie lub notatkę dla zespołu rekrutacyjnego.'
-              />
-
-              <div className='admin-decision-actions'>
-                <button
-                  type='button'
-                  className='button-primary admin-action-button'
-                  disabled={submittingDecision}
-                  onClick={() => handleDecision('accept')}
-                >
-                  Zaakceptuj zgłoszenie
-                </button>
-                <button
-                  type='button'
-                  className='button-danger admin-action-button'
-                  disabled={submittingDecision}
-                  onClick={() => handleDecision('reject')}
-                >
-                  Odrzuć zgłoszenie
-                </button>
-              </div>
-            </section>
-
-            {actionMessage && <div className='admin-success-message admin-details-width'>{actionMessage}</div>}
           </>
         )}
       </div>

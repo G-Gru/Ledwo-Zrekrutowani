@@ -36,7 +36,10 @@
 
 .nav-buttons {
   display: flex;
-  gap: 2.5rem;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .btn {
@@ -53,6 +56,7 @@
   font-size: 1rem;
   position: relative;
   padding-bottom: 0.25rem;
+  white-space: nowrap;
 }
 
 .btn:hover {
@@ -86,4 +90,21 @@
   border: 1px lightgrey solid;
   padding: 2px;
   border-radius: 50%;
+}
+
+@media (max-width: 900px) {
+  .header-container {
+    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-buttons {
+    gap: 1rem;
+    justify-content: flex-start;
+  }
+
+  .logo img {
+    height: 56px;
+  }
 }
