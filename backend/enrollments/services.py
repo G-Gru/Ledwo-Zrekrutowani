@@ -3,13 +3,14 @@ import os
 from pathlib import Path
 from uuid import uuid4
 
-from django.core.files import File
+from django.core.files import File as DjangoFile
 from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404
 
 from core import settings
 from enrollments.exceptions import UserAlreadyEnrolledException, NoPlacesAvailableException, MissingDocumentsException
 from enrollments.models import Enrollment, FormData, ENROLLMENT_TAKING_UP_PLACE_STATUSES, SubmittedDocument
+from files.models import File
 from studies.models import StudiesEdition, StudiesDocument
 from studies.services import get_enrollable_editions_queryset, DELIVERY_DOCUMENT_NAME
 
@@ -83,14 +84,33 @@ def enroll(edition_id, enrollment_id):
 def create_form_files(enrollment_id, serializer):
     files_data = serializer.validated_data.pop("files", [])
     for file_data in files_data:
-        studies_document_id = file_data["studies_document_id"]
-        file = file_data["file"]
+        _create_submitted_document(enrollment_id, file_data)
 
-        SubmittedDocument.objects.create(
-            studies_document_id=studies_document_id,
-            enrollment_id=enrollment_id,
-            file=file
+def submit_document(enrollment_id, user, serializer):
+    with transaction.atomic():
+        get_object_or_404(
+            Enrollment,
+            pk=enrollment_id,
+            user=user
         )
+
+        file_data = serializer.validated_data.pop("file")
+        _create_submitted_document(enrollment_id, file_data)
+
+def _create_submitted_document(enrollment_id, file_data):
+    studies_document_id = file_data["studies_document_id"]
+    file = file_data["file"]
+
+    file_model_obj = File.objects.create(
+        file=file,
+        source=File.Source.SUBMITTED
+    )
+
+    SubmittedDocument.objects.create(
+        studies_document_id=studies_document_id,
+        enrollment_id=enrollment_id,
+        file=file_model_obj
+    )
 
 def create_form_delivery_file(enrollment):
     try:
@@ -104,12 +124,17 @@ def create_form_delivery_file(enrollment):
 
     file_path = generate_form_docx(enrollment.form)
     with open(file_path, "rb") as f:
-        django_file = File(f, name=os.path.basename(file_path))
+        django_file = DjangoFile(f, name=os.path.basename(file_path))
+
+        file_model_obj = File.objects.create(
+            file=django_file,
+            source=File.Source.SUBMITTED
+        )
 
         SubmittedDocument.objects.create(
             studies_document=studies_document,
             enrollment=enrollment,
-            file=django_file,
+            file=file_model_obj,
             status=SubmittedDocument.Status.DELIVERY
         )
 

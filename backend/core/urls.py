@@ -26,6 +26,7 @@ urlpatterns = [
     path("api/payments/", include("payments.urls")),
     path("api/auth/", include("users.urls")),
     path("api/admin/users/", include("users.admin_urls")),
+    path("api/files/", include("files.urls")),
     path("api-auth/", include("rest_framework.urls")),
     path("admin/", admin.site.urls),
 ]

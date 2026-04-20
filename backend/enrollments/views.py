@@ -14,8 +14,7 @@ from . import services
 from .models import Enrollment, FormData, Address, SubmittedDocument
 from .serializers import AdminEnrollmentSerializer, AdminEnrollmentDetailSerializer, FormDataSerializer, \
     AddressSerializer, EnrollmentSerializer, ActiveEnrollmentSerializer, \
-    EnrollmentRecruitmentEndDateSerializer, SubmittedDocumentsCreateSerializer, SubmittedDocumentsListSerializer, \
-    AdminSubmittedDocumentSerializer
+    EnrollmentRecruitmentEndDateSerializer, SubmittedDocumentsCreateSerializer, SubmittedDocumentsListSerializer
 from .services import get_enrollable_edition
 
 
@@ -110,13 +109,7 @@ class SubmittedDocumentsListCreateAPIView(generics.ListCreateAPIView):
         )
 
     def perform_create(self, serializer):
-        get_object_or_404(
-            Enrollment,
-            pk=self.kwargs['enrollment_pk'],
-            user=self.request.user
-        )
-
-        serializer.save(enrollment_id=self.kwargs['enrollment_pk'])
+        services.submit_document(self.kwargs['enrollment_pk'], self.request.user, serializer)
 
 class EnrollmentRecruitmentEndDateAPIView(generics.RetrieveAPIView):
     serializer_class = EnrollmentRecruitmentEndDateSerializer
@@ -137,23 +130,6 @@ class FeesListAPIView(generics.ListAPIView):
             enrollment_id=self.kwargs['enrollment_pk'],
             enrollment__user=self.request.user
         ).prefetch_related('payments')
-
-
-class FileDownloadApiView(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticated, CanViewDocument]
-
-    def get(self, request, *args, **kwargs):
-        document = get_object_or_404(
-            SubmittedDocument,
-            pk=self.kwargs['document_pk'],
-        )
-
-        return FileResponse(
-            document.file.open('rb'),
-            as_attachment=False,
-            filename=document.file.name.split('/')[-1]
-        )
-
 ## ADMIN
 
 class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
@@ -252,7 +228,7 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['get'], url_path='documents')
     def get_documents(self, request, pk=None):
         enrollment = self.get_object()
-        serializer = AdminSubmittedDocumentSerializer(
+        serializer = SubmittedDocumentsListSerializer(
             enrollment.submitteddocument_set.all(), many=True
         )
         return Response(serializer.data)

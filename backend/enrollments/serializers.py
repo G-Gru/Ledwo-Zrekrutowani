@@ -3,7 +3,8 @@ from datetime import date
 from django.urls import reverse
 from rest_framework import serializers
 
-from studies.models import StudiesEdition
+from files.models import File
+from studies.models import StudiesEdition, StudiesDocument
 from studies.serializers import StudiesEditionListSerializer, StudiesDocumentSerializer
 from .models import Enrollment, SubmittedDocument, FormData, Address
 
@@ -95,6 +96,44 @@ def form_data_validate(attrs):
 
     return attrs
 
+class SubmittedDocumentsListSerializer(serializers.ModelSerializer):
+    file_url = serializers.SerializerMethodField(read_only=True)
+    studies_document = StudiesDocumentSerializer()
+
+    class Meta:
+        model = SubmittedDocument
+        exclude = ('enrollment', 'file')
+        read_only_fields = ('id', 'status', 'submitted_date')
+
+    def get_file_url(self, obj):
+        request = self.context.get('request')
+
+        return request.build_absolute_uri(
+            reverse(
+                'file-download',
+                kwargs={'file_pk': obj.file.pk}
+            )
+        )
+
+class SubmittedDocumentsCreateSerializer(serializers.ModelSerializer):
+    file = SubmittedFileSerializer(required=True, write_only=True)
+
+    class Meta:
+        model = File
+        fields = ('file', )
+
+    def validate(self, attrs):
+        file = attrs["file"]
+        doc_id = file["studies_document_id"]
+        studies_document = StudiesDocument.objects.get(id=doc_id)
+
+        if studies_document.is_read_only:
+            raise serializers.ValidationError(
+                "Cannot override read only documents"
+            )
+
+        return attrs
+
 class EnrollmentRecruitmentEndDateSerializer(serializers.ModelSerializer):
     recruitment_end_date = serializers.DateTimeField(source='studies_edition.recruitment_end_date', read_only=True)
 
@@ -131,41 +170,6 @@ class ActiveEnrollmentSerializer(serializers.ModelSerializer):
         model = Enrollment
         exclude = ('user', )
 
-
-class SubmittedDocumentsListSerializer(serializers.ModelSerializer):
-    file_url = serializers.SerializerMethodField(read_only=True)
-    studies_document = StudiesDocumentSerializer()
-
-    class Meta:
-        model = SubmittedDocument
-        exclude = ('enrollment', 'file')
-        read_only_fields = ('id', 'status', 'submitted_date')
-
-    def get_file_url(self, obj):
-        request = self.context.get('request')
-
-        return request.build_absolute_uri(
-            reverse(
-                'enrollment-file-download',
-                kwargs={'document_pk': obj.pk}
-            )
-        )
-
-class SubmittedDocumentsCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SubmittedDocument
-        exclude = ('enrollment', )
-        read_only_fields = ('id', 'status', 'submitted_date')
-
-    @staticmethod
-    def validate_studies_document(value):
-        if value.is_read_only:
-            raise serializers.ValidationError(
-                "Cannot override read only documents"
-            )
-        return value
-
-
 class AdminFormDataSerializer(serializers.ModelSerializer):
     residential_address = AddressSerializer(read_only=True)
     registered_address = AddressSerializer(read_only=True)
@@ -173,13 +177,6 @@ class AdminFormDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = FormData
         exclude = ('enrollment',)
-
-
-class AdminSubmittedDocumentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SubmittedDocument
-        fields = ['id', 'studies_document', 'status', 'submitted_date', 'file']
-
 
 class AdminEnrollmentDetailSerializer(AdminEnrollmentSerializer):
     form_data = serializers.SerializerMethodField()
@@ -196,6 +193,6 @@ class AdminEnrollmentDetailSerializer(AdminEnrollmentSerializer):
             return None
 
     def get_documents(self, obj):
-        return AdminSubmittedDocumentSerializer(
+        return SubmittedDocumentsListSerializer(
             obj.submitteddocument_set.all(), many=True
         ).data

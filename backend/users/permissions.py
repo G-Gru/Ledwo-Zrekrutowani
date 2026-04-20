@@ -1,8 +1,9 @@
 from rest_framework import permissions
 from rest_framework.permissions import BasePermission
 
-from enrollments.models import SubmittedDocument
-from studies.models import StudiesEditionStaff
+from files.models import File
+from studies.models import StudiesEditionStaff, StudiesEdition
+
 
 class IsEmployee(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -33,21 +34,29 @@ class IsObjectOwner(BasePermission):
         return obj.user == request.user
 
 class CanViewDocument(BasePermission):
-    def has_object_permission(self, request, view, obj: SubmittedDocument):
+    def has_object_permission(self, request, view, obj: File):
         if not request.user or not request.user.is_authenticated:
             return False
 
         if request.user.is_staff: #Admin
             return True
 
-        if obj.enrollment.user == request.user:
-            return True
+        if obj.source == File.Source.SUBMITTED:
+            if obj.submitted_document.enrollment.user == request.user:
+                return True
 
-        return (obj.studies_document.studies_edition.studies_edition_staff
-                .filter(
-                    id=request.user.id
-                )
-                .exists())
+            edition = StudiesEdition.objects.get(
+                pk=obj.submitted_document.studies_document.studies_edition_id
+            )
+
+            return (StudiesEditionStaff.objects
+                    .filter(studies_edition=edition, user=request.user)
+                    .exists())
+
+        elif obj.source == File.Source.PAYMENT:
+            pass
+            # TODO zrobić podobnie jak wyżej dla payments
+
 
 class IsEditionStaffWithRole(BasePermission):
     allowed_roles = []

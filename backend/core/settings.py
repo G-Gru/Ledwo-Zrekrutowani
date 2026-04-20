@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "studies",
     "enrollments",
     "payments",
+    "files",
 
     "corsheaders",
 ]

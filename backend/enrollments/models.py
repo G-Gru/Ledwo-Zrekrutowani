@@ -1,5 +1,6 @@
 from django.db import models
 
+from files.models import File
 from studies.models import StudiesEdition, StudiesDocument, StudiesEditionStaff
 from users.models import User
 
@@ -54,7 +55,7 @@ class SubmittedDocument(models.Model):
 
     studies_document = models.ForeignKey(StudiesDocument, on_delete=models.RESTRICT, related_name='submitted_documents')
     enrollment = models.ForeignKey(Enrollment, on_delete=models.RESTRICT)
-    file = models.FileField(upload_to='submitted_documents/')
+    file = models.OneToOneField(File, on_delete=models.RESTRICT, related_name="submitted_document")
     status = models.CharField(max_length=50, choices=Status.choices, default=Status.SUBMITTED)
     submitted_date = models.DateTimeField(auto_now_add=True)
 

@@ -111,3 +111,5 @@ class StudiesDocumentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "due_date": "Must be in the future"
             })
+
+        return value
