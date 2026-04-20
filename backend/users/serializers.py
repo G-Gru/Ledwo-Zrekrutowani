@@ -6,7 +6,7 @@ from .models import User, WorkPhoneNumber
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone', 'is_employee')
+        fields = ('id', 'email', 'first_name', 'last_name', 'phone', 'is_employee', 'index_number')
 
 class WorkPhoneNumberSerializer(serializers.ModelSerializer):
     class Meta:

@@ -38,6 +38,14 @@ export default function Profile({}) {
                 <p><strong>Imię:</strong> {user.first_name || 'Brak danych'}</p>
                 <p><strong>Nazwisko:</strong> {user.last_name || 'Brak danych'}</p>
                 <p><strong>Email:</strong> {user.email || 'Brak danych'}</p>
+                {user.index_number && (
+                  <p>
+                    <strong>Numer indeksu:</strong> 
+                      <span style={{ color: 'var(--primary)', fontWeight: 'bold', marginLeft: '10px', fontSize: '1.2rem' }}>
+                        {user.index_number}
+                      </span>
+                  </p>
+                )}
             </div>
 
             <button onClick={() => logout()}> 

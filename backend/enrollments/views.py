@@ -214,3 +214,17 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
         return Response({
             "message": f"Przypomnienie o płatności zostało wysłane do: {enrollment.user.email}"
         }, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['post'], url_path='set-index')
+    def set_index(self, request, pk=None):
+        enrollment = self.get_object()
+        index_num = request.data.get('index_number')
+        
+        if not index_num:
+            return Response({'error': 'Numer indeksu jest wymagany'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        user = enrollment.user
+        user.index_number = index_num
+        user.save()
+        
+        return Response({'message': f'Numer indeksu {index_num} został zapisany.'}, status=status.HTTP_200_OK)

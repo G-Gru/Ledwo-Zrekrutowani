@@ -13,12 +13,13 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
     is_fully_paid = serializers.SerializerMethodField()
     missing_documents = serializers.SerializerMethodField()
     system_status = serializers.SerializerMethodField()
+    index_number = serializers.CharField(source='user.index_number', read_only=True)
 
     class Meta:
         model = Enrollment
         fields = [
             'id', 'student_name', 'status', 'status_note', 'enrollment_date',
-            'is_fully_paid', 'missing_documents', 'system_status'
+            'is_fully_paid', 'missing_documents', 'system_status', 'index_number'
         ]
 
     def get_student_name(self, obj):

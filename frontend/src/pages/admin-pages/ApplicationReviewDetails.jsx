@@ -66,6 +66,7 @@ export default function ApplicationReviewDetails() {
   const [decisionNote, setDecisionNote] = useState('');
   const [submittingDecision, setSubmittingDecision] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
+  const [indexInput, setIndexInput] = useState('');
 
   useEffect(() => {
     const token = getAccessToken();
@@ -91,6 +92,7 @@ export default function ApplicationReviewDetails() {
       } else {
         setEnrollment(response.enrollment);
         setDecisionNote(response.enrollment?.status_note || '');
+        setIndexInput(response.enrollment?.index_number || '');
         setIsMockData(Boolean(response.isMock));
       }
 
@@ -356,6 +358,41 @@ export default function ApplicationReviewDetails() {
                 </button>
               </div>
             </section>
+
+            {enrollment.status === 'STUDENT' && (
+              <section className='bg-panel admin-details-section admin-details-width' style={{ borderTop: '4px solid var(--primary)' }}>
+                <h2>Dane Akademickie (USOS)</h2>
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  <div style={{ flex: 1 }}>
+                    <label className='admin-details-note-label'>Numer Indeksu</label>
+                    <input 
+                      type="text" 
+                      value={indexInput}
+                      onChange={(e) => setIndexInput(e.target.value)}
+                      className="admin-details-textarea"
+                      style={{ minHeight: '40px', padding: '8px' }}
+                      placeholder="Wpisz nadany numer indeksu"
+                    />
+                  </div>
+                  <button 
+                    className="button-primary" 
+                    style={{ marginTop: '25px' }}
+                    onClick={async () => {
+                      const token = getAccessToken();
+                      const res = await serverApi.setIndexNumber(token, enrollment.id, indexInput);
+                      if(!res.error) {
+                          alert("Numer indeksu został zapisany!");
+                          setEnrollment(prev => ({...prev, index_number: indexInput}));
+                      } else {
+                          alert("Błąd: " + res.errorMsg);
+                      }
+                    }}
+                  >
+                    Zapisz numer
+                  </button>
+                </div>
+              </section>
+            )}
 
             {actionMessage && <div className='admin-success-message admin-details-width'>{actionMessage}</div>}
           </>

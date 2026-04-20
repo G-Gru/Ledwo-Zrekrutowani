@@ -102,6 +102,7 @@ export class serverApi {
             system_status: summary.system_status || '-',
             studies_name: summary.studies_name || 'Nieznany kierunek',
             edition_name: summary.edition_name || 'Nieznana edycja',
+            index_number: summary.index_number || '',
             personal: {
                 first_name: '',
                 second_name: '',
@@ -143,6 +144,7 @@ export class serverApi {
             id: detailData.id,
             student_name: detailData.student_name,
             status: detailData.status,
+            index_number: detailData.index_number,
             status_note: detailData.status_note,
             enrollment_date: detailData.enrollment_date,
             is_fully_paid: detailData.is_fully_paid,
@@ -622,5 +624,14 @@ export class serverApi {
         }
 
         return { data: null, error: true, errorMsg: 'Request failed' };
+    }
+
+    static async setIndexNumber(token, enrollmentId, indexNumber) {
+        return await this.apiRequest(
+            `/api/admin/enrollments/${enrollmentId}/set-index/`, 
+            'POST', 
+            { index_number: indexNumber }, 
+            token
+        );
     }
 }
