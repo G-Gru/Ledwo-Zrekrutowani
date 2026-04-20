@@ -91,6 +91,7 @@ export const logout = () => {
     localStorage.removeItem('user-access-token');
     localStorage.removeItem('user-refresh-token');
     localStorage.removeItem('user-data');
+    navigation.navigate('/')
 };
 
 /**
