@@ -97,6 +97,9 @@ export default function CandidateDetails() {
             <div className='admin-candidate-meta'>
               <span className={statusInfo.className}>{statusInfo.label}</span>
               <span>ID kandydata: {enrollment.id}</span>
+              <Link className='admin-inline-link' to={`/admin/applications/${enrollment.id}`}>
+                Przejdź do formularza
+              </Link>
             </div>
           )}
         </div>
@@ -155,9 +158,9 @@ export default function CandidateDetails() {
 
               <section className='bg-panel admin-candidate-actions-panel'>
                 <h2>Panel akcji</h2>
-                <button type='button' className='button-primary' disabled>
-                  Zmień status
-                </button>
+                <Link className='button-primary admin-action-link' to={`/admin/applications/${enrollment.id}`}>
+                  Otwórz formularz kandydata
+                </Link>
                 <button type='button' className='button-secondary' disabled>
                   Dodaj komentarz
                 </button>

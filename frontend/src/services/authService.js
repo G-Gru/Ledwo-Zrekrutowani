@@ -54,6 +54,8 @@ export const getUser = () => {
   return user ? JSON.parse(user) : null;
 };
 
+export const getUserType = () => getUser()?.type || null;
+
 export const isLoggedIn = () => !!getAccessToken();
 
 /**
@@ -91,7 +93,7 @@ export const logout = () => {
     localStorage.removeItem('user-access-token');
     localStorage.removeItem('user-refresh-token');
     localStorage.removeItem('user-data');
-    navigation.navigate('/')
+  window.location.href = '/studies';
 };
 
 /**

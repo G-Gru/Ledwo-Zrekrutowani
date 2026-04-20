@@ -110,6 +110,16 @@
   margin-bottom: 8px;
 }
 
+.admin-inline-link {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.admin-inline-link:hover {
+  text-decoration: underline;
+}
+
 .admin-candidate-top-grid {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(300px, 3.2fr);
@@ -178,6 +188,13 @@
 .admin-candidate-actions-panel .button-secondary,
 .admin-candidate-actions-panel .button-danger {
   margin: 0;
+}
+
+.admin-action-link {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
 }
 
 .admin-candidate-docs {

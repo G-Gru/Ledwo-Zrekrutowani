@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Header from './components/Header';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import MainPage from './pages/MainPage';
 import StudiesPage from './pages/StudiesPage';
 import StudiesDetailPage from './pages/StudiesDetailPage';
 import ApplicationForm from './pages/ApplicationForm';
@@ -20,18 +19,41 @@ import Candidates from './pages/admin-pages/Candidates';
 import CandidateDetails from './pages/admin-pages/CandidateDetails';
 import ApplicationsReview from './pages/admin-pages/ApplicationsReview';
 import ApplicationReviewDetails from './pages/admin-pages/ApplicationReviewDetails';
+import { getUser, isLoggedIn } from './services/authService';
+
+function ProtectedRoute({ children, allowedTypes = [] }) {
+  if (!isLoggedIn()) {
+    return <Navigate to='/login' replace />;
+  }
+
+  if (allowedTypes.length === 0) {
+    return children;
+  }
+
+  const userType = getUser()?.type;
+  if (!allowedTypes.includes(userType)) {
+    return <Navigate to='/studies' replace />;
+  }
+
+  return children;
+}
 
 function App() {
-  const token = localStorage.getItem('token');
-
   return (
     <Router>
       <Header />
       <Routes>
-        <Route path="/" element={<MainPage />} />
+        <Route path='/' element={<Navigate to='/studies' replace />} />
         <Route path="/studies" element={<StudiesPage />} />
         <Route path="/studies/editions/:id" element={<StudiesDetailPage />} />
-        <Route path="/manage-studies" element={<ManageStudiesOffers />} />
+        <Route
+          path='/manage-studies'
+          element={(
+            <ProtectedRoute allowedTypes={['ADMIN', 'EMPLOYEE']}>
+              <ManageStudiesOffers />
+            </ProtectedRoute>
+          )}
+        />
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -39,17 +61,87 @@ function App() {
         <Route path="/applicationForm" element={<ApplicationForm />} />
         <Route path="/applicationSent" element={<ApplicationSent />} />
 
-        <Route path="/my-applications" element={<MyApplications />} />
-        <Route path="/my-payments" element={<Payments />} />
-        <Route path="/my-documents" element={<Documents />} />
-        <Route path="/my-profile" element={<Profile />} />
+        <Route
+          path='/my-applications'
+          element={(
+            <ProtectedRoute>
+              <MyApplications />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path='/my-payments'
+          element={(
+            <ProtectedRoute>
+              <Payments />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path='/my-documents'
+          element={(
+            <ProtectedRoute>
+              <Documents />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path='/my-profile'
+          element={(
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          )}
+        />
 
-        <Route path="/admin/candidates" element={<Candidates />} />
-        <Route path="/admin/candidates/:id" element={<CandidateDetails />} />
-        <Route path="/admin/applications" element={<ApplicationsReview />} />
-        <Route path="/admin/applications/:id" element={<ApplicationReviewDetails />} />
-        <Route path="/admin/finances" element={<Finanses />} />
-        <Route path="/admin/export" element={<DataExport />} />
+        <Route
+          path='/admin/candidates'
+          element={(
+            <ProtectedRoute allowedTypes={['ADMIN', 'EMPLOYEE']}>
+              <Candidates />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path='/admin/candidates/:id'
+          element={(
+            <ProtectedRoute allowedTypes={['ADMIN', 'EMPLOYEE']}>
+              <CandidateDetails />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path='/admin/applications'
+          element={(
+            <ProtectedRoute allowedTypes={['ADMIN', 'EMPLOYEE']}>
+              <ApplicationsReview />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path='/admin/applications/:id'
+          element={(
+            <ProtectedRoute allowedTypes={['ADMIN', 'EMPLOYEE']}>
+              <ApplicationReviewDetails />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path='/admin/finances'
+          element={(
+            <ProtectedRoute allowedTypes={['ADMIN']}>
+              <Finanses />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path='/admin/export'
+          element={(
+            <ProtectedRoute allowedTypes={['ADMIN']}>
+              <DataExport />
+            </ProtectedRoute>
+          )}
+        />
 
       </Routes>
     </Router>
