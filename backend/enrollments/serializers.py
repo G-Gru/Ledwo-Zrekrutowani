@@ -178,7 +178,7 @@ class AdminFormDataSerializer(serializers.ModelSerializer):
 class AdminSubmittedDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmittedDocument
-        fields = '__all__'
+        fields = ['id', 'studies_document', 'status', 'submitted_date', 'file']
 
 
 class AdminEnrollmentDetailSerializer(AdminEnrollmentSerializer):
@@ -191,7 +191,7 @@ class AdminEnrollmentDetailSerializer(AdminEnrollmentSerializer):
 
     def get_form_data(self, obj):
         try:
-            return AdminFormDataSerializer(obj.formdata).data
+            return AdminFormDataSerializer(getattr(obj, 'form', None)).data if getattr(obj, 'form', None) else None
         except FormData.DoesNotExist:
             return None
 

@@ -4,9 +4,18 @@ from .models import User, WorkPhoneNumber
 
 
 class UserSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone', 'is_employee')
+        fields = ('id', 'email', 'first_name', 'last_name', 'phone', 'type')
+
+    def get_type(self, obj):
+        if obj.is_staff:
+            return "ADMIN"
+        if obj.is_employee:
+            return "EMPLOYEE"
+        return "STUDENT"
 
 class WorkPhoneNumberSerializer(serializers.ModelSerializer):
     class Meta:

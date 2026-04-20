@@ -24,6 +24,12 @@ class LoginAPIView(generics.CreateAPIView):
 
         refresh = RefreshToken.for_user(user)
 
+        user_type = "STUDENT"
+        if user.is_staff:
+            user_type = "ADMIN"
+        elif user.is_employee:
+            user_type = "EMPLOYEE"
+
         return Response({
             "refresh": str(refresh),
             "access": str(refresh.access_token),
@@ -32,7 +38,7 @@ class LoginAPIView(generics.CreateAPIView):
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "is_employee": user.is_employee,
+                "type": user_type,
             }
         })
 

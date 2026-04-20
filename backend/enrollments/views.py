@@ -1,3 +1,5 @@
+from django.core.mail import send_mail
+from django.conf import settings
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, generics
@@ -7,12 +9,13 @@ from rest_framework.response import Response
 
 from payments.models import Fees
 from payments.serializers import FeesSerializer
-from users.permissions import IsObjectOwner, IsStudent, CanViewDocument
+from users.permissions import IsObjectOwner, IsStudent, CanViewDocument, IsEmployee
 from . import services
 from .models import Enrollment, FormData, Address, SubmittedDocument
 from .serializers import AdminEnrollmentSerializer, AdminEnrollmentDetailSerializer, FormDataSerializer, \
     AddressSerializer, EnrollmentSerializer, ActiveEnrollmentSerializer, \
-    EnrollmentRecruitmentEndDateSerializer, SubmittedDocumentsCreateSerializer, SubmittedDocumentsListSerializer
+    EnrollmentRecruitmentEndDateSerializer, SubmittedDocumentsCreateSerializer, SubmittedDocumentsListSerializer, \
+    AdminSubmittedDocumentSerializer
 from .services import get_enrollable_edition
 
 
@@ -155,6 +158,7 @@ class FileDownloadApiView(generics.RetrieveAPIView):
 
 class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
     # W przyszłości dodać permission_classes = [IsAdminUser]
+    permission_classes = [IsEmployee]
     serializer_class = AdminEnrollmentSerializer
 
     def get_serializer_class(self):
@@ -163,10 +167,10 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
         return AdminEnrollmentSerializer
 
     def get_queryset(self):
-        if self.action == 'retrieve':
+        if self.action in ['retrieve', 'decide']:
             return Enrollment.objects.all().select_related(
                 'user', 'studies_edition',
-                'formdata', 'formdata__residential_address', 'formdata__registered_address',
+                'form', 'form__residential_address', 'form__registered_address',
             ).prefetch_related('fees', 'submitteddocument_set')
 
         qs = Enrollment.objects.all().select_related('user', 'studies_edition').prefetch_related('fees')
@@ -177,21 +181,24 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
             qs = qs.filter(fees__paid_date__isnull=True).distinct()
         return qs
 
-    @action(detail=True, methods=['post'], url_path='decide')
-    def decide(self, request, pk=None):
+    @action(detail=True, methods=['post'], url_path='accept')
+    def accept(self, request, pk=None):
         enrollment = self.get_object()
-        decision = request.data.get('decision')
-        note = request.data.get('note', '')
+        note = request.data.get('status_note', '')
 
-        if decision not in ('accept', 'reject'):
-            return Response(
-                {'error': 'decision must be "accept" or "reject"'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        enrollment.status = Enrollment.Status.STUDENT
+        enrollment.status_note = note
+        enrollment.save(update_fields=['status', 'status_note'])
 
-        enrollment.status = (
-            Enrollment.Status.STUDENT if decision == 'accept' else Enrollment.Status.EXPELLED
-        )
+        serializer = AdminEnrollmentDetailSerializer(enrollment)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='reject')
+    def reject(self, request, pk=None):
+        enrollment = self.get_object()
+        note = request.data.get('status_note', '')
+
+        enrollment.status = Enrollment.Status.EXPELLED
         enrollment.status_note = note
         enrollment.save(update_fields=['status', 'status_note'])
 
@@ -209,8 +216,49 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # TODO: Tutaj integracja z wysyłką email
+        subject = f"Przypomnienie o płatności - {enrollment.studies_edition.studies.name}"
+        message = (
+            f"Dzień dobry {enrollment.user.first_name},\n\n"
+            f"Przypominamy o konieczności uregulowania opłat za studia: {enrollment.studies_edition.studies.name}.\n"
+            "Prosimy o jak najszybsze dokonanie wpłaty.\n\n"
+            "Pozdrawiamy,\n"
+            "Zespół Ledwo Zrekrutowani"
+        )
+        
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [enrollment.user.email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Nie udało się wysłać e-maila: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
         return Response({
             "message": f"Przypomnienie o płatności zostało wysłane do: {enrollment.user.email}"
         }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_path='details')
+    def get_details(self, request, pk=None):
+        enrollment = self.get_object()
+        serializer = AdminEnrollmentDetailSerializer(enrollment)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], url_path='documents')
+    def get_documents(self, request, pk=None):
+        enrollment = self.get_object()
+        serializer = AdminSubmittedDocumentSerializer(
+            enrollment.submitteddocument_set.all(), many=True
+        )
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], url_path='fees')
+    def get_fees(self, request, pk=None):
+        enrollment = self.get_object()
+        serializer = FeesSerializer(enrollment.fees.all(), many=True)
+        return Response(serializer.data)

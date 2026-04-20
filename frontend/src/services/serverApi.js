@@ -495,8 +495,8 @@ export class serverApi {
 
     static async sendPaymentReminder(token, enrollmentId) {
         const endpoints = [
-            `/admin/enrollments/${enrollmentId}/send-payment-reminder/`,
             `/api/admin/enrollments/${enrollmentId}/send-payment-reminder/`,
+            `/admin/enrollments/${enrollmentId}/send-payment-reminder/`,
         ];
         for (const endpoint of endpoints) {
             const res = await this.apiRequest(endpoint, 'POST', {}, token);
