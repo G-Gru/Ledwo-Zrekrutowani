@@ -42,6 +42,8 @@ export default function CandidateDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [enrollment, setEnrollment] = useState(null);
+  const [documentActionLoading, setDocumentActionLoading] = useState(null);
+  const [documentActionError, setDocumentActionError] = useState('');
 
   useEffect(() => {
     const token = getAccessToken();
@@ -77,6 +79,33 @@ export default function CandidateDetails() {
     [enrollment?.status]
   );
 
+  const handleDocumentAction = async (documentId, action) => {
+    const token = getAccessToken();
+    if (!token) return;
+
+    setDocumentActionLoading(`${documentId}-${action}`);
+    setDocumentActionError('');
+
+    let result;
+    if (action === 'accept') {
+      result = await serverApi.acceptDocument(token, id, documentId);
+    } else if (action === 'reject') {
+      result = await serverApi.rejectDocument(token, id, documentId);
+    }
+
+    setDocumentActionLoading(null);
+
+    if (result.error) {
+      setDocumentActionError(result.errorMsg);
+    } else {
+      // Refresh enrollment details
+      const response = await serverApi.getAdminEnrollmentDetails(token, id);
+      if (!response.error) {
+        setEnrollment(response.enrollment);
+      }
+    }
+  };
+
   if (!userLoggedIn) {
     return <LoginRedirectPage />;
   }
@@ -97,14 +126,12 @@ export default function CandidateDetails() {
             <div className='admin-candidate-meta'>
               <span className={statusInfo.className}>{statusInfo.label}</span>
               <span>ID kandydata: {enrollment.id}</span>
-              <Link className='admin-inline-link' to={`/admin/applications/${enrollment.id}`}>
-                Przejdź do formularza
-              </Link>
             </div>
           )}
         </div>
 
         {error && <div className='error-message admin-candidates-width'>{error}</div>}
+        {documentActionError && <div className='error-message admin-candidates-width'>{documentActionError}</div>}
         {loading && <p className='admin-candidates-width'>Ładowanie danych kandydata...</p>}
 
         {!loading && enrollment && (
@@ -221,11 +248,21 @@ export default function CandidateDetails() {
                             >
                               Pobierz
                             </a>
-                            <button type='button' className='button-secondary' disabled>
-                              Akceptuj
+                            <button
+                              type='button'
+                              className='button-secondary'
+                              onClick={() => handleDocumentAction(document.id, 'accept')}
+                              disabled={documentActionLoading && documentActionLoading.startsWith(`${document.id}-`)}
+                            >
+                              {documentActionLoading === `${document.id}-accept` ? 'Akceptuję...' : 'Akceptuj'}
                             </button>
-                            <button type='button' className='button-danger' disabled>
-                              Odrzuć
+                            <button
+                              type='button'
+                              className='button-danger'
+                              onClick={() => handleDocumentAction(document.id, 'reject')}
+                              disabled={documentActionLoading && documentActionLoading.startsWith(`${document.id}-`)}
+                            >
+                              {documentActionLoading === `${document.id}-reject` ? 'Odrzucam...' : 'Odrzuć'}
                             </button>
                           </div>
                         </td>

@@ -14,12 +14,15 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
     is_fully_paid = serializers.SerializerMethodField()
     missing_documents = serializers.SerializerMethodField()
     system_status = serializers.SerializerMethodField()
+    studies_name = serializers.SerializerMethodField()
+    edition_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Enrollment
         fields = [
             'id', 'student_name', 'status', 'status_note', 'enrollment_date',
-            'is_fully_paid', 'missing_documents', 'system_status'
+            'is_fully_paid', 'missing_documents', 'system_status',
+            'studies_name', 'edition_name'
         ]
 
     def get_student_name(self, obj):
@@ -31,9 +34,22 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
 
     def get_missing_documents(self, obj):
         # Weryfikacja wymaganych dokumentów ze StudiesDocuments i SubmittedDocuments
-        required_count = obj.studies_edition.studiesdocument_set.filter(required=True).count()
+        required_count = StudiesDocument.objects.filter(
+            studies_edition_id=obj.studies_edition_id,
+            required=True
+        ).count()
         accepted_count = obj.submitteddocument_set.filter(status='ACCEPTED').count()
         return required_count > accepted_count
+
+    def get_studies_name(self, obj):
+        edition = (StudiesEdition.objects
+                   .filter(pk=obj.studies_edition_id)
+                   .values('studies__name')
+                   .first())
+        return edition.get('studies__name') if edition else '-'
+
+    def get_edition_name(self, obj):
+        return self.get_studies_name(obj)
 
     def get_system_status(self, obj):
         fully_paid = self.get_is_fully_paid(obj)
@@ -107,13 +123,15 @@ class SubmittedDocumentsListSerializer(serializers.ModelSerializer):
 
     def get_file_url(self, obj):
         request = self.context.get('request')
-
-        return request.build_absolute_uri(
-            reverse(
-                'file-download',
-                kwargs={'file_pk': obj.file.pk}
-            )
+        file_path = reverse(
+            'file-download',
+            kwargs={'file_pk': obj.file.pk}
         )
+
+        if request:
+            return request.build_absolute_uri(file_path)
+
+        return file_path
 
 class SubmittedDocumentsCreateSerializer(serializers.ModelSerializer):
     file = SubmittedFileSerializer(required=True, write_only=True)
@@ -181,10 +199,9 @@ class AdminFormDataSerializer(serializers.ModelSerializer):
 class AdminEnrollmentDetailSerializer(AdminEnrollmentSerializer):
     form_data = serializers.SerializerMethodField()
     documents = serializers.SerializerMethodField()
-    studies_edition = StudiesEditionListSerializer(read_only=True)
 
     class Meta(AdminEnrollmentSerializer.Meta):
-        fields = AdminEnrollmentSerializer.Meta.fields + ['form_data', 'documents', 'studies_edition']
+        fields = AdminEnrollmentSerializer.Meta.fields + ['form_data', 'documents']
 
     def get_form_data(self, obj):
         try:
@@ -194,5 +211,7 @@ class AdminEnrollmentDetailSerializer(AdminEnrollmentSerializer):
 
     def get_documents(self, obj):
         return SubmittedDocumentsListSerializer(
-            obj.submitteddocument_set.all(), many=True
+            obj.submitteddocument_set.all(),
+            many=True,
+            context=self.context,
         ).data

@@ -68,6 +68,8 @@ export default function ApplicationReviewDetails() {
   const [error, setError] = useState('');
   const [enrollment, setEnrollment] = useState(null);
   const [isMockData, setIsMockData] = useState(false);
+  const [documentActionLoading, setDocumentActionLoading] = useState(null);
+  const [documentActionError, setDocumentActionError] = useState('');
 
   useEffect(() => {
     const token = getAccessToken();
@@ -114,6 +116,37 @@ export default function ApplicationReviewDetails() {
     };
   }, [enrollment]);
 
+  const handleDocumentAction = async (documentId, action) => {
+    const token = getAccessToken();
+    if (!token) return;
+
+    setDocumentActionLoading(`${documentId}-${action}`);
+    setDocumentActionError('');
+
+    let result;
+    if (action === 'accept') {
+      result = await serverApi.acceptDocument(token, id, documentId);
+    } else if (action === 'reject') {
+      result = await serverApi.rejectDocument(token, id, documentId);
+    }
+
+    setDocumentActionLoading(null);
+
+    if (result?.error) {
+      setDocumentActionError(result.errorMsg || 'Nie udało się wykonać akcji dla dokumentu.');
+      return;
+    }
+
+    const refresh = await serverApi.getAdminEnrollmentDetails(token, id);
+    if (refresh.error) {
+      setDocumentActionError(refresh.errorMsg || 'Nie udało się odświeżyć szczegółów po akcji.');
+      return;
+    }
+
+    setEnrollment(refresh.enrollment);
+    setIsMockData(Boolean(refresh.isMock));
+  };
+
   if (!userLoggedIn) {
     return <LoginRedirectPage />;
   }
@@ -145,6 +178,7 @@ export default function ApplicationReviewDetails() {
         )}
 
         {error && <div className='error-message admin-details-width'>{error}</div>}
+        {documentActionError && <div className='error-message admin-details-width'>{documentActionError}</div>}
         {loading && <p className='admin-details-width'>Ładowanie szczegółów zgłoszenia...</p>}
 
         {!loading && enrollment && (
@@ -274,11 +308,21 @@ export default function ApplicationReviewDetails() {
                             >
                               Pobierz
                             </a>
-                            <button type='button' className='button-secondary' disabled>
-                              Akceptuj
+                            <button
+                              type='button'
+                              className='button-secondary'
+                              onClick={() => handleDocumentAction(document.id, 'accept')}
+                              disabled={Boolean(documentActionLoading && documentActionLoading.startsWith(`${document.id}-`))}
+                            >
+                              {documentActionLoading === `${document.id}-accept` ? 'Akceptuję...' : 'Akceptuj'}
                             </button>
-                            <button type='button' className='button-danger' disabled>
-                              Odrzuć
+                            <button
+                              type='button'
+                              className='button-danger'
+                              onClick={() => handleDocumentAction(document.id, 'reject')}
+                              disabled={Boolean(documentActionLoading && documentActionLoading.startsWith(`${document.id}-`))}
+                            >
+                              {documentActionLoading === `${document.id}-reject` ? 'Odrzucam...' : 'Odrzuć'}
                             </button>
                           </div>
                         </td>

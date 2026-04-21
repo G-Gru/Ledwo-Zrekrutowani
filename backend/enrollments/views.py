@@ -9,9 +9,10 @@ from rest_framework.response import Response
 
 from payments.models import Fees
 from payments.serializers import FeesSerializer
+from studies.models import StudiesEdition
 from users.permissions import IsObjectOwner, IsStudent, CanViewDocument, IsEmployee
 from . import services
-from .models import Enrollment, FormData, Address, SubmittedDocument
+from .models import Enrollment, FormData, Address, SubmittedDocument, DocumentHistory
 from .serializers import AdminEnrollmentSerializer, AdminEnrollmentDetailSerializer, FormDataSerializer, \
     AddressSerializer, EnrollmentSerializer, ActiveEnrollmentSerializer, \
     EnrollmentRecruitmentEndDateSerializer, SubmittedDocumentsCreateSerializer, SubmittedDocumentsListSerializer
@@ -145,11 +146,11 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         if self.action in ['retrieve', 'decide']:
             return Enrollment.objects.all().select_related(
-                'user', 'studies_edition',
+                'user',
                 'form', 'form__residential_address', 'form__registered_address',
             ).prefetch_related('fees', 'submitteddocument_set')
 
-        qs = Enrollment.objects.all().select_related('user', 'studies_edition').prefetch_related('fees')
+        qs = Enrollment.objects.all().select_related('user').prefetch_related('fees')
         
         # Filtrowanie po nieopłaconych, jeśli w URL pojawi się ?unpaid_only=true
         unpaid_only = self.request.query_params.get('unpaid_only')
@@ -184,6 +185,10 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['post'], url_path='send-payment-reminder')
     def send_payment_reminder(self, request, pk=None):
         enrollment = self.get_object()
+        edition_name = (StudiesEdition.objects
+                        .filter(pk=enrollment.studies_edition_id)
+                        .values_list('studies__name', flat=True)
+                        .first()) or 'wybrane studia'
         
         unpaid_fees = enrollment.fees.filter(paid_date__isnull=True)
         if not unpaid_fees.exists():
@@ -192,10 +197,10 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        subject = f"Przypomnienie o płatności - {enrollment.studies_edition.studies.name}"
+        subject = f"Przypomnienie o płatności - {edition_name}"
         message = (
             f"Dzień dobry {enrollment.user.first_name},\n\n"
-            f"Przypominamy o konieczności uregulowania opłat za studia: {enrollment.studies_edition.studies.name}.\n"
+            f"Przypominamy o konieczności uregulowania opłat za studia: {edition_name}.\n"
             "Prosimy o jak najszybsze dokonanie wpłaty.\n\n"
             "Pozdrawiamy,\n"
             "Zespół Ledwo Zrekrutowani"
@@ -222,14 +227,19 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['get'], url_path='details')
     def get_details(self, request, pk=None):
         enrollment = self.get_object()
-        serializer = AdminEnrollmentDetailSerializer(enrollment)
+        serializer = AdminEnrollmentDetailSerializer(
+            enrollment,
+            context={'request': request}
+        )
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'], url_path='documents')
     def get_documents(self, request, pk=None):
         enrollment = self.get_object()
         serializer = SubmittedDocumentsListSerializer(
-            enrollment.submitteddocument_set.all(), many=True
+            enrollment.submitteddocument_set.all(),
+            many=True,
+            context={'request': request}
         )
         return Response(serializer.data)
 
@@ -238,3 +248,73 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
         enrollment = self.get_object()
         serializer = FeesSerializer(enrollment.fees.all(), many=True)
         return Response(serializer.data)
+
+
+class AdminDocumentAcceptAPIView(generics.GenericAPIView):
+    permission_classes = [IsEmployee]
+    serializer_class = SubmittedDocumentsListSerializer
+
+    def post(self, request, enrollment_pk, document_pk):
+        """Accept a submitted document"""
+        document = get_object_or_404(
+            SubmittedDocument,
+            id=document_pk,
+            enrollment_id=enrollment_pk
+        )
+
+        note = request.data.get('note', '')
+        previous_status = document.status
+
+        document.status = SubmittedDocument.Status.ACCEPTED
+        document.save(update_fields=['status'])
+
+        try:
+            staff = request.user.studies_edition_staff.first()
+            if staff:
+                DocumentHistory.objects.create(
+                    staff=staff,
+                    submitted_document=document,
+                    previous_status=previous_status,
+                    new_status=document.status,
+                    note=note
+                )
+        except Exception:
+            pass
+
+        serializer = self.get_serializer(document)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AdminDocumentRejectAPIView(generics.GenericAPIView):
+    permission_classes = [IsEmployee]
+    serializer_class = SubmittedDocumentsListSerializer
+
+    def post(self, request, enrollment_pk, document_pk):
+        """Reject a submitted document"""
+        document = get_object_or_404(
+            SubmittedDocument,
+            id=document_pk,
+            enrollment_id=enrollment_pk
+        )
+
+        note = request.data.get('note', '')
+        previous_status = document.status
+
+        document.status = SubmittedDocument.Status.REJECTED
+        document.save(update_fields=['status'])
+
+        try:
+            staff = request.user.studies_edition_staff.first()
+            if staff:
+                DocumentHistory.objects.create(
+                    staff=staff,
+                    submitted_document=document,
+                    previous_status=previous_status,
+                    new_status=document.status,
+                    note=note
+                )
+        except Exception:
+            pass
+
+        serializer = self.get_serializer(document)
+        return Response(serializer.data, status=status.HTTP_200_OK)

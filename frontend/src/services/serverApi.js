@@ -539,9 +539,11 @@ export class serverApi {
             }
         }
 
-        const mock = getMockAdminEnrollmentDetails(enrollmentId);
-        if (mock) {
-            return { enrollment: mock, error: false, errorMsg: '', isMock: true };
+        if (!token) {
+            const mock = getMockAdminEnrollmentDetails(enrollmentId);
+            if (mock) {
+                return { enrollment: mock, error: false, errorMsg: '', isMock: true };
+            }
         }
 
         if (!detailResult.error && detailResult.data) {
@@ -556,7 +558,7 @@ export class serverApi {
         return {
             enrollment: null,
             error: true,
-            errorMsg: 'Nie udało się pobrać szczegółów zgłoszenia.',
+            errorMsg: 'Nie udało się pobrać szczegółów zgłoszenia. Sprawdź uprawnienia konta i działanie endpointów admin.',
             isMock: false,
         };
     }
@@ -582,20 +584,29 @@ export class serverApi {
             }
         }
 
-        const mock = saveMockAdminEnrollmentDecision(enrollmentId, decision, statusNote);
+        if (!token) {
+            const mock = saveMockAdminEnrollmentDecision(enrollmentId, decision, statusNote);
+            return {
+                enrollment: mock,
+                error: false,
+                errorMsg: '',
+                isMock: true,
+            };
+        }
+
         return {
-            enrollment: mock,
-            error: false,
-            errorMsg: '',
-            isMock: true,
+            enrollment: null,
+            error: true,
+            errorMsg: 'Nie udało się zapisać decyzji. Sprawdź uprawnienia konta i endpointy admin.',
+            isMock: false,
         };
     }
 
     static async #getAdminEnrollmentsFromApi(token, unpaidOnly = false) {
         const suffix = unpaidOnly ? '?unpaid_only=true' : '';
         const endpoints = [
-            `/admin/enrollments/${suffix}`,
             `/api/admin/enrollments/${suffix}`,
+            `/admin/enrollments/${suffix}`,
         ];
 
         for (const endpoint of endpoints) {
@@ -605,11 +616,20 @@ export class serverApi {
             }
         }
 
+        if (!token) {
+            return {
+                enrollments: getMockAdminEnrollmentList({ unpaidOnly }),
+                error: false,
+                errorMsg: '',
+                isMock: true,
+            };
+        }
+
         return {
-            enrollments: getMockAdminEnrollmentList({ unpaidOnly }),
-            error: false,
-            errorMsg: '',
-            isMock: true,
+            enrollments: [],
+            error: true,
+            errorMsg: 'Nie udało się pobrać kandydatów. Sprawdź uprawnienia konta i endpointy admin.',
+            isMock: false,
         };
     }
 
@@ -622,5 +642,41 @@ export class serverApi {
         }
 
         return { data: null, error: true, errorMsg: 'Request failed' };
+    }
+
+    static async acceptDocument(token, enrollmentId, documentId, note = '') {
+        const endpoints = [
+            `/api/admin/enrollments/${enrollmentId}/documents/${documentId}/accept/`,
+            `/admin/enrollments/${enrollmentId}/documents/${documentId}/accept/`,
+        ];
+
+        const body = note ? { note } : {};
+
+        for (const endpoint of endpoints) {
+            const res = await this.apiRequest(endpoint, 'POST', body, token);
+            if (!res.error) {
+                return { data: res.data, error: false, errorMsg: '' };
+            }
+        }
+
+        return { data: null, error: true, errorMsg: 'Nie udało się zaakceptować dokumentu.' };
+    }
+
+    static async rejectDocument(token, enrollmentId, documentId, note = '') {
+        const endpoints = [
+            `/api/admin/enrollments/${enrollmentId}/documents/${documentId}/reject/`,
+            `/admin/enrollments/${enrollmentId}/documents/${documentId}/reject/`,
+        ];
+
+        const body = note ? { note } : {};
+
+        for (const endpoint of endpoints) {
+            const res = await this.apiRequest(endpoint, 'POST', body, token);
+            if (!res.error) {
+                return { data: res.data, error: false, errorMsg: '' };
+            }
+        }
+
+        return { data: null, error: true, errorMsg: 'Nie udało się odrzucić dokumentu.' };
     }
 }
