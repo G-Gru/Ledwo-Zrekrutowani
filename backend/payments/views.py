@@ -1,3 +1,6 @@
+import datetime
+
+from django.db.models import Sum, Count, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status, views
 from rest_framework.permissions import IsAuthenticated
@@ -6,6 +9,7 @@ from rest_framework.response import Response
 from payments import services
 from payments.models import Fees, Payments
 from payments.serializers import FeesWithEditionSerializer, AdminFeeSerializer, AdminPaymentSerializer
+from studies.models import StudiesEdition
 from users.permissions import IsStudent, IsEmployee
 
 
@@ -66,6 +70,62 @@ class AdminPaymentsListAPIView(generics.ListAPIView):
             'fee__enrollment__user',
             'fee__enrollment__form'
         ).all().order_by('-id')
+
+
+class AdminFinanceDashboardAPIView(views.APIView):
+    permission_classes = [IsEmployee]
+
+    def get(self, request):
+        today = datetime.date.today()
+
+        fees_qs = Fees.objects.all()
+
+        total_collected = fees_qs.filter(paid_date__isnull=False).aggregate(
+            s=Sum('amount'))['s'] or 0
+        total_pending = fees_qs.filter(paid_date__isnull=True, due_date__gte=today).aggregate(
+            s=Sum('amount'))['s'] or 0
+        total_overdue = fees_qs.filter(paid_date__isnull=True, due_date__lt=today).aggregate(
+            s=Sum('amount'))['s'] or 0
+        pending_transfers_count = Payments.objects.filter(status="PENDING").count()
+
+        editions = (StudiesEdition.objects
+                    .filter(enrollment__fees__isnull=False)
+                    .distinct()
+                    .select_related('studies')
+                    .annotate(
+                        fees_count=Count('enrollment__fees', distinct=True),
+                        collected=Sum('enrollment__fees__amount',
+                                     filter=Q(enrollment__fees__paid_date__isnull=False)),
+                        pending=Sum('enrollment__fees__amount',
+                                   filter=Q(enrollment__fees__paid_date__isnull=True,
+                                            enrollment__fees__due_date__gte=today)),
+                        overdue=Sum('enrollment__fees__amount',
+                                   filter=Q(enrollment__fees__paid_date__isnull=True,
+                                            enrollment__fees__due_date__lt=today)),
+                    ))
+
+        editions_data = [
+            {
+                "edition_id": e.id,
+                "studies_name": e.studies.name,
+                "academic_year": e.academic_year,
+                "fees_count": e.fees_count,
+                "collected": e.collected or 0,
+                "pending": e.pending or 0,
+                "overdue": e.overdue or 0,
+            }
+            for e in editions
+        ]
+
+        return Response({
+            "overall": {
+                "total_collected": total_collected,
+                "total_pending": total_pending,
+                "total_overdue": total_overdue,
+                "pending_transfers_count": pending_transfers_count,
+            },
+            "by_edition": editions_data,
+        })
 
 
 class AdminPaymentApproveAPIView(views.APIView):

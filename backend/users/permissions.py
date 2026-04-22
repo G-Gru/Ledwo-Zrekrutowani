@@ -54,8 +54,14 @@ class CanViewDocument(BasePermission):
                     .exists())
 
         elif obj.source == File.Source.PAYMENT:
-            pass
-            # TODO zrobić podobnie jak wyżej dla payments
+            enrollment = obj.payment.fee.enrollment
+            if enrollment.user == request.user:
+                return True
+
+            edition = StudiesEdition.objects.get(pk=enrollment.studies_edition_id)
+            return (StudiesEditionStaff.objects
+                    .filter(studies_edition=edition, user=request.user)
+                    .exists())
 
 
 class IsEditionStaffWithRole(BasePermission):
