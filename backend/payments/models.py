@@ -1,6 +1,7 @@
 from django.db import models
 
 from enrollments.models import Enrollment
+from files.models import File
 
 
 class Fees(models.Model):
@@ -17,6 +18,7 @@ class Payments(models.Model):
     payment_method = models.CharField(max_length=50)
     reference_number = models.IntegerField()
     status = models.CharField(max_length=50)
+    file = models.OneToOneField(File, on_delete=models.RESTRICT, related_name='payment', null=True, blank=True)
 
 
 class PaymentsHistory(models.Model):
