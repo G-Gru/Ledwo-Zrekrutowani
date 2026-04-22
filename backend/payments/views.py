@@ -5,8 +5,8 @@ from rest_framework.response import Response
 
 from payments import services
 from payments.models import Fees
-from payments.serializers import FeesWithEditionSerializer
-from users.permissions import IsStudent
+from payments.serializers import FeesWithEditionSerializer, AdminFeeSerializer, AdminPaymentSerializer
+from users.permissions import IsStudent, IsEmployee
 
 
 class PaymentHistoryListAPIView(generics.ListAPIView):
@@ -42,3 +42,26 @@ class PayFeeAPIView(views.APIView):
             return Response({"detail": "Ta opłata została już uregulowana."}, status=status.HTTP_400_BAD_REQUEST)
         services.pay_fee(fee)
         return Response({"detail": "Płatność zrealizowana."}, status=status.HTTP_200_OK)
+    
+
+class AdminFeesListAPIView(generics.ListAPIView):
+    permission_classes = [IsEmployee]
+    serializer_class = AdminFeeSerializer
+
+    def get_queryset(self):
+        return Fees.objects.select_related(
+            'enrollment__user', 
+            'enrollment__form', 
+            'enrollment__studies_edition__studies'
+        ).all().order_by('-issued_date')
+
+
+class AdminPaymentsListAPIView(generics.ListAPIView):
+    permission_classes = [IsEmployee]
+    serializer_class = AdminPaymentSerializer
+
+    def get_queryset(self):
+        return Payments.objects.select_related(
+            'fee__enrollment__user', 
+            'fee__enrollment__form'
+        ).all().order_by('-id')
