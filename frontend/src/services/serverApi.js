@@ -139,6 +139,10 @@ export class serverApi {
             return null;
         }
 
+        const formData = detailData.form_data && typeof detailData.form_data === 'object'
+            ? detailData.form_data
+            : {};
+
         const normalized = this.#buildEmptyAdminEnrollmentDetails({
             id: detailData.id,
             student_name: detailData.student_name,
@@ -151,6 +155,38 @@ export class serverApi {
             studies_name: detailData.studies_name || detailData.studies_edition?.name,
             edition_name: detailData.edition_name || detailData.studies_edition?.name,
         });
+
+        normalized.personal = {
+            first_name: formData.first_name || '',
+            second_name: formData.second_name || '',
+            last_name: formData.last_name || '',
+            family_name: formData.family_name || '',
+            academic_title: formData.academic_title || '',
+            birth_date: formData.birth_date || '',
+            birth_place: formData.birth_place || '',
+            pesel: formData.pesel || '',
+            citizenship: formData.citizenship || '',
+        };
+
+        normalized.contact = {
+            email: formData.email || '',
+            phone: formData.phone || '',
+        };
+
+        normalized.residential_address = formData.residential_address || null;
+        normalized.registered_address = formData.registered_address || null;
+
+        normalized.education = {
+            description: formData.education || '',
+            country: formData.education_country || '',
+        };
+
+        normalized.emergency_contact = {
+            name: formData.emergency_first_name || '',
+            surname: formData.emergency_last_name || '',
+            relation: formData.emergency_contact || '',
+            phone: formData.emergency_phone || '',
+        };
 
         normalized.documents = Array.isArray(documents)
             ? documents.map((item, index) => ({
