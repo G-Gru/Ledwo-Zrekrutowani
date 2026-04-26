@@ -113,12 +113,13 @@ export default function ApplicationForm() {
         e.preventDefault();
         setError(null); // Reset error
         if (validate()) {
+            console.log("Próba Wysyłania formularza...", formData, " z załącznikami: ", files);
             const result = await serverApi.sendApplicationForm(userToken, {
                 formData,
+                files,
                 studies_edition_id: courseId,
                 action: "ENROLL",
             });
-            console.log("Próba Wysyłania formularza...", formData);
 
             if (result && !result.error) {
                 navigate(`/applicationSent?edition_id=${courseId}`);

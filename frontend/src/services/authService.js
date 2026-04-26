@@ -73,8 +73,6 @@ export const login = async (email, password) => {
         body: JSON.stringify({ email, password }),
         });
 
-        console.log(response)
-
         // add to local storage
         if (response.access && response.refresh) {
             localStorage.setItem('user-access-token', response["access"]);

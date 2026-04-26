@@ -1,0 +1,72 @@
+
+.profile-section-1 {
+    display: flex;
+    flex-direction: row;
+    padding: 10px;
+    margin-top: 15px;
+    color: var(--text-main);
+    gap: 0px;
+    align-items: center;
+
+    .profile-main-data {
+        padding: 10px;
+        margin-left: 15px;
+        display: flex;
+        flex-direction: column;
+
+        .profile-full-name {
+            font-size: xx-large;
+            color: black;
+            font-weight: bolder;
+            margin: 0;
+        }
+        .profile-status {
+            text-transform: uppercase;
+        }
+        .student-studies {
+            background-color: rgba(135, 206, 250, 0.306);
+            padding: 10px;
+            border-radius: 15px;
+            text-transform: uppercase;
+            font-weight: bolder;
+            color: var(--text-muted);
+            margin: 15px;
+            text-align: center;
+        }
+    }
+}
+
+.profile-section-2 {
+    background-color: var(--surface);
+    padding: 5px 20px;
+    border-radius: 20px;
+    margin: 30px 10px;
+
+    .title {
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: bolder;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #00000014;
+    }
+}
+
+.titled-field {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    margin: 10px;
+
+    .item-title {
+        text-transform: uppercase;
+        color: var(--primary);
+        font-weight: bolder;
+        font-size: small;
+        text-align: right;
+        margin:0;
+    }
+    .item-value {
+        margin: 0;
+        margin-left: 1rem;
+    }
+}

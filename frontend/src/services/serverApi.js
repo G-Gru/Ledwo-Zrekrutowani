@@ -10,19 +10,22 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export class serverApi {
     // Pomocnicza metoda do zapytań
-    static async apiRequest(endpoint, method = 'GET', body = null, token = null) {
+    static async apiRequest(endpoint, method = 'GET', body = null, token = null, useJsonStringData = true) {
         console.log(`Calling server API at endpoint: ${method} ${endpoint}`)
 
-        const headers = {
-            'Content-Type': 'application/json',
-        };
+        const headers = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        // Don't set Content-Type always, cant upload files
+        if (useJsonStringData) {
+            headers['Content-Type'] = 'application/json';
+        }
 
         try {
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method,
                 headers,
-                body: body ? JSON.stringify(body) : null
+                body: body ? (useJsonStringData ? JSON.stringify(body) : body) : null,
             });
 
             if (!response.ok) {
@@ -325,6 +328,23 @@ export class serverApi {
             }
         }
 
+        // Upload document for enrollment creation
+        // if (applicationForm.files && applicationForm.files.diploma) {
+        //     const docUploadBody = {
+        //         studies_document_id: 1,
+        //         file: applicationForm.files.diploma,
+        //     }
+        //     const documentUploadResponse = await this.apiRequest(`/api/enrollments/${applicationForm.studies_edition_id}/documents/`, "POST", docUploadBody, token, false);
+        //     if (documentUploadResponse.error) {
+        //         return {
+        //             data: null,
+        //             error: true,
+        //             errorMsg: documentUploadResponse.errorMsg,
+        //             errorDetail: documentUploadResponse.errorDetail
+        //         };
+        //     }
+        // }
+
         const formFullData = {
             action: applicationForm.action || 'SAVE',
             first_name: applicationForm.formData.firstName || 'Brak danych',
@@ -342,8 +362,11 @@ export class serverApi {
             phone: applicationForm.formData.phone || '000000000',
             education: `${applicationForm.formData.studiesName || 'Brak danych'} w ${applicationForm.formData.studiesLocation || 'Brak danych'}, ukończono ${applicationForm.formData.studiesEndYear || '0000'}`,
             education_country: applicationForm.formData.education_country || 'Polska',
-            emergency_contact: `${applicationForm.formData.emergencyContact?.name || 'Brak'} ${applicationForm.formData.emergencyContact?.surname || 'danych'} | tel:${applicationForm.formData.emergencyContact?.phone || '000000000'}`
+            emergency_contact: `${applicationForm.formData.emergencyContact?.name || 'Brak'} ${applicationForm.formData.emergencyContact?.surname || 'danych'} | tel:${applicationForm.formData.emergencyContact?.phone || '000000000'}`,
+            // files: [ applicationForm.files.diploma ]
         };
+
+        // console.log(formFullData)
 
         const result = await this.apiRequest(`/api/enrollments/editions/${applicationForm.studies_edition_id}/`, 'POST', formFullData, token);
         if (result.error) {
@@ -354,6 +377,7 @@ export class serverApi {
                 errorDetail: result.errorDetail
             };
         }
+
         return {
             data: result.data,
             error: false,
