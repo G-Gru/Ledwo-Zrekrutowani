@@ -387,12 +387,9 @@ export class serverApi {
     }
 
     static async getCourseInfo(editionId) {
-        const res = await this.apiRequest('/api/studies/editions/', 'GET');
-        if (!res.error) {
-            const edition = res.data.find(item => item.id == editionId);
-            if (edition) return { major: edition.name, institute: "Nieznany wydział" };
-        }
-        return { major: "Nieznany kierunek", institute: "Nieznany wydział" };
+        const res = await this.apiRequest(`/api/studies/editions/${editionId}/`, 'GET', null, getAccessToken());
+        if (res && !res.error && res.data) return res.data
+        return { name: "Nieznany kierunek", recruitment_end_date: "2000-01-01", status: "-" };
     }
     static async getCoursesInfo() {
         const res = await this.apiRequest('/api/studies/editions/', 'GET');

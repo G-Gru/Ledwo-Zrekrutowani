@@ -3,16 +3,14 @@ import '../styles/ApplicationForm.css';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { serverApi } from '../services/serverApi';
 import { getAccessToken } from '../services/authService';
+import { formatDateInWarsaw } from '../utils/dateTime';
 
-export default function ApplicationSent({
-    responseDeadline='1 stycznia 2000',
-    paymentDeadline='1 stycznia 2000',
-    documentDeadline='1 stycznia 2000',
-}) {
+export default function ApplicationSent(
+) {
     const navigate = useNavigate();
     const [showPaymentCard, setShowPaymentCard] = useState(true);
     const [showDocumentCard, setShowDocumentCard] = useState(true);
-    const [courseInfo, setCourseInfo] = useState({ name: "Nieznany kierunek", faculty: "Nieznany wydział" });
+    const [courseInfo, setCourseInfo] = useState({ name: "Nieznany kierunek", deadline: "-"});
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -26,8 +24,9 @@ export default function ApplicationSent({
         const fetchCourseInfo = async () => {
             const token = getAccessToken();
             if (token && courseId) {
-                const info = await serverApi.getCourseInfo(courseId, token);
-                setCourseInfo({ name: info.major, faculty: info.institute });
+                const info = await serverApi.getCourseInfo(courseId);
+                console.log(info)
+                setCourseInfo({ name: info.name, deadline: formatDateInWarsaw(info.recruitment_end_date) });
             }
         };
         fetchCourseInfo();
@@ -50,9 +49,9 @@ export default function ApplicationSent({
         <p>
             Twoje zgłoszenie na kierunek <b>{courseInfo.name}</b> zostało pomyślnie wysłane. 
         </p>
-        <p>
-            Wyniki rekrutacji zostaną ogłoszone do dnia <b><i>{responseDeadline}</i></b>
-        </p>
+        {/* <p>
+            Wyniki rekrutacji zostaną ogłoszone do dnia <b><i>{courseInfo.deadline}</i></b>
+        </p> */}
 
         {/* ACTION CARDS CONTAINER */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
@@ -71,7 +70,7 @@ export default function ApplicationSent({
                     {/* TERMIN */}
                     <div className='payment-deadline-info'> 
                         <span className="material-symbols-outlined text-primary">event</span>
-                        Termin uiszczenia opłaty: <span style={{color: 'darkred'}}> {paymentDeadline} </span>
+                        Termin uiszczenia opłaty: <span style={{color: 'darkred'}}> {courseInfo.deadline} </span>
                     </div>
 
                     <div style={{width: '95%', borderTop:'1px solid #c4c4c47d', alignSelf: 'center'}}> </div>
@@ -106,7 +105,7 @@ export default function ApplicationSent({
                     {/* TERMIN */}
                     <div className='payment-deadline-info'> 
                         <span className="material-symbols-outlined text-primary">event</span>
-                        Termin dostarczenia dokumentu: <span style={{color: 'darkred'}}> {documentDeadline} </span>
+                        Termin dostarczenia dokumentu: <span style={{color: 'darkred'}}> {courseInfo.deadline} </span>
                     </div>
 
                     <div style={{width: '95%', borderTop:'1px solid #c4c4c47d', alignSelf: 'center'}}> </div>

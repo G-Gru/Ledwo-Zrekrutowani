@@ -73,7 +73,7 @@ export default function ApplicationForm() {
         const fetchCourseData = async () => {
             if (userToken && courseId) {
                 const info = await serverApi.getCourseInfo(courseId, userToken);
-                setCourseInfo(info || { major: "Nieznany kierunek", institute: "Nieznany wydział" });
+                setCourseInfo(info);
             }
         };
         fetchCourseData();
@@ -191,7 +191,7 @@ export default function ApplicationForm() {
             {/* Tytul strony */}
             <div className='page-title'> Wniosek o Rekrutacje na studia podyplomowe </div>
             <div className="course-info">
-                <p><strong>KIERUNEK:</strong> {courseInfo.major.toUpperCase()}</p>
+                <p><strong>KIERUNEK:</strong> {courseInfo.name.toUpperCase()}</p>
                 {/* <p><strong>WYDZIAŁ:</strong> {courseInfo.institute.toUpperCase()}</p> */}
             </div>
 
