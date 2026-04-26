@@ -150,8 +150,6 @@ export default function ApplicationForm() {
         }
     };
     const validate = () => {
-        /* DEBUG TEMORATRY !!!!!!!!!!!  */ return true;
-
         let newErrors = {};
 
         // Sprawdzenie wymaganych plików
@@ -216,10 +214,10 @@ export default function ApplicationForm() {
             <div className="form-row">
                 <div className="form-group">
                     <label htmlFor="firstName">Imię</label>
-                    <input disabled className="input-readonly" id="firstName" name="firstName" autoComplete="given-name" value={formData.firstName} onChange={handleChange} /*required*/ />
+                    <input disabled className="input-readonly" id="firstName" name="firstName" autoComplete="given-name" value={formData.firstName} onChange={handleChange} required />
 
                     <label htmlFor="lastName">Nazwisko</label>
-                    <input disabled className="input-readonly" id="lastName" name="lastName" autoComplete="family-name" value={formData.lastName} onChange={handleChange} /*required*/ />
+                    <input disabled className="input-readonly" id="lastName" name="lastName" autoComplete="family-name" value={formData.lastName} onChange={handleChange} required />
 
                     <label htmlFor="title">Tytuł</label>
                     <select name="title" value={formData.title} onChange={handleChange}>
@@ -237,16 +235,16 @@ export default function ApplicationForm() {
 
                 <div className="form-group">
                     <label htmlFor="birthdate">Data urodzenia</label>
-                    <input id="birthdate" name="birthdate" type="date" autoComplete="bday" value={formData.birthdate} onChange={handleChange} /*required*/ />
+                    <input id="birthdate" name="birthdate" type="date" autoComplete="bday" value={formData.birthdate} onChange={handleChange} required />
 
                     <label htmlFor="birthplace">Miejsce urodzenia</label>
                     <input id="birthplace" name="birthplace" autoComplete="birthplace" value={formData.birthplace} onChange={handleChange} />
 
                     <label htmlFor="pesel">PESEL</label>
-                    <input id="pesel" className={errors.pesel ? 'input-error' : ''} name="pesel" maxLength="11" autoComplete="off" value={formData.pesel} onChange={handleChange} /*required*/ />
+                    <input id="pesel" className={errors.pesel ? 'input-error' : ''} name="pesel" maxLength="11" autoComplete="off" value={formData.pesel} onChange={handleChange} required />
 
                     <label htmlFor="nationality">Obywatelstwo</label>
-                    <input id="nationality" name="nationality" autoComplete="nationality" value={formData.nationality} onChange={handleChange} /*required*/ />
+                    <input id="nationality" name="nationality" autoComplete="nationality" value={formData.nationality} onChange={handleChange} required />
                 </div>
             </div>
 
@@ -258,11 +256,11 @@ export default function ApplicationForm() {
             <div className="form-row">
                 <div className="form-group">
                     <label htmlFor="email">Email</label>
-                    <input disabled id="email" className="input-readonly" name="email" type="email" autoComplete="email" value={formData.email} onChange={handleChange} /*required*/ />
+                    <input disabled id="email" className="input-readonly" name="email" type="email" autoComplete="email" value={formData.email} onChange={handleChange} required />
                 </div>
                 <div className="form-group">
                     <label htmlFor="phone">Telefon</label>
-                    <input id="phone" className={errors.phone ? 'input-error' : ''} name="phone" type="tel" autoComplete="tel" value={formData.phone} onChange={handleChange} /*required*/ />
+                    <input id="phone" className={errors.phone ? 'input-error' : ''} name="phone" type="tel" autoComplete="tel" value={formData.phone} onChange={handleChange} required />
                 </div>
             </div>
 
@@ -275,23 +273,23 @@ export default function ApplicationForm() {
             <div className="form-row">
                 <div className="form-group">
                     <label htmlFor="address-street">Ulica </label>
-                    <input id="address-street" name="street" autoComplete="address-street" value={formData.residenceAddress.street} onChange={(e) => handleChange(e, 'residenceAddress')} /*required*/ />
+                    <input id="address-street" name="street" autoComplete="address-street" value={formData.residenceAddress.street} onChange={(e) => handleChange(e, 'residenceAddress')} required />
 
                     <label htmlFor="address-homeNum">Numer domu</label>
-                    <input id="address-homeNum" name="house" autoComplete="address-homeNum" value={formData.residenceAddress.house} onChange= {(e) => handleChange(e, 'residenceAddress')} /*required*/ />
+                    <input id="address-homeNum" name="house" autoComplete="address-homeNum" value={formData.residenceAddress.house} onChange= {(e) => handleChange(e, 'residenceAddress')} required />
 
                     <label htmlFor="address-zip">Kod pocztowy</label>
-                    <input id="address-zip" className={errors.residenceAddress_postalCode ? 'input-error' : ''} name="postalCode" autoComplete="address-zip" value={formData.residenceAddress.postalCode} onChange={(e) => handleChange(e, 'residenceAddress')} /*required*/ />
+                    <input id="address-zip" className={errors.residenceAddress_postalCode ? 'input-error' : ''} name="postalCode" autoComplete="address-zip" value={formData.residenceAddress.postalCode} onChange={(e) => handleChange(e, 'residenceAddress')} required />
                 </div>
                 <div className="form-group">
                     <label htmlFor="address-city">Miasto</label>
-                    <input id="address-city" name="city" autoComplete="address-city" value={formData.residenceAddress.city} onChange={(e) => handleChange(e, 'residenceAddress')} /*required*/ />
+                    <input id="address-city" name="city" autoComplete="address-city" value={formData.residenceAddress.city} onChange={(e) => handleChange(e, 'residenceAddress')} required />
 
                     <label htmlFor="address-apartNum">Numer mieszkania</label>
                     <input id="address-apartNum" name="apartment" autoComplete="address-apartNum" value={formData.residenceAddress.apartment} onChange={(e) => handleChange(e, 'residenceAddress')} />
 
                     <label htmlFor="address-country">Kraj</label>
-                    <input id="address-country" name="country" autoComplete="address-country" value={formData.residenceAddress.country} onChange={(e) => handleChange(e, 'residenceAddress')} /*required*/ />
+                    <input id="address-country" name="country" autoComplete="address-country" value={formData.residenceAddress.country} onChange={(e) => handleChange(e, 'residenceAddress')} required />
                 </div>
             </div>
 
@@ -307,23 +305,23 @@ export default function ApplicationForm() {
                     <div className="form-group">
 
                         <label htmlFor="correspondence-street">Ulica </label>
-                        <input id="correspondence-street" name="street" autoComplete="correspondence-street" value={formData.correspondenceAddress.street} onChange={(e) => handleChange(e, 'correspondenceAddress')} /*required*/ />
+                        <input id="correspondence-street" name="street" autoComplete="correspondence-street" value={formData.correspondenceAddress.street} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
 
                         <label htmlFor="correspondence-homeNum">Numer domu</label>
-                        <input id="correspondence-homeNum" name="house" autoComplete="correspondence-homeNum" value={formData.correspondenceAddress.house} onChange={(e) => handleChange(e, 'correspondenceAddress')} /*required*/ />
+                        <input id="correspondence-homeNum" name="house" autoComplete="correspondence-homeNum" value={formData.correspondenceAddress.house} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
 
                         <label htmlFor="correspondence-zip">Kod pocztowy</label>
-                        <input id="correspondence-zip" className={errors.correspondenceAddress_postalCode ? 'input-error' : ''} name="postalCode" autoComplete="correspondence-zip" value={formData.correspondenceAddress.postalCode} onChange={(e) => handleChange(e, 'correspondenceAddress')} /*required*/ />
+                        <input id="correspondence-zip" className={errors.correspondenceAddress_postalCode ? 'input-error' : ''} name="postalCode" autoComplete="correspondence-zip" value={formData.correspondenceAddress.postalCode} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
                     </div>
                     <div className="form-group">
                         <label htmlFor="correspondence-city">Miasto</label>
-                        <input id="correspondence-city" name="city" autoComplete="correspondence-city" value={formData.correspondenceAddress.city} onChange={(e) => handleChange(e, 'correspondenceAddress')} /*required*/ />
+                        <input id="correspondence-city" name="city" autoComplete="correspondence-city" value={formData.correspondenceAddress.city} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
 
                         <label htmlFor="correspondence-apartNum">Numer mieszkania</label>
                         <input id="correspondence-apartNum" name="apartment" autoComplete="correspondence-apartNum" value={formData.correspondenceAddress.apartment} onChange={(e) => handleChange(e, 'correspondenceAddress')} />
 
                         <label htmlFor="correspondence-country">Kraj</label>
-                        <input id="correspondence-country" name="country" autoComplete="correspondence-country" value={formData.correspondenceAddress.country} onChange={(e) => handleChange(e, 'correspondenceAddress')} /*required*/ />
+                        <input id="correspondence-country" name="country" autoComplete="correspondence-country" value={formData.correspondenceAddress.country} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
                     </div>
                 </div>
             </div> )}
