@@ -206,7 +206,11 @@ export default function Payments() {
                         <div className='bg-panel payment-methods-panel'>
                             {/* Error transakcji */}
                             {paymentMessage && (
-                                <div className="error-message" style={{borderColor: paymentSuccess ? 'green' : 'red'}}>
+                                <div className="error-message" style={{
+                                    borderColor: paymentSuccess ? 'green' : 'red', 
+                                    background: paymentSuccess ? 'rgba(0.0,255.0,0.0,0.15)' : 'rgba(255.0,0.0,0.0,0.15)',
+                                    color: paymentSuccess ? 'black' : 'red',
+                                } }>
                                     {paymentMessage}
                                 </div>
                             )}
@@ -290,9 +294,9 @@ export default function Payments() {
                                         <div className='history-amount'>{item.amount}</div>
                                         <div className='history-status-tag'>{item.status}</div>
                                     </div>
-                                    <button className='btn-ghost-icon'>
+                                    {/* <button className='btn-ghost-icon'>
                                         <span className="material-symbols-outlined">description</span>
-                                    </button>
+                                    </button> */}
                                 </div>
                             ))
                         )}

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import '../styles/Style.css';
 
-export default function MainPage() {
+export default function NavigationPage() {
   const navigate = useNavigate();
 
   return (

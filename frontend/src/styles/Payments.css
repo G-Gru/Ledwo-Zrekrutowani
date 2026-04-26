@@ -116,8 +116,9 @@
 
 .history-top-bar {
     display: flex;
+    flex-direction: column;
+    text-align: left;
     justify-content: space-between;
-    align-items: center;
     margin-bottom: 25px;
 }
 
@@ -155,6 +156,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+.status-icon-circle span { /* wysrodkowanie nie wiem czemu to nie dziala bez tego */
+    margin-left: 6px;
+    color: black;
 }
 
 .history-item-name {

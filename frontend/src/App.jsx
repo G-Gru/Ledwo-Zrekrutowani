@@ -20,6 +20,7 @@ import CandidateDetails from './pages/admin-pages/CandidateDetails';
 import ApplicationsReview from './pages/admin-pages/ApplicationsReview';
 import ApplicationReviewDetails from './pages/admin-pages/ApplicationReviewDetails';
 import { getUser, isLoggedIn } from './services/authService';
+import NavigationPage from './pages/NavigationPage';
 
 function ProtectedRoute({ children, allowedTypes = [] }) {
   if (!isLoggedIn()) {
@@ -44,6 +45,7 @@ function App() {
       <Header />
       <Routes>
         <Route path='/' element={<Navigate to='/studies' replace />} />
+        <Route path='/navigation' element={<NavigationPage/>} />
         <Route path="/studies" element={<StudiesPage />} />
         <Route path="/studies/editions/:id" element={<StudiesDetailPage />} />
         <Route

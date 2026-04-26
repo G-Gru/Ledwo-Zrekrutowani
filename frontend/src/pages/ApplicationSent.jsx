@@ -96,10 +96,11 @@ export default function ApplicationSent({
                     <h4 className='action-title'> 
                         WYMAGANA AKCJA
                     </h4>
-                    <h2> Dostarczenie podpisanej kopii formularza do sekretariatu </h2>
+                    <h2> Dostarczenie podpisanej kopii formularza do sekretariatu, oraz orginał dyplomu </h2>
                     <p>
                         Aby dokończyć proces rekrutacji, należy przynieść wydrukowaną kopie z Twoimi wypełnionymi danymi i własnoręcznym podpisem.
-                        Wzór dokumentu jest dostępny do pobrania poniżej.
+                        Wzór dokumentu jest dostępny do pobrania w sekcji Moje Dokumenty.
+                        Dodatkowo należy przynieść orgianał załączonego dyplomu ukończenia studiów wyższych.
                     </p>
 
                     {/* TERMIN */}
@@ -110,14 +111,9 @@ export default function ApplicationSent({
 
                     <div style={{width: '95%', borderTop:'1px solid #c4c4c47d', alignSelf: 'center'}}> </div>
 
-                    {/* <p style={{fontSize: 'smaller'}}>  
-                        Opłatę możesz uregulować teraz lub w dowolnym momencie przed upływem terminu w sekcji 
-                        <b> Płatności </b> 
-                    </p> */}
-                    
                     {/* Buttons */}
                     <div style={{display: 'flex', flexDirection: 'row'}}>
-                        <button onClick={() => navigate('/my-applications/download/id=')}> Pobierz wzór dokumentu </button>
+                        <button onClick={() => navigate('/my-documents')}> Przejdź do Moje Dokumenty </button>
                         <button className='button-secondary' onClick={() => handleDismissCard(setShowDocumentCard)}> Zrozumiałem </button>
                     </div>
                 </div>

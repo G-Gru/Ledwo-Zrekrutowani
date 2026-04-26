@@ -1,5 +1,5 @@
 
-import { getUser } from './authService';
+import { getAccessToken, getUser } from './authService';
 import {
     getMockAdminEnrollmentDetails,
     getMockAdminEnrollmentList,
@@ -11,6 +11,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 export class serverApi {
     // Pomocnicza metoda do zapytań
     static async apiRequest(endpoint, method = 'GET', body = null, token = null) {
+        console.log(`Calling server API at endpoint: ${method} ${endpoint}`)
+
         const headers = {
             'Content-Type': 'application/json',
         };
@@ -74,8 +76,8 @@ export class serverApi {
         const user = getUser();
         if (user) {
             return {
-                firstName: user.firstName || user.name || "Imie",
-                lastName: user.lastName || "Nazwisko",
+                firstName: user.firstName || user.name || user.first_name || "Imie",
+                lastName: user.lastName || user.last_name || "Nazwisko",
                 email: user.email || "ziomeczek@mail.com"
             };
         }
@@ -714,5 +716,78 @@ export class serverApi {
         }
 
         return { data: null, error: true, errorMsg: 'Nie udało się odrzucić dokumentu.' };
+    }
+
+    /* Getting documents per enrollment from server */
+    static async getSystemDocuments() {
+        let token = getAccessToken()
+        let enrollmentsResponse = await this.apiRequest('/api/enrollments/active/', 'GET', null, token);        
+        let anyResponseError = enrollmentsResponse == null || enrollmentsResponse.error
+        let anyResponseErrorMsg = enrollmentsResponse ? enrollmentsResponse.errorMsg : ""
+
+        // get document for all active user enrollments
+        let returnDocuments = []
+        if (!anyResponseError) {
+            for (const enrollment of enrollmentsResponse.data) { // for each active user enrollment
+                if (anyResponseError) break
+                let editionData = enrollment.studies_edition
+                let documentsResponse = await this.apiRequest(`/api/enrollments/${enrollment.id}/documents/`, 'GET', null, token)
+
+                // on error
+                if (documentsResponse.error) {
+                    anyResponseErrorMsg += documentsResponse.errorMsg;
+                    break;
+                }
+    
+                // map document data to frontend format
+                else {
+                    const mapped = documentsResponse.data.map(doc => ({ // go thru each document for enrollment
+                        title: doc.id == 1 ? "Podanie o przyjęcie na studia" : "Dyplom studiów wyższych", // should be only 2 types of documents 
+                        studies_name: editionData.name,
+                        dateUpload: doc.submitted_date,
+                        fileUrl: doc.file_url,
+                        actionRequired: doc.status != "ACCEPTED",
+                        dateDeadline: editionData.recruitment_end_date,
+                        dateAccepted: "",
+                    }))
+                    returnDocuments.push(mapped)
+                }
+            }
+        }
+
+        // if any db call returned error - return mock data
+        if (anyResponseError) {
+            const mockDocuments = [
+                // SYSTEMOWE (Do wydruku)
+                {
+                    title: "Podanie o przyjęcie na studia",
+                    studies_name: 'Nieznany Kierunek',
+                    edition_name: 'edycja',
+                    dateUpload: "10.03.2025",
+                    fileUrl: "#",
+                    actionRequired: true,
+                    dateDeadline: "01.06.2025",
+                    dateAccepted: "01.06.2025",
+                },
+                {
+                    title: "Podanie o przyjęcie na studia",
+                    studies_name: 'Nieznany Kierunek',
+                    edition_name: 'edycja',
+                    dateUpload: "10.03.2025",
+                    fileUrl: "#",
+                    actionRequired: false,
+                    dateDeadline: "01.06.2025",
+                    dateAccepted: "01.06.2025",
+                },
+            ];
+
+            return { documents: mockDocuments, error: true, errorMsg: `Brak komunikacji z serwerem: Wyswietlane dane mock-owe (${anyResponseErrorMsg})` };
+        }
+
+        
+        // if no error
+        else {
+            return { documents: returnDocuments.flat(), error: false, errorMsg: ""}
+        }
     }
 }
