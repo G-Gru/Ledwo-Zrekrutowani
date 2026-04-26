@@ -21,7 +21,7 @@ export default function ApplicationForm() {
     const [searchParams] = useSearchParams();
     const courseId = searchParams.get('edition_id');
 
-    const [courseInfo, setCourseInfo] = useState({ major: "Nieznany kierunek", institute: "Nieznany wydział" })
+    const [courseInfo, setCourseInfo] = useState({ name: "Nieznany kierunek" })
 
 
     useEffect(() => {
