@@ -65,6 +65,7 @@ export default function StudiesDetailPage() {
   const [edition, setEdition] = useState(null);
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [recruitmentActive, setRecruitmentActive] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,6 +80,7 @@ export default function StudiesDetailPage() {
         }
 
         setEdition(editionRes.data);
+        setRecruitmentActive(editionRes.data.status == "ACTIVE")
 
         if (!staffRes.error && Array.isArray(staffRes.data)) {
           setStaff(staffRes.data);
@@ -207,15 +209,17 @@ export default function StudiesDetailPage() {
           </table>
         </div>
       </section>
-
-      <div className="apply-section">
-        <button
-          className="button-primary apply-button"
-          onClick={() => navigate(`/applicationForm?edition_id=${edition.id}`)}
-        >
-          Rekrutuj się
-        </button>
-      </div>
+      
+      { !recruitmentActive ? <p style={{border: '1px solid lightgrey', borderRadius: '15px', padding: '15px'}}> Kierunek nie prowadzi obecnie rekrutacji </p> : (
+        <div className="apply-section">
+            <button
+            className="button-primary apply-button"
+            onClick={() => navigate(`/applicationForm?edition_id=${edition.id}`)}
+            >
+            Rekrutuj się
+            </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,11 +5,24 @@ import { getAccessToken, isLoggedIn } from '../services/authService';
 import '../styles/ApplicationForm.css';
 import DocumentUploadCard from '../components/DocumentUploadCard'
 import LoginRedirectPage from '../components/LoginRedirectPage';
+import DuplicateRecruitmentFormRedirectPage from '../components/DuplicateRecruitmentFormRedirectPage';
 
 export default function ApplicationForm() {
     // Pobieranie danych uzytkownika
     const [isUserLoggedIn, setUserLoggedIn] = useState(false)
     const [userToken, setUserToken] = useState(null)
+    const [isUserAlreadyEnrolled, setUserAlreadyEnrolled] = useState(false)
+
+    const navigate = useNavigate();
+    const [errors, setErrors] = useState({});
+    const [error, setError] = useState(null);
+
+    // dane kierunku i wydzialu
+    const [searchParams] = useSearchParams();
+    const courseId = searchParams.get('edition_id');
+
+    const [courseInfo, setCourseInfo] = useState({ major: "Nieznany kierunek", institute: "Nieznany wydział" })
+
 
     useEffect(() => {
         const token = getAccessToken();
@@ -32,7 +45,20 @@ export default function ApplicationForm() {
             }));
         }
 
+        async function checkUserAlreadyEnrolled() {
+            const otherEnrollmentData = await serverApi.getUserActiveApplications(token)
+
+            if (otherEnrollmentData && Array.isArray(otherEnrollmentData.applications)) {
+                const alreadyEnrolled = otherEnrollmentData.applications.some(application => {
+                    const editionId = application?.studies_edition?.id ?? application?.studies_edition;
+                    return String(editionId) === String(courseId);
+                });
+                setUserAlreadyEnrolled(alreadyEnrolled);
+            }
+        }
+
         fetchUserData();
+        checkUserAlreadyEnrolled()
 
         const watchInterval = setInterval(() => {
             if (!isLoggedIn()) {
@@ -41,17 +67,7 @@ export default function ApplicationForm() {
         }, 30000);
 
         return () => clearInterval(watchInterval);
-    }, []);
-
-    const navigate = useNavigate();
-    const [errors, setErrors] = useState({});
-    const [error, setError] = useState(null);
-
-    // dane kierunku i wydzialu
-    const [searchParams] = useSearchParams();
-    const courseId = searchParams.get('edition_id');
-
-    const [courseInfo, setCourseInfo] = useState({ major: "Nieznany kierunek", institute: "Nieznany wydział" })
+    }, [courseId]);
 
     useEffect(() => {
         const fetchCourseData = async () => {
@@ -112,6 +128,10 @@ export default function ApplicationForm() {
     const onSubmit = async (e) => {
         e.preventDefault();
         setError(null); // Reset error
+        if (isUserAlreadyEnrolled) {
+            setError('Jesteś już zapisany na ten sam kierunek. Nie możesz wysłać kolejnego wniosku.');
+            return;
+        }
         if (validate()) {
             console.log("Próba Wysyłania formularza...", formData, " z załącznikami: ", files);
             const result = await serverApi.sendApplicationForm(userToken, {
@@ -163,19 +183,29 @@ export default function ApplicationForm() {
   
   return (
     <div>
-    { !isUserLoggedIn ? <LoginRedirectPage /> : (
-
+    { !isUserLoggedIn ? <LoginRedirectPage /> 
+    : isUserAlreadyEnrolled ? <DuplicateRecruitmentFormRedirectPage /> 
+    : (
         <div className='page-layout'>
 
             {/* Tytul strony */}
             <div className='page-title'> Wniosek o Rekrutacje na studia podyplomowe </div>
             <div className="course-info">
                 <p><strong>KIERUNEK:</strong> {courseInfo.major.toUpperCase()}</p>
-                <p><strong>WYDZIAŁ:</strong> {courseInfo.institute.toUpperCase()}</p>
+                {/* <p><strong>WYDZIAŁ:</strong> {courseInfo.institute.toUpperCase()}</p> */}
             </div>
 
         <div className='bg-panel'>
             <form onSubmit={onSubmit} autoComplete="off">
+                {isUserAlreadyEnrolled && (
+                    <div className="error-banner">
+                        <span className="material-symbols-outlined">error</span>
+                        <div className="error-banner-text">
+                            <strong>Już uczestniczysz w rekrutacji do tego kierunku.</strong>
+                            <p>Nie możesz wysłać kolejnego wniosku dla tego samego wydania studiów.</p>
+                        </div>
+                    </div>
+                )}
 
             {/* DANE OSOBOWE */}
             <div className="section-title">      
@@ -427,7 +457,7 @@ export default function ApplicationForm() {
             {error && <div className="error-message">{error}</div>}
 
             {/* Wyslij formularz guzik */}
-            <button className='btn-submit' type='submit'>Wyślij wniosek</button>
+            <button className='btn-submit' type='submit' disabled={isUserAlreadyEnrolled}>Wyślij wniosek</button>
 
             </form>
         </div>
