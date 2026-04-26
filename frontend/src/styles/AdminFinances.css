@@ -1,0 +1,326 @@
+/* ─── Layout ──────────────────────────────────────────── */
+.admin-finances-layout #account-page-column-middle {
+  width: 80%;
+  align-items: flex-start;
+}
+
+.admin-finances-layout #account-page-column-right {
+  display: none;
+}
+
+/* ─── Page header ─────────────────────────────────────── */
+.finances-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.finances-subtitle {
+  margin: 0 0 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+/* ─── Tab bar ─────────────────────────────────────────── */
+.finances-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--surface-border);
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.finances-tab-btn {
+  padding: 0.6rem 1.6rem;
+  border: none;
+  background: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+  border-radius: 4px 4px 0 0;
+}
+
+.finances-tab-btn:hover {
+  color: var(--on-secondary-container);
+  background: var(--surface-container-low);
+}
+
+.finances-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  border-radius: 9px;
+  background: #e65100;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+/* ─── Stat cards ──────────────────────────────────────── */
+.finances-stats-row {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.finances-stat-card {
+  flex: 1;
+  min-width: 180px;
+  padding: 1.1rem 1.3rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  background: var(--surface-container-lowest);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.finances-stat-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-secondary-container);
+}
+
+.finances-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.finances-stat-value.green { color: #2e7d32; }
+.finances-stat-value.red   { color: #c62828; }
+.finances-stat-value.orange { color: #e65100; }
+
+/* ─── Section header (table section) ─────────────────── */
+.finances-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 0.9rem;
+}
+
+.finances-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--on-secondary-container);
+  margin: 0;
+}
+
+/* ─── Buttons ─────────────────────────────────────────── */
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: var(--surface-container-lowest);
+  color: var(--text-main);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-export:hover {
+  background: var(--surface-container-low);
+}
+
+.btn-approve {
+  padding: 0.3rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  background: #1565c0;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-approve:hover { background: #0d47a1; }
+.btn-approve:disabled { background: #90a4ae; cursor: not-allowed; }
+
+/* ─── Status badges ───────────────────────────────────── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.status-badge.paid    { background: #e8f5e9; color: #2e7d32; }
+.status-badge.pending { background: #fff3e0; color: #e65100; }
+.status-badge.unpaid  { background: #eceff1; color: #455a64; }
+.status-badge.overdue { background: #ffebee; color: #c62828; }
+
+/* ─── Table ───────────────────────────────────────────── */
+.finances-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+}
+
+.finances-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.finances-table thead th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-secondary-container);
+  background: var(--surface-container-low);
+  border-bottom: 1px solid var(--surface-border);
+  white-space: nowrap;
+}
+
+.finances-sort-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: inherit;
+  cursor: pointer;
+}
+
+.finances-sort-btn:hover {
+  color: var(--primary);
+}
+
+.finances-table tbody tr {
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.finances-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.finances-table tbody tr:hover {
+  background: var(--surface-container-lowest);
+}
+
+.finances-table tbody td {
+  padding: 0.7rem 1rem;
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.finances-table td.mono {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ─── Budget / kosztorys ─────────────────────────────── */
+.budget-year-section {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.budget-year-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.budget-year-label {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.budget-year-card {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.budget-kpi {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: var(--surface-container-lowest);
+}
+
+.budget-kpi-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-secondary-container);
+  margin-bottom: 0.3rem;
+}
+
+.budget-kpi-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* ─── Loader / error ─────────────────────────────────── */
+.finances-loading {
+  padding: 3rem 0;
+  text-align: center;
+  color: var(--text-muted);
+  width: 100%;
+}
+
+.finances-error {
+  padding: 1rem 1.2rem;
+  border-radius: 10px;
+  background: #ffebee;
+  color: #c62828;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .admin-finances-layout #account-page-column-middle {
+    width: 96%;
+  }
+}

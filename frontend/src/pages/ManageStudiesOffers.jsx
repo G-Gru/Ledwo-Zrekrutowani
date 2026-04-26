@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import AccountPageLeftMenu from '../components/AccountPageLeftMenu';
 import '../styles/Style.css';
 import { toDateTimeLocalInWarsaw } from '../utils/dateTime';
 
@@ -599,15 +600,18 @@ export default function ManageStudiesOffers() {
   };
 
   return (
-    <div className="page-layout">
-      <h2 className="page-title">Zarządzanie ofertami studiów</h2>
+    <div className='account-page-layout manage-studies-layout'>
+      <AccountPageLeftMenu />
 
-      {studiesError && <div className="error-message">{studiesError}</div>}
-      {editionsError && <div className="error-message">{editionsError}</div>}
-      {staffError && <div className="error-message">{staffError}</div>}
+      <div className='account-column' id='account-page-column-middle'>
+        <h2 className="page-title">Zarządzanie ofertami studiów</h2>
 
-      {canViewStudies ? (
-        <>
+        {studiesError && <div className="error-message">{studiesError}</div>}
+        {editionsError && <div className="error-message">{editionsError}</div>}
+        {staffError && <div className="error-message">{staffError}</div>}
+
+        {canViewStudies ? (
+          <>
           <section className="bg-panel manage-table">
             <h3>Kierunki studiów (admin)</h3>
             {studiesPermissionMessage && <div className="error-message">{studiesPermissionMessage}</div>}
@@ -706,16 +710,16 @@ export default function ManageStudiesOffers() {
               </div>
             </form>
           </section>
-        </>
-      ) : (
-        <section className="bg-panel">
-          <h3>Kierunki studiów</h3>
-          <p>{studiesPermissionMessage || 'Brak uprawnień do zarządzania kierunkami studiów.'}</p>
-        </section>
-      )}
+          </>
+        ) : (
+          <section className="bg-panel">
+            <h3>Kierunki studiów</h3>
+            <p>{studiesPermissionMessage || 'Brak uprawnień do zarządzania kierunkami studiów.'}</p>
+          </section>
+        )}
 
-      {canViewEditions ? (
-        <>
+        {canViewEditions ? (
+          <>
           <section className="bg-panel manage-table">
             <h3>Aktualne edycje</h3>
             {editionsPermissionMessage && <div className="error-message">{editionsPermissionMessage}</div>}
@@ -1008,19 +1012,20 @@ export default function ManageStudiesOffers() {
               )}
             </section>
           )}
-        </>
-      ) : (
-        <section className="bg-panel">
-          <h3>Edycje studiów</h3>
-          <p>{editionsPermissionMessage || 'Brak uprawnień do podglądu edycji studiów.'}</p>
-        </section>
-      )}
+          </>
+        ) : (
+          <section className="bg-panel">
+            <h3>Edycje studiów</h3>
+            <p>{editionsPermissionMessage || 'Brak uprawnień do podglądu edycji studiów.'}</p>
+          </section>
+        )}
 
-      {canViewEditions && !canCreateEdition && !selectedEdition && (
-        <section className="bg-panel">
-          <p>Tworzenie nowych edycji jest dostępne tylko dla administratora.</p>
-        </section>
-      )}
+        {canViewEditions && !canCreateEdition && !selectedEdition && (
+          <section className="bg-panel">
+            <p>Tworzenie nowych edycji jest dostępne tylko dla administratora.</p>
+          </section>
+        )}
+      </div>
     </div>
   );
 }
