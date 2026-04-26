@@ -715,6 +715,29 @@ button:hover {
   background-color: var(--background)
 }
 
+.manage-studies-layout #account-page-column-middle {
+  width: 75%;
+  align-items: stretch;
+}
+
+.manage-studies-layout .page-title {
+  margin: 1.5rem 0 1rem;
+  align-self: flex-start;
+}
+
+.manage-studies-layout .bg-panel {
+  width: 100%;
+}
+
+.manage-studies-layout .form-container {
+  max-width: none;
+  width: 100%;
+}
+
+.manage-studies-layout .manage-table {
+  overflow-x: auto;
+}
+
 .error-message {
   background-color: #fee;
   color: #c33;
