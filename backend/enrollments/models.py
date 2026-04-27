@@ -106,9 +106,9 @@ class FormData(models.Model):
             "email",
             "phone",
             "education_university",
-            "education_year"
+            "education_year",
             "education_location",
-            "education_country",
+            "maturity_country",
     ]
 
     class Action(models.TextChoices):

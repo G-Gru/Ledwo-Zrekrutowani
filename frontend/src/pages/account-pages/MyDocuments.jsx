@@ -42,6 +42,14 @@ export default function Documents() {
 
     }, []);
 
+    const handleDownload = async (fileId) => {
+        const result = await serverApi.downloadFile(fileId, userToken);
+
+        if (result?.error) {
+            setErrorMsg(result.errorMsg);
+        }
+    };
+
     return (
         !userLoggedIn ? <LoginRedirectPage /> : (
         
@@ -89,10 +97,14 @@ export default function Documents() {
                                         }
 
                                     </div>
-                                    { !item.fileUrl ? (null) : (
-                                        <a href={item.fileUrl} className='btn-ghost-icon'>
+                                    { !item.file ? null : (
+                                        <button
+                                            type="button"
+                                            className='btn-ghost-icon'
+                                            onClick={() => handleDownload(item.file)}
+                                        >
                                             <span className="material-symbols-outlined">download</span>
-                                        </a>
+                                        </button>
                                     )}
                                 </div>
                             ))

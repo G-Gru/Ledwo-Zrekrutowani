@@ -9,7 +9,8 @@ export default function DocumentUploadCard({
     maxSize, 
     icon, 
     onFileSelect,
-    onFileRemove
+    onFileRemove,
+    previouslyUploaded
 }) {
     // Stan do przechowywania nazwy wybranego pliku
     const [fileName, setFileName] = useState(null);
@@ -99,6 +100,11 @@ export default function DocumentUploadCard({
             <div className="upload-text-container">
                 <p className="upload-title">{title}</p>
                 <p className="upload-meta">{formats} (max {maxSize})</p>
+                {previouslyUploaded && (
+                    <p className="upload-meta">
+                        Przesłany wcześniej
+                    </p>
+                )}
             </div>
             
             {/* Ukryty systemowy input plikowy */}

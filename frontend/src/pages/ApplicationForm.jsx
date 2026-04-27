@@ -12,7 +12,7 @@ export default function ApplicationForm() {
     const [isUserLoggedIn, setUserLoggedIn] = useState(false)
     const [userToken, setUserToken] = useState(null)
     const [isUserAlreadyEnrolled, setUserAlreadyEnrolled] = useState(false)
-    const [previousApplicationExists, setPreviousApplicationExists] = useState(false)
+    const [enrollmentId, setEnrollmentId] = useState(null)
 
     const navigate = useNavigate();
     const [errors, setErrors] = useState({});
@@ -40,6 +40,7 @@ export default function ApplicationForm() {
 
     // dokumenty
     const [documents, setDocuments] = useState([]);
+    const [existingDocuments, setExistingDocuments] = useState({});
     const [files, setFiles] = useState({});
 
     useEffect(() => {
@@ -64,7 +65,7 @@ export default function ApplicationForm() {
 
             const existingApplication = await serverApi.getExistingApplicationForm(token, courseId);
             if (!existingApplication.error && existingApplication.data) {
-                setPreviousApplicationExists(true)
+                setEnrollmentId(existingApplication.data.enrollment)
 
                 const mappedExistingData = await serverApi.mapExistingApplicationToFormData(
                     token,
@@ -88,6 +89,24 @@ export default function ApplicationForm() {
                     !!mappedExistingData.emergencyLastName ||
                     !!mappedExistingData.emergencyPhone;
                 setHasEmergencyContact(hasEmergency);
+            }
+
+            if (existingApplication.data?.enrollment) {
+                const docsRes = await serverApi.getEnrollmentDocuments(
+                    token,
+                    existingApplication.data.enrollment
+                );
+
+                if (!docsRes.error && Array.isArray(docsRes.data)) {
+                    const mapped = {};
+
+                    docsRes.data.forEach(doc => {
+                        mapped[doc.studies_document.id] = doc;
+                    });
+
+                    setExistingDocuments(mapped);
+                    console.log(mapped)
+                }
             }
 
             setFormData(prev => ({
@@ -124,7 +143,7 @@ export default function ApplicationForm() {
         }, 30000);
 
         return () => clearInterval(watchInterval);
-    }, [courseId]);
+    }, [courseId, enrollmentId]);
 
     useEffect(() => {
         const fetchCourseData = async () => {
@@ -193,10 +212,10 @@ export default function ApplicationForm() {
             files,
             studies_edition_id: courseId,
             action: actionType,
-        }, !previousApplicationExists);
+        }, enrollmentId === null);
 
         if (result && !result.error) {
-            setPreviousApplicationExists(true)
+            setEnrollmentId(result.data.enrollment)
             if (actionType === "ENROLL") {
                 navigate(`/applicationSent?edition_id=${courseId}`);
             }
@@ -218,7 +237,10 @@ export default function ApplicationForm() {
         // Docs
         if (isFinalSubmit) {
             documents.forEach(doc => {
-                if (doc.required && !files[doc.id]) {
+                const hasNewFile = !!files[doc.id];
+                const hasExistingFile = !!existingDocuments?.[doc.id];
+
+                if (doc.required && !hasNewFile && !hasExistingFile) {
                     newErrors[`doc_${doc.id}`] = `${doc.name} jest wymagany.`;
                 }
             });
@@ -295,7 +317,7 @@ export default function ApplicationForm() {
         <div className='page-layout'>
 
             {/* Tytul strony */}
-            <div className='page-title'> Wniosek o Rekrutacje na studia podyplomowe </div>
+            <div className='page-title'> Wniosek o rekrutację na studia podyplomowe</div>
             <div className="course-info">
                 <p><strong>KIERUNEK:</strong> {courseInfo.name.toUpperCase()}</p>
                 {/* <p><strong>WYDZIAŁ:</strong> {courseInfo.institute.toUpperCase()}</p> */}
@@ -504,12 +526,13 @@ export default function ApplicationForm() {
                             key={doc.id}
                             id={doc.id}
                             title={doc.name + (doc.required ? " *" : "")}
-                            formats="PDF, JPG"
+                            formats="PDF, DOC"
                             maxSize="5MB"
                             icon="description"
                             onFileSelect={handleFileSelect}
                             onFileRemove={handleFileRemove}
                             required={doc.required}
+                            previouslyUploaded={!!existingDocuments[doc.id]}
                         />
                     ))}
                 </div>

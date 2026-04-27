@@ -11,7 +11,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export class serverApi {
     // Pomocnicza metoda do zapytań
-    static async apiRequest(endpoint, method = 'GET', body = null, token = null, useJsonStringData = true) {
+    static async apiRequest(endpoint, method = 'GET', body = null, token = null, useJsonStringData = true, isBlob = false) {
         console.log(`Calling server API at endpoint: ${method} ${endpoint}`)
 
         const headers = {};
@@ -67,7 +67,11 @@ export class serverApi {
                 }
                 return { data: null, error: true, errorMsg: `HTTP ${response.status}`, errorDetail };
             }
-            
+
+            if (isBlob) {
+                return { data: response, error: false };
+            }
+
             const data = await response.json();
             return { data, error: false, errorMsg: "" };
         } catch (err) {
@@ -366,9 +370,9 @@ export class serverApi {
         payload.append("emergency_last_name", applicationForm.formData.emergencyLastName);
         payload.append("emergency_phone", applicationForm.formData.emergencyPhone);
 
-        filesPayload.forEach((f, index) => {
-            payload.append(`files[${index}][studies_document_id]`, f.studies_document_id);
-            payload.append(`files[${index}][file]`, f.file);
+        filesPayload.forEach((f) => {
+            payload.append("files_ids", f.studies_document_id);
+            payload.append("files_uploads", f.file);
         });
 
         // console.log(formFullData)
@@ -439,6 +443,51 @@ export class serverApi {
                 data: null,
                 error: true,
                 errorMsg: result.errorMsg || 'Failed to fetch existing application form',
+                errorDetail: result.errorDetail || null
+            };
+        }
+
+        return {
+            data: result.data,
+            error: false,
+            errorMsg: '',
+            errorDetail: ''
+        };
+    }
+
+    static async getEnrollmentDocuments(token, enrollmentId) {
+        if (!enrollmentId) {
+            return {
+                data: null,
+                error: true,
+                errorMsg: "Missing enrollment id",
+                errorDetail: "enrollmentId is required"
+            };
+        }
+
+        const result = await this.apiRequest(
+            `/api/enrollments/${enrollmentId}/documents/`,
+            'GET',
+            null,
+            token
+        );
+
+        if (result.error) {
+            const status = result.status || result.errorStatus;
+
+            if (status === 404) {
+                return {
+                    data: [],
+                    error: false,
+                    errorMsg: '',
+                    errorDetail: ''
+                };
+            }
+
+            return {
+                data: null,
+                error: true,
+                errorMsg: result.errorMsg || 'Failed to fetch enrollment documents',
                 errorDetail: result.errorDetail || null
             };
         }
@@ -615,7 +664,7 @@ export class serverApi {
         // let mock_schedule = await this.generateRecruitmentApplicationSchedule(null, null, false)
         return {
             applications: [
-                // { name: "Niewypełniony wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje wypełnienia"], 
+                // { name: "Niewypełniony wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje wypełnienia"],
                 // schedule: mock_schedule }
             ],
             error: true,
@@ -780,7 +829,7 @@ export class serverApi {
         if (paymentIsCompleted && documentsCompleted) {
             recruitmentSchedule[3].flag = 'in-progress'
             recruitmentSchedule[3].endDate = recruitmentSchedule[2].endDate
-        } 
+        }
         if (candidateStatus == 'STUDENT') {
             recruitmentSchedule[3].flag = 'complete'
             recruitmentSchedule[3].endDate = recruitmentSchedule[2].endDate
@@ -1011,7 +1060,7 @@ export class serverApi {
                         title: doc.id == 1 ? "Podanie o przyjęcie na studia" : "Dyplom studiów wyższych", // should be only 2 types of documents 
                         studies_name: editionData.name,
                         dateUpload: doc.submitted_date,
-                        fileUrl: doc.file_url,
+                        fileUrl: doc.file,
                         actionRequired: doc.status != "ACCEPTED",
                         dateDeadline: editionData.recruitment_end_date,
                         dateAccepted: "",
@@ -1030,7 +1079,7 @@ export class serverApi {
                     studies_name: 'Nieznany Kierunek',
                     edition_name: 'edycja',
                     dateUpload: "10.03.2025",
-                    fileUrl: "#",
+                    file: 0,
                     actionRequired: true,
                     dateDeadline: "01.06.2025",
                     dateAccepted: "01.06.2025",
@@ -1040,7 +1089,7 @@ export class serverApi {
                     studies_name: 'Nieznany Kierunek',
                     edition_name: 'edycja',
                     dateUpload: "10.03.2025",
-                    fileUrl: "#",
+                    file: 0,
                     actionRequired: false,
                     dateDeadline: "01.06.2025",
                     dateAccepted: "01.06.2025",
@@ -1057,9 +1106,67 @@ export class serverApi {
         }
     }
 
+    static async downloadFile(fileId, token) {
+        if (!fileId) {
+            return {
+                error: true,
+                errorMsg: "Missing file id",
+                errorDetail: "fileId is required",
+            };
+        }
+
+        const result = await this.apiRequest(
+            `/api/files/${fileId}/`,
+            'GET',
+            null,
+            token,
+            true,
+            true
+        );
+
+        if (result.error) {
+            return {
+                error: true,
+                errorMsg: result.errorMsg || 'Failed to download file',
+                errorDetail: result.errorDetail || null,
+            };
+        }
+
+        const blob = await result.data.blob();
+
+        const contentDisposition = result.data.headers.get('Content-Disposition');
+        let filename = 'file';
+        if (contentDisposition) {
+            let match = contentDisposition.match(/filename="?([^"]+)"?/);
+
+            if (!match) {
+                match = contentDisposition.match(/filename\*=(?:UTF-8'')?([^;]+)/);
+            }
+
+            if (match) {
+                filename = decodeURIComponent(match[1].replace(/['"]/g, ''));
+            }
+        }
+
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        return {
+            error: false,
+        };
+    }
+
     /* Get system generated enrollment document for a specific user application (enrollment id) */
     static async getSystemGeneratedEnrollmentDocuments(enrollmentId) {
-        
+
         let token = getAccessToken()
         let documentsResponse = await this.apiRequest(`/api/enrollments/${enrollmentId}/documents/`, 'GET', null, token)
         let enrollmentResponse = await this.apiRequest(`/api/enrollments/${enrollmentId}/`, 'GET', null, token)
@@ -1098,7 +1205,7 @@ export class serverApi {
 
         // map document data to frontend format
         const mapped = documentsResponse.data.map(doc => ({ // go thru each document for enrollment
-            title: doc.id == 1 ? "Podanie o przyjęcie na studia" : "Dyplom studiów wyższych", // should be only 2 types of documents 
+            title: doc.id == 1 ? "Podanie o przyjęcie na studia" : "Dyplom studiów wyższych", // should be only 2 types of documents
             studies_name: editionName,
             dateUpload: doc.submitted_date,
             fileUrl: doc.file_url,

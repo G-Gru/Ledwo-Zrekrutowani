@@ -68,11 +68,22 @@ class FormDataSerializer(serializers.ModelSerializer):
                                      required=True,
                                      write_only=True)
 
-    files = SubmittedFileSerializer(many=True, required=False, write_only=True)
+    files_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        required=False,
+        write_only=True
+    )
+
+    files_uploads = serializers.ListField(
+        child=serializers.FileField(),
+        required=False,
+        write_only=True
+    )
 
     class Meta:
         model = FormData
-        exclude = ('modified_date', 'enrollment')
+        exclude = ('modified_date', )
+        read_only_fields = ('enrollment', )
 
     def validate(self, attrs):
         return form_data_validate(attrs)
@@ -113,25 +124,12 @@ def form_data_validate(attrs):
     return attrs
 
 class SubmittedDocumentsListSerializer(serializers.ModelSerializer):
-    file_url = serializers.SerializerMethodField(read_only=True)
     studies_document = StudiesDocumentSerializer()
 
     class Meta:
         model = SubmittedDocument
-        exclude = ('enrollment', 'file')
-        read_only_fields = ('id', 'status', 'submitted_date')
-
-    def get_file_url(self, obj):
-        request = self.context.get('request')
-        file_path = reverse(
-            'file-download',
-            kwargs={'file_pk': obj.file.pk}
-        )
-
-        if request:
-            return request.build_absolute_uri(file_path)
-
-        return file_path
+        exclude = ('enrollment', )
+        read_only_fields = ('id', 'status', 'submitted_date', 'file')
 
 class SubmittedDocumentsCreateSerializer(serializers.ModelSerializer):
     file = SubmittedFileSerializer(required=True, write_only=True)

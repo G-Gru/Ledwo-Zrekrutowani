@@ -8,13 +8,15 @@ const sampleStudies = [
     id: 1,
     name: 'Informatyka',
     terms_count: 7,
-    description: 'Programowanie, systemy operacyjne, bazy danych i inżynieria oprogramowania.'
+    description: 'Programowanie, systemy operacyjne, bazy danych i inżynieria oprogramowania.',
+    organizational_unit: 'INF'
   },
   {
     id: 2,
     name: 'Analiza Danych',
     terms_count: 4,
-    description: 'Uczenie maszynowe, statystyka i przetwarzanie dużych zbiorów danych.'
+    description: 'Uczenie maszynowe, statystyka i przetwarzanie dużych zbiorów danych.',
+    organizational_unit: 'INF'
   }
 ];
 
@@ -30,7 +32,8 @@ const sampleEditions = [
     max_participants: 50,
     syllabus_url: 'https://example.com/syllabus',
     recruitment_start_date: '2024-05-01T00:00:00Z',
-    recruitment_end_date: '2024-09-30T23:59:59Z'
+    recruitment_end_date: '2024-09-30T23:59:59Z',
+    academic_year: '2024/2025'
   },
   {
     id: 2,
@@ -43,7 +46,8 @@ const sampleEditions = [
     max_participants: 40,
     syllabus_url: 'https://example.com/syllabus-2',
     recruitment_start_date: '2024-09-01T00:00:00Z',
-    recruitment_end_date: '2025-02-28T23:59:59Z'
+    recruitment_end_date: '2025-02-28T23:59:59Z',
+    academic_year: '2025/2026'
   }
 ];
 
@@ -87,7 +91,8 @@ const sampleEditionStaffByEdition = {
 const emptyStudyForm = {
   name: '',
   terms_count: '',
-  description: ''
+  description: '',
+  organizational_unit: '',
 };
 
 const emptyEditionForm = {
@@ -99,7 +104,8 @@ const emptyEditionForm = {
   status: 'HIDDEN',
   syllabus_url: '',
   recruitment_start_date: '',
-  recruitment_end_date: ''
+  recruitment_end_date: '',
+  academic_year: '',
 };
 
 const emptyStaffForm = {
@@ -158,7 +164,8 @@ export default function ManageStudiesOffers() {
   const mapStudyToForm = (study) => ({
     name: study?.name || '',
     terms_count: study?.terms_count || '',
-    description: study?.description || ''
+    description: study?.description || '',
+    organizational_unit: study?.organizational_unit || '',
   });
 
   const mapEditionToForm = (edition) => ({
@@ -170,7 +177,8 @@ export default function ManageStudiesOffers() {
     status: edition?.status || 'HIDDEN',
     syllabus_url: edition?.syllabus_url || '',
     recruitment_start_date: toDateTimeLocal(edition?.recruitment_start_date),
-    recruitment_end_date: toDateTimeLocal(edition?.recruitment_end_date)
+    recruitment_end_date: toDateTimeLocal(edition?.recruitment_end_date),
+    academic_year: edition?.academic_year || '',
   });
 
   const fetchStudies = async () => {
@@ -497,7 +505,8 @@ export default function ManageStudiesOffers() {
       const payload = {
         name: studyFormData.name,
         terms_count: Number(studyFormData.terms_count),
-        description: studyFormData.description
+        description: studyFormData.description,
+        organizational_unit: studyFormData.organizational_unit,
       };
 
       const res = await fetch(url, {
@@ -549,7 +558,8 @@ export default function ManageStudiesOffers() {
             status: editionFormData.status,
             syllabus_url: editionFormData.syllabus_url,
             recruitment_start_date: editionFormData.recruitment_start_date,
-            recruitment_end_date: editionFormData.recruitment_end_date
+            recruitment_end_date: editionFormData.recruitment_end_date,
+            academic_year: editionFormData.academic_year,
           }
         : {
             studies_id: Number(editionFormData.studies_id),
@@ -560,7 +570,8 @@ export default function ManageStudiesOffers() {
             status: editionFormData.status,
             syllabus_url: editionFormData.syllabus_url,
             recruitment_start_date: editionFormData.recruitment_start_date,
-            recruitment_end_date: editionFormData.recruitment_end_date
+            recruitment_end_date: editionFormData.recruitment_end_date,
+            academic_year: editionFormData.academic_year,
           };
 
       const res = await fetch(url, {
@@ -661,7 +672,6 @@ export default function ManageStudiesOffers() {
           <section className="bg-panel">
             <h3>{selectedStudy ? 'Edytuj kierunek studiów' : 'Dodaj nowy kierunek studiów'}</h3>
             <form onSubmit={handleStudySubmit} className="form-container">
-              <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="study_name">Nazwa kierunku *</label>
                   <input
@@ -674,19 +684,31 @@ export default function ManageStudiesOffers() {
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="terms_count">Liczba semestrów *</label>
-                  <input
-                    type="number"
-                    id="terms_count"
-                    name="terms_count"
-                    min="1"
-                    value={studyFormData.terms_count}
-                    onChange={handleStudyChange}
-                    required
-                  />
+                <div className="form-row">
+                    <div className="form-group">
+                        <label htmlFor="terms_count">Liczba semestrów *</label>
+                        <input
+                            type="number"
+                            id="terms_count"
+                            name="terms_count"
+                            min="1"
+                            value={studyFormData.terms_count}
+                            onChange={handleStudyChange}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="organizational_unit">Jednostka ogranizacyjna *</label>
+                        <input
+                            type="text"
+                            id="organizational_unit"
+                            name="organizational_unit"
+                            value={studyFormData.organizational_unit}
+                            onChange={handleStudyChange}
+                            required
+                        />
+                    </div>
                 </div>
-              </div>
 
               <div className="form-group">
                 <label htmlFor="study_description">Opis *</label>
@@ -783,6 +805,18 @@ export default function ManageStudiesOffers() {
                         ))}
                       </select>
                     </div>
+
+                  <div className="form-group">
+                      <label htmlFor="academic_year">Rok akademicki *</label>
+                      <input
+                          type="text"
+                          id="academic_year"
+                          name="academic_year"
+                          value={editionFormData.academic_year}
+                          onChange={handleEditionChange}
+                          required
+                      />
+                  </div>
                   </div>
                 )}
 

@@ -52,8 +52,13 @@ def update_enrollment_form(edition_id, user, serializer):
 
 def save_form(serializer, enrollment):
     serializer.is_valid(raise_exception=True)
+
+    files_ids = serializer.validated_data.pop("files_ids", [])
+    files_uploads = serializer.validated_data.pop("files_uploads", [])
+
     serializer.save(enrollment=enrollment)
-    create_form_files(enrollment.id, serializer)
+
+    create_form_files(enrollment.id, files_ids, files_uploads)
 
 def enroll(edition_id, enrollment_id):
     with transaction.atomic():
@@ -82,10 +87,9 @@ def enroll(edition_id, enrollment_id):
         enrollment.save()
         create_form_delivery_file(enrollment)
 
-def create_form_files(enrollment_id, serializer):
-    files_data = serializer.validated_data.pop("files", [])
-    for file_data in files_data:
-        _create_submitted_document(enrollment_id, file_data)
+def create_form_files(enrollment_id, files_ids, files_uploads):
+    for studies_document_id, uploaded_file in zip(files_ids, files_uploads):
+        _create_submitted_document(enrollment_id, studies_document_id, uploaded_file)
 
 def submit_document(enrollment_id, user, serializer):
     with transaction.atomic():
@@ -98,12 +102,9 @@ def submit_document(enrollment_id, user, serializer):
         file_data = serializer.validated_data.pop("file")
         _create_submitted_document(enrollment_id, file_data)
 
-def _create_submitted_document(enrollment_id, file_data):
-    studies_document_id = file_data["studies_document_id"]
-    file = file_data["file"]
-
+def _create_submitted_document(enrollment_id, studies_document_id, uploaded_file):
     file_model_obj = File.objects.create(
-        file=file,
+        file=uploaded_file,
         source=File.Source.SUBMITTED
     )
 
@@ -167,9 +168,10 @@ def generate_form_docx(form: FormData):
         "registered_address": form.registered_address,
         "email": form.email,
         "phone": form.phone,
-        "education": form.education,
-        "education_country": form.education_country,
-        "emergency_contact": form.emergency_contact or "Nie podano",
+        "education": " ".join([form.education_university, form.education_location, form.education_year]),
+        "maturity_country": form.maturity_country,
+        "emergency_contact": " ".join([form.emergency_name, form.emergency_last_name, form.emergency_phone])
+                             or "Nie podano",
     }
 
     doc.render(context)
