@@ -281,6 +281,8 @@ class AdminDocumentAcceptAPIView(generics.GenericAPIView):
         except Exception:
             pass
 
+        services.check_and_promote_to_student(document.enrollment)
+
         serializer = self.get_serializer(document)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

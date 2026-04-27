@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 
 from core import settings
 from enrollments.exceptions import UserAlreadyEnrolledException, NoPlacesAvailableException, MissingDocumentsException
-from enrollments.models import Enrollment, FormData, ENROLLMENT_TAKING_UP_PLACE_STATUSES, SubmittedDocument
+from enrollments.models import Enrollment, FormData, ENROLLMENT_TAKING_UP_PLACE_STATUSES, SubmittedDocument, SUBMITTED_DOCUMENT_CONFIRMED_STATUSES
 from files.models import File
 from studies.models import StudiesEdition, StudiesDocument
 from studies.services import get_enrollable_editions_queryset, DELIVERY_DOCUMENT_NAME
@@ -180,3 +180,25 @@ def generate_form_docx(form: FormData):
     doc.save(file_path)
 
     return file_path
+
+
+def check_and_promote_to_student(enrollment):
+    if enrollment.status != Enrollment.Status.CANDIDATE:
+        return
+
+    if enrollment.fees.filter(paid_date__isnull=True).exists():
+        return
+
+    required_docs = StudiesDocument.objects.filter(
+        studies_edition=enrollment.studies_edition,
+        required=True
+    )
+    unconfirmed = required_docs.exclude(
+        submitted_documents__enrollment=enrollment,
+        submitted_documents__status__in=SUBMITTED_DOCUMENT_CONFIRMED_STATUSES
+    )
+    if unconfirmed.exists():
+        return
+
+    enrollment.status = Enrollment.Status.STUDENT
+    enrollment.save(update_fields=['status'])

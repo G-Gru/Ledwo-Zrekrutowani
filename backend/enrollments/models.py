@@ -65,6 +65,11 @@ SUBMITTED_DOCUMENT_ACCEPT_ENROLLMENT_STATUSES = [
     SubmittedDocument.Status.VERIFIED,
 ]
 
+SUBMITTED_DOCUMENT_CONFIRMED_STATUSES = [
+    SubmittedDocument.Status.ACCEPTED,
+    SubmittedDocument.Status.VERIFIED,
+]
+
 class DocumentHistory(models.Model):
     staff = models.ForeignKey(StudiesEditionStaff, on_delete=models.RESTRICT)
     submitted_document = models.ForeignKey(SubmittedDocument, on_delete=models.RESTRICT)

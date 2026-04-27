@@ -6,6 +6,7 @@ from django.db import transaction
 
 from files.models import File
 from payments.models import Fees, Payments, PaymentsHistory
+from enrollments.services import check_and_promote_to_student
 
 
 def create_fee_for_enrollment(enrollment, edition):
@@ -46,6 +47,7 @@ def pay_fee(fee, proof_file=None):
 
     if payment_status == "COMPLETED":
         send_payment_confirmation_email(fee)
+        check_and_promote_to_student(fee.enrollment)
 
 
 def approve_payment(payment):
@@ -63,6 +65,7 @@ def approve_payment(payment):
         fee.save(update_fields=['paid_date'])
 
     send_payment_confirmation_email(payment.fee)
+    check_and_promote_to_student(payment.fee.enrollment)
 
 
 def send_fee_issued_email(fee):
