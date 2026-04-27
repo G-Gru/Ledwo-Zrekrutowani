@@ -17,16 +17,45 @@
     background-color: var(--surface-container-low);
     border: none;
     display: flex;
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    justify-content: space-between;
     gap: 10px;
     border: 2px lightgrey dashed;
 }
+.application-card-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+.application-card-icon {
+    font-size: 1.8rem;
+    color: var(--primary);
+}
+.application-card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.application-card-info h4 {
+    margin: 0 0 6px 0;
+    line-height: 1.2;
+}
+.application-card-info p {
+    margin: 0;
+}
 .single-application-card p {
     color: var(--text-main);
-    margin:2px;
+    margin: 2px;
     font-size: smaller;
 }
+.single-application-card:hover {
+    border-color: black;
+}
+
 .line-item-title {
     color: var(--text-muted);
     font-weight: 625;
@@ -41,13 +70,25 @@
 
 .status-badges-container {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    margin-right: 1rem;
+}
+
+.application-card-actions {
+    display: flex;
+    justify-content:center;
+    gap: 1.5rem;
+    width: 100%;
 }
 
 .application-status {
     padding: 4px 10px;
     border-radius: 12px;
-    font-size: 0.75rem;
+    font-size: 0.6rem;
     font-weight: 600;
     text-transform: uppercase;
     display: inline-block;
@@ -114,4 +155,17 @@
 
 .help-link .icon-small {
     font-size: 18px;
+}
+
+.docs-inline-link {
+    color: var(--primary);
+    transition: font-size 0.15s ease;
+    font-size: 0.7em;
+    font-weight: 675;
+}
+
+.docs-inline-link:hover {
+    cursor: pointer;
+    font-size: 0.75em;
+    text-decoration: underline;
 }

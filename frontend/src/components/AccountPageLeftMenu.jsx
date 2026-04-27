@@ -26,7 +26,7 @@ export default function AccountPageLeftMenu() {
       <nav className="side-menu">
         {/* Sekcja główna */}
         <NavLink to="/my-profile" icon="person" label="Profil" />
-        <NavLink to="/my-documents" icon="description" label="Dokumenty" />
+        {/* <NavLink to="/my-documents" icon="description" label="Dokumenty" /> */}
         <NavLink to="/my-payments" icon="payments" label="Płatności" />
         <NavLink to="/my-applications" icon="assignment" label="Moje wnioski" />
 

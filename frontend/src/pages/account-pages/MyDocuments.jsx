@@ -4,6 +4,7 @@ import LoginRedirectPage from '../../components/LoginRedirectPage';
 import { serverApi } from '../../services/serverApi';
 import { getAccessToken } from '../../services/authService';
 import { formatDateInWarsaw } from '../../utils/dateTime';
+import { useSearchParams } from 'react-router-dom';
 import '../../styles/Payments.css';
 import '../../styles/Documents.css';
 
@@ -15,10 +16,14 @@ export default function Documents() {
     const [userToken, setUserToken] = useState(null);
     const [userLoggedIn, setUserLoggedIn] = useState(false)
 
+    const [searchParams] = useSearchParams();
+
     const actionColour = '#ba5414'
     const acceptedColour = '#00696f'
     const actionColourBg= actionColour + '20' // add hex code 0x60 for alpha level
     const acceptedColourBg = acceptedColour + '20'
+
+    const enrollmentId = searchParams.get('enrollment_id');
 
     useEffect( () => {
         const token = getAccessToken();
@@ -27,9 +32,8 @@ export default function Documents() {
         setUserLoggedIn(true);
 
         async function fetchDocumentsData() {
-
-            // system docuemnts
-            var systemDocs = await serverApi.getSystemDocuments() 
+            // fetch docuemnts
+            var systemDocs = await serverApi.getSystemGeneratedEnrollmentDocuments(enrollmentId) 
             setSystemDocuments( systemDocs.documents )
             if (systemDocs.error) setErrorMsg(systemDocs.errorMsg)
         }

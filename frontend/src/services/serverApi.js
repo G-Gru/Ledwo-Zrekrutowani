@@ -5,6 +5,7 @@ import {
     getMockAdminEnrollmentList,
     saveMockAdminEnrollmentDecision,
 } from '../mocks/adminEnrollmentMocks';
+import { formatDateInWarsaw } from '../utils/dateTime';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -401,14 +402,14 @@ export class serverApi {
     /* Applications */
     // dane: application { name: "", type: "", status: [""],  schedule: [title: "", startDate: "", endDate: "", flag: ""] }
     static async getUserUnfinishedApplications(userToken) {
-        let mock_schedule = await this.generateRecruitmentApplicationSchedule(null, null, false)
+        // let mock_schedule = await this.generateRecruitmentApplicationSchedule(null, null, false)
         return {
             applications: [
-                { name: "Niewypełniony wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje wypełnienia"], 
-                schedule: mock_schedule }
+                // { name: "Niewypełniony wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje wypełnienia"], 
+                // schedule: mock_schedule }
             ],
             error: true,
-            errorMsg: "Pobieranie roboczych wniosków: Funkcjonalnosc niezaimplementowana: wyświetlane dane mock-owe."
+            errorMsg: "" //"Pobieranie roboczych wniosków: Funkcjonalnosc niezaimplementowana: wyświetlane dane mock-owe."
         }
     }
     static async getUserActiveApplications(token) {
@@ -418,25 +419,37 @@ export class serverApi {
         if (res.error) {
             /* mockowe dane */
             return {
-                applications: [
-                    { name: "Wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje odpowiedźi"], schedule: this.generateRecruitmentApplicationSchedule(), id: 1 },
-                    { name: "Wniosek rekrutacyjny", type: "rekr", status: ["Brak zapłaty"], schedule: this.generateRecruitmentApplicationSchedule(), id: 2 }
-                ],
+                applications: null,
+                // [
+                //     { name: "Wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje odpowiedźi"], schedule: this.generateRecruitmentApplicationSchedule(), id: 1 },
+                //     { name: "Wniosek rekrutacyjny", type: "rekr", status: ["Brak zapłaty"], schedule: this.generateRecruitmentApplicationSchedule(), id: 2 }
+                // ],
                 error: true,
                 errorMsg: `Pobieranie aktywnych wniosków: Błąd komunikacji z serwerem. Wyświetlane dane mock-owe (${res.errorMsg})`
             }
         }
 
+
         // Mapowanie danych z backendu na format frontendowy
-        const mapped = await Promise.all(res.data.map(async item => ({
-            id: item.id,
-            studies_edition: item.studies_edition,
-            name: "Wniosek rekrutacyjny",
-            type: "rekr",
-            status: [item.status],
-            schedule: await serverApi.generateRecruitmentApplicationSchedule(token, item.id, true, item.recruitmentEndDate)
-        })))
-        return { applications: mapped, error: false, errorMsg: "" }
+        const mapped = await Promise.all(res.data.map(async item => {
+            const schedule = await serverApi.generateRecruitmentApplicationSchedule( token, item.id, true, formatDateInWarsaw(item.studies_edition.recruitment_end_date), item.status )
+            let isPaymentComplete = schedule?.[1]?.flag === "complete"
+            let isDocuementsComplete = schedule?.[2]?.flag === "complete"
+            let statuses = [item.status]
+            if (!isPaymentComplete) statuses.push("Wymaga płatności")
+            if (!isDocuementsComplete) statuses.push("Brak dostarczonych dokumentów")
+
+            return {
+                id: item.id,
+                studies_edition: item.studies_edition,
+                name: "Wniosek rekrutacyjny",
+                status: statuses,
+                schedule,
+                isPaymentComplete,
+            };
+        }));
+
+        return { applications: mapped, error: false, errorMsg: "" };
     }
 
     /* Payments */
@@ -508,14 +521,14 @@ export class serverApi {
     }
 
     /* HELPER schedule generator for applications */
-    static async generateRecruitmentApplicationSchedule(userToken = null, application_id = null, isActive = true, recruitmentEndDate = "--/--/----") {
+    static async generateRecruitmentApplicationSchedule(userToken = null, application_id = null, isActive = true, recruitmentEndDate = "--/--/----", candidateStatus = "CANDIDATE") {
         
         /* general recruit schedule */
         const recruitmentSchedule = [
             { title: "SKŁADANIE WNIOSKÓW", startDate: "--/--/--", endDate: recruitmentEndDate, flag: isActive ? "complete" : "in-progress" },
             { title: "OPŁATA REKRUTACYJNA", startDate: "--/--/--", endDate: recruitmentEndDate, flag: isActive ? "in-progress" : "upcoming" },
             { title: "PRZYNIESIENIE DOKUMENTÓW", startDate: "--/--/--", endDate: recruitmentEndDate, flag: isActive ? "in-progress" : "upcoming" },
-            { title: "DECYZJA KOMISJI", startDate: "--/--/--", endDate: recruitmentEndDate, flag: "upcoming" }
+            { title: "DECYZJA KOMISJI", startDate: recruitmentEndDate, endDate: "--/--/--", flag: "upcoming" }
         ]
 
         if (userToken == null || application_id == null) return recruitmentSchedule;
@@ -537,8 +550,30 @@ export class serverApi {
 
         const paymentIsCompleted = paymentData.length === 0 || Boolean(paymentData[0]?.paid_date);
         if (paymentIsCompleted) {
-            recruitmentSchedule[1].endDate = paymentData[0]?.paid_date || recruitmentEndDate;
+            recruitmentSchedule[1].endDate = formatDateInWarsaw(paymentData[0]?.paid_date) || recruitmentEndDate;
             recruitmentSchedule[1].flag = "complete";
+        }
+
+        /* get recruitment document data for application */
+        const documentInfoResponse = await serverApi.apiRequest(`/api/enrollments/${application_id}/documents/`, 'GET', null, userToken);
+        const documentData = !documentInfoResponse.error && Array.isArray(documentInfoResponse.data)
+            ? documentInfoResponse.data
+            : [];
+        const documentsCompleted = documentData.length === 0 || Boolean(documentData[0]?.status == "ACCEPTED");
+
+        if (documentsCompleted) {
+            recruitmentSchedule[2].endDate = formatDateInWarsaw(documentData[0]?.submitted_date) || recruitmentEndDate;
+            recruitmentSchedule[2].flag = "complete";
+        }
+
+        /* ustaw decyzje komisji */
+        if (paymentIsCompleted && documentsCompleted) {
+            recruitmentSchedule[3].flag = 'in-progress'
+            recruitmentSchedule[3].endDate = recruitmentSchedule[2].endDate
+        } 
+        if (candidateStatus == 'STUDENT') {
+            recruitmentSchedule[3].flag = 'complete'
+            recruitmentSchedule[3].endDate = recruitmentSchedule[2].endDate
         }
 
         return recruitmentSchedule;
@@ -740,7 +775,7 @@ export class serverApi {
     }
 
     /* Getting documents per enrollment from server */
-    static async getSystemDocuments() {
+    static async getAllEnrollmentDocuments() {
         let token = getAccessToken()
         let enrollmentsResponse = await this.apiRequest('/api/enrollments/active/', 'GET', null, token);        
         let anyResponseError = enrollmentsResponse == null || enrollmentsResponse.error
@@ -810,5 +845,57 @@ export class serverApi {
         else {
             return { documents: returnDocuments.flat(), error: false, errorMsg: ""}
         }
+    }
+
+    /* Get system generated enrollment document for a specific user application (enrollment id) */
+    static async getSystemGeneratedEnrollmentDocuments(enrollmentId) {
+        
+        let token = getAccessToken()
+        let documentsResponse = await this.apiRequest(`/api/enrollments/${enrollmentId}/documents/`, 'GET', null, token)
+        let enrollmentResponse = await this.apiRequest(`/api/enrollments/${enrollmentId}/`, 'GET', null, token)
+        let recruitmentEndDateResponse = await this.apiRequest(`/api/enrollments/${enrollmentId}/recruitment-end-date/`, 'GET', null, token)
+
+        // on error - return mock docs
+        if (documentsResponse.error || enrollmentResponse.error || recruitmentEndDateResponse.error) {
+            const mockDocuments = [
+                // SYSTEMOWE (Do wydruku)
+                {
+                    title: "Podanie o przyjęcie na studia",
+                    studies_name: 'Nieznany Kierunek',
+                    edition_name: 'edycja',
+                    dateUpload: "10.03.2025",
+                    fileUrl: "#",
+                    actionRequired: true,
+                    dateDeadline: "01.06.2025",
+                    dateAccepted: "01.06.2025",
+                },
+                {
+                    title: "Podanie o przyjęcie na studia",
+                    studies_name: 'Nieznany Kierunek',
+                    edition_name: 'edycja',
+                    dateUpload: "10.03.2025",
+                    fileUrl: "#",
+                    actionRequired: false,
+                    dateDeadline: "01.06.2025",
+                    dateAccepted: "01.06.2025",
+                },
+            ];
+            return { documents: mockDocuments, error: true, errorMsg: `Brak komunikacji z serwerem: Wyswietlane dane mock-owe (${anyResponseErrorMsg})` };
+        }
+
+        const editionName = enrollmentResponse.data.studies_edition.name
+        const editionRecruitmentEnd = recruitmentEndDateResponse.data.recruitment_end_date
+
+        // map document data to frontend format
+        const mapped = documentsResponse.data.map(doc => ({ // go thru each document for enrollment
+            title: doc.id == 1 ? "Podanie o przyjęcie na studia" : "Dyplom studiów wyższych", // should be only 2 types of documents 
+            studies_name: editionName,
+            dateUpload: doc.submitted_date,
+            fileUrl: doc.file_url,
+            actionRequired: doc.status != "ACCEPTED",
+            dateDeadline: formatDateInWarsaw(editionRecruitmentEnd),
+            dateAccepted: "",
+        }))
+        return { documents: mapped, error: false, errorMsg: ""  }
     }
 }

@@ -94,7 +94,7 @@ export default function Payments() {
 
         const watchInterval = setInterval(() => {
             if (!isLoggedIn()) {
-                setUserLoggedIn(false);
+                setUserLoggedIn(false);   
             }
         }, 30000);
 
@@ -119,13 +119,14 @@ export default function Payments() {
         if (res.success) {
             setTimeout(() => {
                 fetchPaymentData(userToken);
+                setShowPaymentOptions(false)
             }, 700);
         }
     };
 
     return (
         !userLoggedIn ? <LoginRedirectPage /> : (
-        <div className='account-page-layout
+        <div className='account-page-layout'>
             <AccountPageLeftMenu />
 
             <div className='payments-main-container'>
@@ -144,24 +145,28 @@ export default function Payments() {
                         <div className='summary-content'>
                             <span className='label-tiny'>DO ZAPŁATY ŁĄCZNIE</span>
                             <div className='main-balance'>{summary.totalToPay}</div>
-                            <p className='deadline-text'>
-                                <span className="material-symbols-outlined">event</span>
-                                Najbliższy termin: <strong>{summary.deadline}</strong>
-                            </p>
+                            { !userHasUpcomingPayments ? null :
+                                <p className='deadline-text'>
+                                    <span className="material-symbols-outlined">event</span>
+                                    Najbliższy termin: <strong>{summary.deadline}</strong>
+                                </p>
+                            }
                         </div>
-                        <button 
-                            className={`btn-primary-large ${showPaymentOptions ? 'active-btn' : ''}`}
-                            onClick={() => {
-                                setPayAll(true);
-                                setSelectedIds(upcomingPayments.map(p => p.id));
-                                setShowPaymentOptions(!showPaymentOptions);
-                                setPaymentMessage("");
-                                setPaymentSuccess(null);
-                            }}
-                        >
-                            <span className="material-symbols-outlined">payments</span>
-                            {showPaymentOptions ? 'Ukryj opcje płatności' : 'Zapłać za Wszystko'}
-                        </button>
+                        { !userHasUpcomingPayments ? null :
+                            <button 
+                                className={`btn-primary-large ${showPaymentOptions ? 'active-btn' : ''}`}
+                                onClick={() => {
+                                    setPayAll(true);
+                                    setSelectedIds(upcomingPayments.map(p => p.id));
+                                    setShowPaymentOptions(!showPaymentOptions);
+                                    setPaymentMessage("");
+                                    setPaymentSuccess(null);
+                                }}
+                            >
+                                <span className="material-symbols-outlined">payments</span>
+                                {showPaymentOptions ? 'Ukryj opcje płatności' : 'Zapłać za Wszystko'}
+                            </button>
+                        }
                     </div>
 
                     {/* Tabela Bieżących Zobowiązań */}

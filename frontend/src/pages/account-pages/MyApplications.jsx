@@ -10,9 +10,12 @@ import LoginRedirectPage from '../../components/LoginRedirectPage';
 
 function getStatusColorClass(statusText) {
     const text = statusText.toLowerCase();
-    if (text.includes("brak zapłaty")) return "status-red";
-    if (text.includes("oczekuje wypełnienia")) return "status-yellow";
-    if (text.includes("odpowiedź")) return "status-blue";
+    // if (text.includes("brak zapłaty")) return "status-red";
+    // if (text.includes("oczekuje wypełnienia")) return "status-yellow";
+    // if (text.includes("odpowiedź")) return "status-blue";
+    if (text.includes("student")) return "status-blue";
+    if (text.includes("candidate")) return "status-yellow";
+    if (text.includes("dokumen") || text.includes("płatno")) return "status-red";
     return "status-grey";
 }
 
@@ -37,41 +40,62 @@ export default function MyApplications({}) {
 
     const [error, setError] = useState("");
 
+    const navigate = useNavigate()
+
 
     /* Karta na wyswietlenie jednego wniosku */
     const ApplicationCard = ({ 
-        id, documentName, type, studies_edition, statuses=[], unfinished=false 
+        id, keyId, documentName, type, studies_edition, statuses=[], unfinished=false, isPaymentComplete=false
     }) => {
         return (
             <div 
-                className={`single-application-card ${activeCardId === id ? 'active' : ''}`}
-                onClick={() => setActiveCardId(id)}
+                className={`single-application-card ${activeCardId === keyId ? 'active' : ''}`}
+                onClick={() => setActiveCardId(keyId)}
+                style={{display: 'flex', flexDirection: 'column' }}
             >
-                <span className="material-symbols-outlined">{unfinished ? "edit_note" : getIconFromDocumentType(type)}</span>
+                <div className="application-card-row">
+                    <span className="material-symbols-outlined application-card-icon">
+                        {unfinished ? "edit_note" : getIconFromDocumentType(type)}
+                    </span>
 
-                <div style={{display: 'flex', flexDirection: 'column', flex: 1}}>
-                    <h4> {documentName} </h4>
-                    
-                    {type === "rekr" && (
-                        <>
-                            <p><span className='line-item-title'>KIERUNEK:</span> {studies_edition ? studies_edition.name : "Nieznany kierunek"}</p>
-                            <p><span className='line-item-title'>WYDZIAŁ:</span> Nieznany Wydzial </p>
-                        </>
-                    )}
+                    <div className="application-card-info">
+                        <h4>{documentName}</h4>
+                        <p>
+                            <span className='line-item-title'>KIERUNEK:</span> {studies_edition ? studies_edition.name : "Nieznany kierunek"}
+                        </p>
+                    </div>
 
-                    {/* Generowanie tagów statusów - każdy status jako osobny element */}
-                    <div className="status-badges-container" style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                    <div className="status-badges-container">
                         {statuses.map((status, idx) => (
-                            <div key={idx} className={`application-status ${getStatusColorClass(status)}`}> 
-                                {status} 
+                            <div key={idx} className={`application-status ${getStatusColorClass(status)}`}>
+                                {status}
                             </div>
                         ))}
                     </div>
+
+                    {unfinished && <span className="material-symbols-outlined application-card-chevron">chevron_right</span>}
                 </div>
 
-                {unfinished && <span className="material-symbols-outlined">chevron_right</span>}
+                {/* Linki do platnosci i dokumentow */}
+                { !studies_edition ? null : (
+                    <div className="application-card-actions">
+                        { isPaymentComplete ? null : (
+                            <div className="docs-inline-link" 
+                                onClick={ () => { navigate(`/my-payments`) }}
+                            >
+                                Przejdź do strony płatności
+                            </div>
+                        )}
+                        
+                        <div className="docs-inline-link" 
+                            onClick={ () => { navigate(`/my-documents?enrollment_id=${id}`) }}
+                        >
+                            Przejdź do dokumentów tego wniosku
+                        </div>
+                    </div>
+                )}
             </div>
-        );
+        )
     };
 
     /* Pobieranie wnioskow z servera */
@@ -137,9 +161,9 @@ export default function MyApplications({}) {
                             unfinishedApplications.map((app, i) => (
                                 <ApplicationCard 
                                     key={i}
-                                    id={i} 
+                                    keyId={i}
+                                    id={app.id} 
                                     documentName={app.name}
-                                    type={app.type}
                                     studies_edition={app.studies_edition}
                                     statuses={app.status}
                                     unfinished={true} 
@@ -159,11 +183,13 @@ export default function MyApplications({}) {
                             activeApplications.map((app, i) => (
                                 <ApplicationCard 
                                     key={i + unfinishedApplications.length}
-                                    id={i + unfinishedApplications.length} 
+                                    keyId={i + unfinishedApplications.length}
+                                    id={app.id} 
                                     documentName={app.name}
                                     type={app.type}
                                     studies_edition={app.studies_edition}
                                     statuses={app.status}
+                                    isPaymentComplete={app.isPaymentComplete}
                                 />
                             ))
                         )}   
