@@ -27,68 +27,70 @@ export default function Payments() {
     const [paymentSuccess, setPaymentSuccess] = useState(null);
     const [paymentProofFile, setPaymentProofFile] = useState(null);
 
+    const fetchPaymentData = async (token) => {
+        if (!token) return;
+
+        /* get user upcoming payments */
+        let upcomingPaymentsResponse = await serverApi.getUserActivePayments(token)
+        if (upcomingPaymentsResponse != null && upcomingPaymentsResponse.payments) {
+            setUserHasUpcomingPayments(upcomingPaymentsResponse.payments.length > 0)
+            setUpcomingPayments(upcomingPaymentsResponse.payments)
+            setSelectedIds(upcomingPaymentsResponse.payments.map(p => p.id)); // Set default to all
+            if (upcomingPaymentsResponse.error) setError(upcomingPaymentsResponse.errorMsg);
+        }
+
+        /* get user payment history */
+        let paymentHistoryResponse = await serverApi.getUserPaymentsHistory(token)
+        if (paymentHistoryResponse != null && paymentHistoryResponse.payments) {
+            setUserHasPaymentHistory(paymentHistoryResponse.payments.length > 0)
+            setPaymentHistory(paymentHistoryResponse.payments)
+            if (paymentHistoryResponse.error) setError(paymentHistoryResponse.errorMsg);
+        }
+
+        /* generate payments summary */
+        if (!upcomingPaymentsResponse || upcomingPaymentsResponse.error) {
+            // Fallback to mock data if error
+            let mock_data = {
+                totalToPay: "3,450.00 PLN",
+                deadline: "01.01.2000",
+                nextPaymentName: "Czesne (Semestr Zimowy)"
+            };
+            setSummary(mock_data);
+        } else if (!upcomingPaymentsResponse.payments || upcomingPaymentsResponse.payments.length === 0) {
+            let empty_payments = {
+                totalToPay: "Brak zapłat",
+                deadline: "--/--/----",
+                nextPaymentName: ""
+            };
+            setSummary(empty_payments);
+        } else {
+            const payments = upcomingPaymentsResponse.payments;
+            // Calculate total to pay
+            const total = payments.reduce((sum, p) => {
+                const amtStr = p.amount || p.amout || '0'; // handle typo in amout
+                const amt = parseFloat(amtStr.replace(/[^\d.,]/g, '').replace(',', '.'));
+                return sum + (isNaN(amt) ? 0 : amt);
+            }, 0);
+            const totalToPay = `${total.toFixed(2).replace('.', ',')} PLN`;
+
+            // Find earliest deadline and its title
+            const earliest = payments.reduce((min, p) => {
+                const date = new Date(p.due_date);
+                return date < min.date ? { date, title: p.title } : min;
+            }, { date: new Date('9999-12-31'), title: '' });
+
+            const deadline = formatDateInWarsaw(earliest.date); // Format as DD.MM.YYYY
+            const nextPaymentName = earliest.title;
+            setSummary({ totalToPay, deadline, nextPaymentName });
+        }
+    };
+
     useEffect(() => {
         const token = getAccessToken();
         if (!token) { setUserLoggedIn(false); return; }
         setUserToken(token);
         setUserLoggedIn(true);
-
-        async function fetchPaymentData() {
-            /* get user upcoming payments */
-            let upcomingPaymentsResponse = await serverApi.getUserActivePayments(token)
-            if (upcomingPaymentsResponse != null && upcomingPaymentsResponse.payments) {
-                setUserHasUpcomingPayments(upcomingPaymentsResponse.payments.length > 0)
-                setUpcomingPayments(upcomingPaymentsResponse.payments)
-                setSelectedIds(upcomingPaymentsResponse.payments.map(p => p.id)); // Set default to all
-                if (upcomingPaymentsResponse.error) setError(upcomingPaymentsResponse.errorMsg);
-            }
-
-            /* get user payment history */
-            let paymentHistoryResponse = await serverApi.getUserPaymentsHistory(token)
-            if (paymentHistoryResponse != null && paymentHistoryResponse.payments) {
-                setUserHasPaymentHistory(paymentHistoryResponse.payments.length > 0)
-                setPaymentHistory(paymentHistoryResponse.payments)
-                if (paymentHistoryResponse.error) setError(paymentHistoryResponse.errorMsg);
-            }
-
-            /* generate payments summary */
-            if (!upcomingPaymentsResponse || upcomingPaymentsResponse.error) {
-                // Fallback to mock data if error
-                let mock_data = {
-                    totalToPay: "3,450.00 PLN",
-                    deadline: "01.01.2000",
-                    nextPaymentName: "Czesne (Semestr Zimowy)"
-                };
-                setSummary(mock_data);
-            } else if (!upcomingPaymentsResponse.payments || upcomingPaymentsResponse.payments.length === 0) {
-                let empty_payments = {
-                    totalToPay: "Brak zapłat",
-                    deadline: "--/--/----",
-                    nextPaymentName: ""
-                };
-                setSummary(empty_payments);
-            } else {
-                const payments = upcomingPaymentsResponse.payments;
-                // Calculate total to pay
-                const total = payments.reduce((sum, p) => {
-                    const amtStr = p.amount || p.amout || '0'; // handle typo in amout
-                    const amt = parseFloat(amtStr.replace(/[^\d.,]/g, '').replace(',', '.'));
-                    return sum + (isNaN(amt) ? 0 : amt);
-                }, 0);
-                const totalToPay = `${total.toFixed(2).replace('.', ',')} PLN`;
-
-                // Find earliest deadline and its title
-                const earliest = payments.reduce((min, p) => {
-                    const date = new Date(p.due_date);
-                    return date < min.date ? { date, title: p.title } : min;
-                }, { date: new Date('9999-12-31'), title: '' });
-
-                const deadline = formatDateInWarsaw(earliest.date); // Format as DD.MM.YYYY
-                const nextPaymentName = earliest.title;
-                setSummary({ totalToPay, deadline, nextPaymentName });
-            }
-        }
-        fetchPaymentData();
+        fetchPaymentData(token);
 
         const watchInterval = setInterval(() => {
             if (!isLoggedIn()) {
@@ -108,9 +110,22 @@ export default function Payments() {
         setPaymentProofFile(null);
     };
 
+    const userPayment = async () => {
+        const res = await serverApi.userPayment(userToken, selectedIds);
+        setPaymentSuccess(res.success);
+        setPaymentMessage(res.success ? "Płatność została pomyślnie zrealizowana!" : res.errorMsg);
+
+        // Odśwież dane po krótkim opóźnieniu, żeby użytkownik zobaczył zrealizowana platnosc
+        if (res.success) {
+            setTimeout(() => {
+                fetchPaymentData(userToken);
+            }, 700);
+        }
+    };
+
     return (
         !userLoggedIn ? <LoginRedirectPage /> : (
-        <div className='account-page-layout'>
+        <div className='account-page-layout
             <AccountPageLeftMenu />
 
             <div className='payments-main-container'>
@@ -238,9 +253,7 @@ export default function Payments() {
                                             <button 
                                                 className='btn-primary-large'
                                                 onClick={async () => {
-                                                    const res = await serverApi.userPayment(userToken, selectedIds)
-                                                    setPaymentSuccess(res.success)
-                                                    setPaymentMessage(res.success ? "Płatność została pomyślnie zrealizowana!" : res.errorMsg)
+                                                    userPayment()
                                                     handlePaymentProofFileRemove()
                                                 }}
                                                 style={{ marginTop: '16px', width: '100%' }}
@@ -258,11 +271,7 @@ export default function Payments() {
                                     <h4 className='method-title'>Płatność Online</h4>
                                     <p className='method-desc'>Szybka płatność kartą, BLIK lub przelewem natychmiastowym.</p>
                                     <p><strong>Kwota do zapłaty:</strong> {totalAmount}</p>
-                                    <button className='btn-online-pay' onClick={async () => {
-                                        const res = await serverApi.userPayment(userToken, selectedIds);
-                                        setPaymentSuccess(res.success);
-                                        setPaymentMessage(res.success ? "Płatność została pomyślnie zrealizowana!" : res.errorMsg);
-                                    }}>
+                                    <button className='btn-online-pay' onClick={async () => userPayment() }>
                                         PRZEJDŹ DO PŁATNOŚCI
                                     </button>
                                 </div>

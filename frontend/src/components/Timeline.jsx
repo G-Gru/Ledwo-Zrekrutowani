@@ -21,7 +21,8 @@ export default function Timeline({ schedule }) {
             <div className="timeline-container">
                 <div className="timeline-line"></div>
 
-                {schedule.map((step, index) => {
+                { schedule == null || schedule.length == 0 || schedule.map == null ? (<p style={{marginLeft: '2rem', color: 'lightgrey'}}> Brak harmonogramu</p>) : 
+                    schedule.map((step, index) => {
                     // Mapowanie flagi z serwera na klasę CSS z Twojego pliku
                     const statusClass = step.flag === 'complete' ? 'completed' : 
                                         step.flag === 'in-progress' ? 'in-progress' : 'upcoming';
