@@ -88,7 +88,7 @@ class StudiesEditionListCreateAdminAPIView(generics.ListCreateAPIView):
         services.create_auto_documents(edition)
 
 
-class StudiesEditionRetrieveUpdateDestroyAdminAPIView(generics.RetrieveUpdateAPIView):
+class StudiesEditionRetrieveUpdateDestroyAdminAPIView(generics.RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = "edition_pk"
     serializer_class = StudiesEditionDetailsSerializer
 
