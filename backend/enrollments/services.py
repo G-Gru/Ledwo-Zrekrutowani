@@ -33,7 +33,8 @@ def create_enrollment_form(edition_id, user, serializer):
                                                    studies_edition_id=edition_id,
                                                    status=Enrollment.Status.DRAFT)
             save_form(serializer, enrollment)
-    except IntegrityError:
+    except IntegrityError as e:
+        print(e)
         raise UserAlreadyEnrolledException()
 
     if is_enrolling_form(serializer):

@@ -32,20 +32,22 @@ class StudiesEditionCreateSerializer(serializers.ModelSerializer):
         rec_start = attrs.get("recruitment_start_date")
         rec_end = attrs.get("recruitment_end_date")
 
+        start_date = start.date() if isinstance(start, datetime) else start
+        end_date = end.date() if isinstance(end, datetime) else end
         rec_start_date = rec_start.date() if isinstance(rec_start, datetime) else rec_start
         rec_end_date = rec_end.date() if isinstance(rec_end, datetime) else rec_end
 
-        if end < start:
+        if end_date < start_date:
             raise serializers.ValidationError({
                 "end_date": "Must be greater than start date"
             })
 
-        if rec_end < rec_start:
+        if rec_end_date < rec_start_date:
             raise serializers.ValidationError({
                 "recruitment_end_date": "Must be greater than recruitment start date"
             })
 
-        if rec_end_date > start:
+        if rec_end_date > start_date:
             raise serializers.ValidationError({
                 "recruitment_end_date": "Recruitment must end before or on studies start date"
             })

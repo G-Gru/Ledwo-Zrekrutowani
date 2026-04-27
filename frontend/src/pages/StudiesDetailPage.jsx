@@ -127,12 +127,12 @@ export default function StudiesDetailPage() {
               <h4>Rekrutacja</h4>
               <hr />
               <div className="date-row">
-                <p className="date-label">Początek</p>
+                <p className="date-label">Rozpoczęcie</p>
                 <p className="date-value">{recruitmentStart}</p>
               </div>
               <div className="date-divider"></div>
               <div className="date-row">
-                <p className="date-label">Koniec</p>
+                <p className="date-label">Zakończenie</p>
                 <p className="date-value">{recruitmentEnd}</p>
               </div>
             </div>

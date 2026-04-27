@@ -58,7 +58,7 @@ STUDIES_EDITION_ENROLLABLE_STATUSES = [
 ]
 
 class StudiesDocument(models.Model):
-    studies_edition = models.ForeignKey(StudiesEdition, on_delete=models.RESTRICT)
+    studies_edition = models.ForeignKey(StudiesEdition, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     required = models.BooleanField()
     due_date = models.DateTimeField()
@@ -78,12 +78,18 @@ class StudiesEditionStaff(models.Model):
             models.Index(fields=["user", "studies_edition"]),
             models.Index(fields=["studies_edition", "role"]),
         ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["studies_edition", "user", "role"],
+                name="unique_studies_edition_staff_entry"
+            )
+        ]
 
     class Roles(models.TextChoices):
         STUDIES_DIRECTOR = 'STUDIES_DIRECTOR'
         ADMINISTRATIVE_COORDINATOR = 'ADMINISTRATIVE_COORDINATOR'
         FINANCE_COORDINATOR = 'FINANCE_COORDINATOR'
 
-    studies_edition = models.ForeignKey(StudiesEdition, on_delete=models.RESTRICT, related_name='studies_edition_staff')
+    studies_edition = models.ForeignKey(StudiesEdition, on_delete=models.CASCADE, related_name='studies_edition_staff')
     user = models.ForeignKey(User, on_delete=models.RESTRICT, related_name='studies_edition_staff')
     role = models.CharField(max_length=50, choices=Roles.choices)

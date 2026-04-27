@@ -219,7 +219,7 @@ export class serverApi {
         return normalized;
     }
    
-    static async sendApplicationForm(token, applicationForm) {
+    static async sendApplicationForm(token, applicationForm, createNew) {
         if (!applicationForm) {
             return {
                 data: null,
@@ -329,53 +329,263 @@ export class serverApi {
             }
         }
 
-        // Upload document for enrollment creation
-        // if (applicationForm.files && applicationForm.files.diploma) {
-        //     const docUploadBody = {
-        //         studies_document_id: 1,
-        //         file: applicationForm.files.diploma,
-        //     }
-        //     const documentUploadResponse = await this.apiRequest(`/api/enrollments/${applicationForm.studies_edition_id}/documents/`, "POST", docUploadBody, token, false);
-        //     if (documentUploadResponse.error) {
-        //         return {
-        //             data: null,
-        //             error: true,
-        //             errorMsg: documentUploadResponse.errorMsg,
-        //             errorDetail: documentUploadResponse.errorDetail
-        //         };
-        //     }
-        // }
+        const filesPayload = Object.entries(applicationForm.files || {})
+            .filter(([, file]) => file)
+            .map(([docId, file]) => ({
+                studies_document_id: Number(docId),
+                file
+            }));
 
-        const formFullData = {
-            action: applicationForm.action || 'SAVE',
-            first_name: applicationForm.formData.firstName || 'Brak danych',
-            second_name: applicationForm.formData.secondName || '',
-            last_name: applicationForm.formData.lastName || 'Brak danych',
-            family_name: applicationForm.formData.familyName || applicationForm.formData.lastName || 'Brak danych',
-            academic_title: applicationForm.formData.title || 'Brak danych',
-            birth_place: applicationForm.formData.birthplace || 'Brak danych',
-            birth_date: applicationForm.formData.birthdate || '1900-01-01',
-            pesel: applicationForm.formData.pesel || '00000000000',
-            citizenship: applicationForm.formData.nationality || 'Polska',
-            residential_address: residenceAddressId,
-            registered_address: correspondenceAddressId,
-            email: applicationForm.formData.email || 'brak@example.com',
-            phone: applicationForm.formData.phone || '000000000',
-            education: `${applicationForm.formData.studiesName || 'Brak danych'} w ${applicationForm.formData.studiesLocation || 'Brak danych'}, ukończono ${applicationForm.formData.studiesEndYear || '0000'}`,
-            education_country: applicationForm.formData.education_country || 'Polska',
-            emergency_contact: `${applicationForm.formData.emergencyContact?.name || 'Brak'} ${applicationForm.formData.emergencyContact?.surname || 'danych'} | tel:${applicationForm.formData.emergencyContact?.phone || '000000000'}`,
-            // files: [ applicationForm.files.diploma ]
-        };
+        const payload = new FormData();
+
+        payload.append("action", applicationForm.action || "SAVE");
+
+        payload.append("first_name", applicationForm.formData.firstName);
+        payload.append("second_name", applicationForm.formData.secondName);
+        payload.append("last_name", applicationForm.formData.lastName);
+        payload.append("family_name", applicationForm.formData.familyName);
+
+        payload.append("academic_title", applicationForm.formData.title);
+        payload.append("birth_place", applicationForm.formData.birthplace);
+        payload.append("birth_date", applicationForm.formData.birthdate);
+        payload.append("pesel", applicationForm.formData.pesel);
+        payload.append("citizenship", applicationForm.formData.citizenship);
+
+        payload.append("residential_address", residenceAddressId);
+        payload.append("registered_address", correspondenceAddressId);
+
+        payload.append("email", applicationForm.formData.email);
+        payload.append("phone", applicationForm.formData.phone);
+
+        payload.append("education_university", applicationForm.formData.educationUniversity);
+        payload.append("education_year", applicationForm.formData.educationYear );
+        payload.append("education_location", applicationForm.formData.educationLocation);
+        payload.append("maturity_country", applicationForm.formData.maturity_country);
+
+        payload.append("emergency_name", applicationForm.formData.emergencyName);
+        payload.append("emergency_last_name", applicationForm.formData.emergencyLastName);
+        payload.append("emergency_phone", applicationForm.formData.emergencyPhone);
+
+        filesPayload.forEach((f, index) => {
+            payload.append(`files[${index}][studies_document_id]`, f.studies_document_id);
+            payload.append(`files[${index}][file]`, f.file);
+        });
 
         // console.log(formFullData)
 
-        const result = await this.apiRequest(`/api/enrollments/editions/${applicationForm.studies_edition_id}/`, 'POST', formFullData, token);
+        const result = createNew ?
+            await this.apiRequest(
+                `/api/enrollments/editions/${applicationForm.studies_edition_id}/`,
+                'POST',
+                payload,
+                token,
+                false
+            ) :
+            await this.apiRequest(
+                `/api/enrollments/editions/${applicationForm.studies_edition_id}/form/`,
+                'PUT',
+                payload,
+                token,
+                false
+            );
+
         if (result.error) {
             return {
                 data: null,
                 error: true,
                 errorMsg: result.errorMsg,
                 errorDetail: result.errorDetail
+            };
+        }
+
+        return {
+            data: result.data,
+            error: false,
+            errorMsg: '',
+            errorDetail: ''
+        };
+    }
+
+    static async getExistingApplicationForm(token, studiesEditionId) {
+        if (!studiesEditionId) {
+            return {
+                data: null,
+                error: true,
+                errorMsg: "Missing studies edition id",
+                errorDetail: "studiesEditionId is required"
+            };
+        }
+
+        const result = await this.apiRequest(
+            `/api/enrollments/editions/${studiesEditionId}/form/`,
+            'GET',
+            null,
+            token
+        );
+
+        if (result.error) {
+            const status = result.status || result.errorStatus;
+
+            if (status === 404) {
+                return {
+                    data: null,
+                    error: false,
+                    errorMsg: '',
+                    errorDetail: ''
+                };
+            }
+
+            return {
+                data: null,
+                error: true,
+                errorMsg: result.errorMsg || 'Failed to fetch existing application form',
+                errorDetail: result.errorDetail || null
+            };
+        }
+
+        return {
+            data: result.data,
+            error: false,
+            errorMsg: '',
+            errorDetail: ''
+        };
+    }
+
+    static async getAddressById(token, addressId) {
+        if (!addressId) {
+            return {
+                data: null,
+                error: true,
+                errorMsg: "Missing address id",
+                errorDetail: "addressId is required"
+            };
+        }
+
+        const result = await this.apiRequest(
+            `/api/enrollments/addresses/${addressId}/`,
+            'GET',
+            null,
+            token
+        );
+
+        if (result.error) {
+            return {
+                data: null,
+                error: true,
+                errorMsg: result.errorMsg || 'Failed to fetch address',
+                errorDetail: result.errorDetail || null
+            };
+        }
+
+        return {
+            data: result.data,
+            error: false,
+            errorMsg: '',
+            errorDetail: ''
+        };
+    }
+
+    static async mapExistingApplicationToFormData(token, existingData) {
+        if (!existingData) return null;
+
+        let residenceAddress = {
+            street: "",
+            house: "",
+            apartment: "",
+            city: "",
+            country: "Polska",
+            postalCode: ""
+        };
+
+        let correspondenceAddress = {
+            street: "",
+            house: "",
+            apartment: "",
+            city: "",
+            country: "Polska",
+            postalCode: ""
+        };
+
+        if (existingData.residential_address) {
+            const residenceResult = await this.getAddressById(token, existingData.residential_address);
+
+            if (!residenceResult.error && residenceResult.data) {
+                residenceAddress = {
+                    street: residenceResult.data.street || "",
+                    house: residenceResult.data.house_number || "",
+                    apartment: residenceResult.data.flat_number || "",
+                    city: residenceResult.data.city || "",
+                    country: residenceResult.data.country || "Polska",
+                    postalCode: residenceResult.data.postal_code || ""
+                };
+            }
+        }
+
+        if (existingData.registered_address) {
+            const correspondenceResult = await this.getAddressById(token, existingData.registered_address);
+
+            if (!correspondenceResult.error && correspondenceResult.data) {
+                correspondenceAddress = {
+                    street: correspondenceResult.data.street || "",
+                    house: correspondenceResult.data.house_number || "",
+                    apartment: correspondenceResult.data.flat_number || "",
+                    city: correspondenceResult.data.city || "",
+                    country: correspondenceResult.data.country || "Polska",
+                    postalCode: correspondenceResult.data.postal_code || ""
+                };
+            }
+        }
+
+        return {
+            firstName: existingData.first_name || "",
+            secondName: existingData.second_name || "",
+            lastName: existingData.last_name || "",
+            familyName: existingData.family_name || "",
+            title: existingData.academic_title || "",
+            birthplace: existingData.birth_place || "",
+            birthdate: existingData.birth_date || "",
+            pesel: existingData.pesel || "",
+            citizenship: existingData.citizenship || "",
+            email: existingData.email || "",
+            phone: existingData.phone || "",
+
+            educationUniversity: existingData.education_university || "",
+            educationLocation: existingData.education_location || "",
+            educationYear: existingData.education_year || "",
+            educationCountry: existingData.education_country || "",
+
+            emergencyName: existingData.emergency_name || "",
+            emergencyLastName: existingData.emergency_last_name || "",
+            emergencyPhone:  existingData.emergency_phone || "",
+
+            residenceAddress: residenceAddress,
+            correspondenceAddress: correspondenceAddress
+        };
+    }
+
+    static async getStudiesEditionDocuments(token, studiesEditionId) {
+        if (!studiesEditionId) {
+            return {
+                data: null,
+                error: true,
+                errorMsg: "Missing studies edition id",
+                errorDetail: "studiesEditionId is required"
+            };
+        }
+
+        const result = await this.apiRequest(
+            `/api/studies/editions/${studiesEditionId}/documents/`,
+            'GET',
+            null,
+            token
+        );
+
+        if (result.error) {
+            return {
+                data: null,
+                error: true,
+                errorMsg: result.errorMsg || 'Failed to fetch edition documents',
+                errorDetail: result.errorDetail || null
             };
         }
 

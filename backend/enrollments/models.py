@@ -105,7 +105,9 @@ class FormData(models.Model):
             "registered_address",
             "email",
             "phone",
-            "education",
+            "education_university",
+            "education_year"
+            "education_location",
             "education_country",
     ]
 
@@ -127,7 +129,11 @@ class FormData(models.Model):
     registered_address = models.ForeignKey(Address, on_delete=models.RESTRICT, related_name="registered_formdata")
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=50, blank=True)
-    education = models.CharField(max_length=50, blank=True)
-    education_country = models.CharField(max_length=50, blank=True)
-    emergency_contact = models.CharField(max_length=100, blank=True)
+    education_university = models.CharField(max_length=50, blank=True)
+    education_year = models.CharField(max_length=50, blank=True)
+    education_location = models.CharField(max_length=50, blank=True)
+    maturity_country = models.CharField(max_length=50, blank=True)
+    emergency_name = models.CharField(max_length=50, blank=True)
+    emergency_last_name = models.CharField(max_length=50, blank=True)
+    emergency_phone = models.CharField(max_length=50, blank=True)
     modified_date = models.DateTimeField(auto_now=True)

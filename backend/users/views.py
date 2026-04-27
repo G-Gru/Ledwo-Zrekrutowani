@@ -68,7 +68,7 @@ class LoginAPIView(generics.CreateAPIView):
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "type": user_type,   # backward-compatible
+                "type": user_type,   # backward-compatible # todo remove
                 "role": user_role,   # specific: ADMIN/STUDENT/STUDIES_DIRECTOR/ADMINISTRATIVE_COORDINATOR/FINANCE_COORDINATOR
             }
         })

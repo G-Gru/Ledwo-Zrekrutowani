@@ -35,9 +35,10 @@ class EnrollmentFormRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         edition_pk = self.kwargs['edition_pk']
-        return FormData.objects.select_related('enrollment').get(
-            enrollment__studies_edition_id=edition_pk,
-            enrollment__user=self.request.user
+        return get_object_or_404(
+            FormData,
+            enrollment__studies_edition_id = edition_pk,
+            enrollment__user = self.request.user
         )
 
     def perform_update(self, serializer):

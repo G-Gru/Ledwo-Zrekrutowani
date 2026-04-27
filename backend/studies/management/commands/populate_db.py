@@ -118,8 +118,10 @@ class Command(BaseCommand):
             registered_address=address,
             email="student1@gmail.com",
             phone="123456789",
-            education="wyższe",
-            education_country="Polska",
+            education_university="agh",
+            education_year=2024,
+            education_location="Krakow",
+            maturity_country="Polska",
         )
 
         # Student2 — STUDENT z opłaconą płatnością
@@ -155,8 +157,10 @@ class Command(BaseCommand):
             registered_address=address2,
             email="student2@gmail.com",
             phone="987654321",
-            education="wyższe",
-            education_country="Polska",
+            education_university="agh",
+            education_year=2024,
+            education_location="Krakow",
+            maturity_country="Polska",
         )
 
         paid_fee = Fees.objects.create(

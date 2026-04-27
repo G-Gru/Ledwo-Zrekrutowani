@@ -12,6 +12,7 @@ export default function ApplicationForm() {
     const [isUserLoggedIn, setUserLoggedIn] = useState(false)
     const [userToken, setUserToken] = useState(null)
     const [isUserAlreadyEnrolled, setUserAlreadyEnrolled] = useState(false)
+    const [previousApplicationExists, setPreviousApplicationExists] = useState(false)
 
     const navigate = useNavigate();
     const [errors, setErrors] = useState({});
@@ -22,7 +23,24 @@ export default function ApplicationForm() {
     const courseId = searchParams.get('edition_id');
 
     const [courseInfo, setCourseInfo] = useState({ name: "Nieznany kierunek" })
+    const [formData, setFormData] = useState({
+        firstName: "", secondName: "", lastName: "", email: "",
+        title: "", familyName: "", birthdate: "", birthplace: "", pesel: "", citizenship: "Polska",
+        residenceAddress: { street: "", house: "", apartment: "", city: "", country: "Polska", postalCode: "" },
+        correspondenceAddress: { street: "", house: "", apartment: "", city: "", country: "Polska", postalCode: "" },
+        phone: "",
+        educationUniversity: "", educationLocation: "", educationYear: "", maturity_country: "Polska",
+        emergencyName: "", emergencyLastName: "", emergencyPhone: "",
+        consents: { data: false, rules: false, rodo: false }
+    });
 
+    // info nieobowiazkowe
+    const [hasCorrespondenceAddress, setHasCorrespondenceAddress] = useState(false);
+    const [hasEmergencyContact, setHasEmergencyContact] = useState(false);
+
+    // dokumenty
+    const [documents, setDocuments] = useState([]);
+    const [files, setFiles] = useState({});
 
     useEffect(() => {
         const token = getAccessToken();
@@ -34,31 +52,70 @@ export default function ApplicationForm() {
         setUserToken(token);
         setUserLoggedIn(true);
 
-        async function fetchUserData() {
+        async function bootstrapForm() {
             const userData = await serverApi.getUserData(token);
 
-            setFormData(prev => ({
-                ...prev,
+            let mergedFormData = {
                 firstName: userData.firstName || "logged_account_name",
                 lastName: userData.lastName || "logged_account_surname",
                 email: userData.email || "logged_account_email@mail.com"
+            };
+
+
+            const existingApplication = await serverApi.getExistingApplicationForm(token, courseId);
+            if (!existingApplication.error && existingApplication.data) {
+                setPreviousApplicationExists(true)
+
+                const mappedExistingData = await serverApi.mapExistingApplicationToFormData(
+                    token,
+                    existingApplication.data
+                );
+
+                mergedFormData = {
+                    ...mergedFormData,
+                    ...mappedExistingData
+                };
+
+                const hasDifferentCorrespondence =
+                    existingApplication.data.registered_address &&
+                    existingApplication.data.residential_address &&
+                    String(existingApplication.data.registered_address) !== String(existingApplication.data.residential_address);
+                setHasCorrespondenceAddress(hasDifferentCorrespondence);
+
+
+                const hasEmergency =
+                    !!mappedExistingData.emergencyName ||
+                    !!mappedExistingData.emergencyLastName ||
+                    !!mappedExistingData.emergencyPhone;
+                setHasEmergencyContact(hasEmergency);
+            }
+
+            setFormData(prev => ({
+                ...prev,
+                ...mergedFormData
             }));
-        }
 
-        async function checkUserAlreadyEnrolled() {
-            const otherEnrollmentData = await serverApi.getUserActiveApplications(token)
 
+            const otherEnrollmentData = await serverApi.getUserActiveApplications(token);
             if (otherEnrollmentData && Array.isArray(otherEnrollmentData.applications)) {
                 const alreadyEnrolled = otherEnrollmentData.applications.some(application => {
                     const editionId = application?.studies_edition?.id ?? application?.studies_edition;
-                    return String(editionId) === String(courseId);
+                    const status = application?.status;
+
+                    return String(editionId) === String(courseId) && String(status) !== "DRAFT";
                 });
+
                 setUserAlreadyEnrolled(alreadyEnrolled);
+            }
+
+            const docsResult = await serverApi.getStudiesEditionDocuments(token, courseId);
+            if (!docsResult.error && Array.isArray(docsResult.data)) {
+                const uploadableDocs = docsResult.data.filter(doc => !doc.is_read_only);
+                setDocuments(uploadableDocs);
             }
         }
 
-        fetchUserData();
-        checkUserAlreadyEnrolled()
+        bootstrapForm();
 
         const watchInterval = setInterval(() => {
             if (!isLoggedIn()) {
@@ -79,12 +136,7 @@ export default function ApplicationForm() {
         fetchCourseData();
     }, [courseId, userToken]);
 
-    // info nieobowiazkowe
-    const [hasCorrespondenceAddress, setHasCorrespondenceAddress] = useState(false);
-    const [hasEmergencyContact, setHasEmergencyContact] = useState(false);
 
-    // dokumenty
-    const [files, setFiles] = useState({ diploma: null, cv: null, additional: null });
     const handleFileSelect = (id, file) => {
         setFiles(prev => ({ ...prev, [id]: file }));
     };
@@ -92,26 +144,23 @@ export default function ApplicationForm() {
         setFiles(prev => ({ ...prev, [id]: null }));
     };
 
-    // dane formularza
-    const [formData, setFormData] = useState({
-        firstName: "", lastName: "", email: "", // Pobierane z konta
-        title: "", familyName: "", birthdate: "", birthplace: "", pesel: "", nationality: "Polska",
-        residenceAddress: { street: "", house: "", apartment: "", city: "", country: "Polska", postalCode: "" },
-        correspondenceAddress: { street: "", house: "", apartment: "", city: "", country: "Polska", postalCode: "" },
-        phone: "",
-        studiesName: "", studiesLocation: "", studiesEndYear: 2024, highSchoolLocation: "Polska",
-        emergencyContact: { name: "", surname: "", phone: "" },
-        consents: { data: false, rules: false, rodo: false }
-    });
     const handleChange = (e, section = null) => {
         const { name, value, type, checked } = e.target;
+        const newValue = type === 'checkbox' ? checked : value;
+
         if (section) {
             setFormData(prev => ({
                 ...prev,
-                [section]: { ...prev[section], [name]: value }
+                [section]: {
+                    ...prev[section],
+                    [name]: newValue
+                }
             }));
         } else {
-            setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+            setFormData(prev => ({
+                ...prev,
+                [name]: newValue
+            }));
         }
 
         // czyszczenie errorow
@@ -125,64 +174,123 @@ export default function ApplicationForm() {
     };
 
     // wysylanie formularza
-    const onSubmit = async (e) => {
-        e.preventDefault();
-        setError(null); // Reset error
-        if (isUserAlreadyEnrolled) {
+    const submitApplication = async (actionType) => {
+        setError(null);
+
+        if (actionType === "ENROLL" && isUserAlreadyEnrolled) {
             setError('Jesteś już zapisany na ten sam kierunek. Nie możesz wysłać kolejnego wniosku.');
             return;
         }
-        if (validate()) {
-            console.log("Próba Wysyłania formularza...", formData, " z załącznikami: ", files);
-            const result = await serverApi.sendApplicationForm(userToken, {
-                formData,
-                files,
-                studies_edition_id: courseId,
-                action: "ENROLL",
-            });
 
-            if (result && !result.error) {
+        if (!validate(actionType)) {
+            return;
+        }
+
+        console.log(`Próba wysłania formularza z akcją ${actionType}`, formData, files);
+
+        const result = await serverApi.sendApplicationForm(userToken, {
+            formData,
+            files,
+            studies_edition_id: courseId,
+            action: actionType,
+        }, !previousApplicationExists);
+
+        if (result && !result.error) {
+            setPreviousApplicationExists(true)
+            if (actionType === "ENROLL") {
                 navigate(`/applicationSent?edition_id=${courseId}`);
-            } else {
-                const message = result ? (result.errorDetail || result.errorMsg || 'Błąd komunikacji z serwerem') : 'Błąd komunikacji z serwerem';
-                setError(`Błąd przy wysyłaniu wniosku: ${message}`);
             }
+        } else {
+            const message = result
+                ? (result.errorDetail || result.errorMsg || 'Błąd komunikacji z serwerem')
+                : 'Błąd komunikacji z serwerem';
+
+            setError(`Błąd przy wysyłaniu formularza: ${message}`);
         }
     };
-    const validate = () => {
+
+
+    const validate = (actionType = "ENROLL") => {
         let newErrors = {};
 
-        // Sprawdzenie wymaganych plików
-        if (!files.diploma) newErrors.diploma = "Dyplom jest wymagany.";
+        const isFinalSubmit = actionType === "ENROLL";
 
-        // Podstawowe pola
-        if (!/^\d{11}$/.test(formData.pesel)) newErrors.pesel = "PESEL musi mieć 11 cyfr.";
-        if (formData.phone.length < 9) newErrors.phone = "Numer telefonu jest za krótki.";
-        
-        // Adres zamieszkania
-        if (!/^\d{2}-\d{3}$/.test(formData.residenceAddress.postalCode)) {
-            newErrors.residenceAddress_postalCode = "Błędny kod pocztowy.";
+        // Docs
+        if (isFinalSubmit) {
+            documents.forEach(doc => {
+                if (doc.required && !files[doc.id]) {
+                    newErrors[`doc_${doc.id}`] = `${doc.name} jest wymagany.`;
+                }
+            });
         }
 
-        // Adres korespondencyjny (tylko jeśli checkbox jest zaznaczony)
-        if (hasCorrespondenceAddress && !/^\d{2}-\d{3}$/.test(formData.correspondenceAddress.postalCode)) {
-            newErrors.correspondenceAddress_postalCode = "Błędny kod pocztowy.";
+        // pesel
+        if (isFinalSubmit) {
+            if (!/^\d{11}$/.test(formData.pesel)) {
+                newErrors.pesel = "PESEL musi mieć 11 cyfr.";
+            }
+        } else {
+            if (formData.pesel && !/^\d{11}$/.test(formData.pesel)) {
+                newErrors.pesel = "PESEL musi mieć 11 cyfr.";
+            }
         }
 
-        // Zgody
-        if (!formData.consents.rules) newErrors.rules = "Musisz zaakceptować regulamin.";
-        if (!formData.consents.rodo) newErrors.rodo = "Zgoda RODO jest wymagana.";
+        // phone
+        if (isFinalSubmit) {
+            if (!formData.phone || formData.phone.length < 9) {
+                newErrors.phone = "Numer telefonu jest za krótki.";
+            }
+        } else {
+            if (formData.phone && formData.phone.length < 9) {
+                newErrors.phone = "Numer telefonu jest za krótki.";
+            }
+        }
+
+        // postal
+        if (isFinalSubmit) {
+            if (!/^\d{2}-\d{3}$/.test(formData.residenceAddress.postalCode)) {
+                newErrors.residenceAddress_postalCode = "Błędny kod pocztowy.";
+            }
+        } else {
+            if (
+                formData.residenceAddress.postalCode &&
+                !/^\d{2}-\d{3}$/.test(formData.residenceAddress.postalCode)
+            ) {
+                newErrors.residenceAddress_postalCode = "Błędny kod pocztowy.";
+            }
+        }
+
+        // addreses
+        if (hasCorrespondenceAddress) {
+            if (isFinalSubmit) {
+                if (!/^\d{2}-\d{3}$/.test(formData.correspondenceAddress.postalCode)) {
+                    newErrors.correspondenceAddress_postalCode = "Błędny kod pocztowy.";
+                }
+            } else {
+                if (
+                    formData.correspondenceAddress.postalCode &&
+                    !/^\d{2}-\d{3}$/.test(formData.correspondenceAddress.postalCode)
+                ) {
+                    newErrors.correspondenceAddress_postalCode = "Błędny kod pocztowy.";
+                }
+            }
+        }
+
+        // checkboxes
+        if (isFinalSubmit) {
+            if (!formData.consents.data) newErrors.rules = "Musisz potwierdzić poprawność danych.";
+            if (!formData.consents.rules) newErrors.rules = "Musisz zaakceptować regulamin.";
+            if (!formData.consents.rodo) newErrors.rodo = "Zgoda RODO jest wymagana.";
+        }
 
         setErrors(newErrors);
-        
-        // Jeśli obiekt newErrors jest pusty, zwraca true (formularz ok)
         return Object.keys(newErrors).length === 0;
-    }
+    };
   
   return (
     <div>
     { !isUserLoggedIn ? <LoginRedirectPage /> 
-    : isUserAlreadyEnrolled ? <DuplicateRecruitmentFormRedirectPage /> 
+    // : isUserAlreadyEnrolled ? <DuplicateRecruitmentFormRedirectPage />
     : (
         <div className='page-layout'>
 
@@ -194,7 +302,7 @@ export default function ApplicationForm() {
             </div>
 
         <div className='bg-panel'>
-            <form onSubmit={onSubmit} autoComplete="off">
+            <form>
                 {isUserAlreadyEnrolled && (
                     <div className="error-banner">
                         <span className="material-symbols-outlined">error</span>
@@ -243,8 +351,8 @@ export default function ApplicationForm() {
                     <label htmlFor="pesel">PESEL</label>
                     <input id="pesel" className={errors.pesel ? 'input-error' : ''} name="pesel" maxLength="11" autoComplete="off" value={formData.pesel} onChange={handleChange} required />
 
-                    <label htmlFor="nationality">Obywatelstwo</label>
-                    <input id="nationality" name="nationality" autoComplete="nationality" value={formData.nationality} onChange={handleChange} required />
+                    <label htmlFor="citizenship">Obywatelstwo</label>
+                    <input id="citizenship" name="citizenship" autoComplete="citizenship" value={formData.citizenship} onChange={handleChange} required />
                 </div>
             </div>
 
@@ -334,19 +442,24 @@ export default function ApplicationForm() {
                 <div className="form-row">
                     <div className="form-group">
                         <label htmlFor="studiesName">Nazwa uczeli wyższej</label>
-                        <input id="studiesName" name="studiesName" autoComplete="studiesName" value={formData.studiesName} onChange={handleChange} />
-                        
+                        <input id="studiesName" name="educationUniversity" value={formData.educationUniversity} onChange={handleChange} />
+
                         <label htmlFor="studiesLocation">Lokalizacja</label>
-                        <input id="studiesLocation" name="studiesLocation" autoComplete="off" value={formData.studiesLocation} onChange={handleChange} />
+                        <input id="studiesLocation" name="educationLocation" value={formData.educationLocation} onChange={handleChange} />
                     </div>
                     <div className="form-group">
                         <label htmlFor="studiesEndYear">Rok zakończenia</label>
-                        <input id="studiesEndYear" name="studiesEndYear" type="number" min="1900" max="2100" autoComplete="off" value={formData.studiesEndYear} onChange={handleChange} />
+                        <input id="studiesEndYear" name="educationYear" value={formData.educationYear} onChange={handleChange} />
 
                         <label>Miejsce uzyskania świadectwa dojrzałości *</label>
-                        <select className="radio-group">
-                            <option> Polska </option>
-                            <option> Inne </option>
+                        <select
+                            className="radio-group"
+                            name="educationCountry"
+                            value={formData.maturity_country}
+                            onChange={handleChange}
+                        >
+                            <option value="Polska">Polska</option>
+                            <option value="Inne">Inne</option>
                         </select>
                     </div>
                 </div>
@@ -359,22 +472,22 @@ export default function ApplicationForm() {
                 </div>
 
                 <label className="checkbox-container">
-                    <input type="checkbox" onChange={(e) => setHasEmergencyContact(e.target.checked)} />
+                    <input type="checkbox" checked={hasEmergencyContact} onChange={(e) => setHasEmergencyContact(e.target.checked)} />
                     Chcę dodać kontakt awaryjny
                 </label>
 
                 <div className="form-row">
                     {hasEmergencyContact && (
                         <><div className="form-group">
-                            <label htmlFor="emergencyContactName">Imię kontaktu</label>
-                            <input id="emergencyContactName" name="name" autoComplete="name" value={formData.emergencyContact.name} onChange={(e) => handleChange(e, 'emergencyContact') } />
+                            <label htmlFor="emergencyName">Imię kontaktu</label>
+                            <input id="emergencyName" name="emergencyName" autoComplete="name" value={formData.emergencyName} onChange={handleChange} />
 
-                            <label htmlFor="emergencyContactContact">Telefon kontaktu awaryjnego</label>
-                            <input id="emergencyContactContact" name="phone" type="tel" autoComplete="tel" value={formData.emergencyContact.phone} onChange={(e) => handleChange(e, 'emergencyContact') } />
+                            <label htmlFor="emergencyPhone">Telefon kontaktu awaryjnego</label>
+                            <input id="emergencyPhone" name="emergencyPhone" type="tel" autoComplete="tel" value={formData.emergencyPhone} onChange={handleChange} />
                         </div>
                         <div className="form-group">
-                            <label htmlFor="emergencyContactSurname">Nazwisko kontaktu</label>
-                            <input id="emergencyContactSurname" name="surname" autoComplete="family-name" value={formData.emergencyContact.surname} onChange={(e) => handleChange(e, 'emergencyContact') } />
+                            <label htmlFor="emergencyLastName">Nazwisko kontaktu</label>
+                            <input id="emergencyLastName" name="emergencyLastName" autoComplete="family-name" value={formData.emergencyLastName} onChange={handleChange} />
                         </div></>
                     )}
                 </div>
@@ -384,57 +497,89 @@ export default function ApplicationForm() {
                 <span className="material-symbols-outlined text-primary">upload_file</span>
                     Dokumenty
                 </div>
-                
+
                 <div className="form-row" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-                    <DocumentUploadCard 
-                        id="diploma"
-                        title="Dyplom ukończenia studiów wyższych"
-                        formats="PDF, JPG"
-                        maxSize="5MB"
-                        icon="description"
-                        onFileSelect={handleFileSelect}
-                        onFileRemove={handleFileRemove}
-                    />
+                    {documents.map(doc => (
+                        <DocumentUploadCard
+                            key={doc.id}
+                            id={doc.id}
+                            title={doc.name + (doc.required ? " *" : "")}
+                            formats="PDF, JPG"
+                            maxSize="5MB"
+                            icon="description"
+                            onFileSelect={handleFileSelect}
+                            onFileRemove={handleFileRemove}
+                            required={doc.required}
+                        />
+                    ))}
                 </div>
                 
                 {/* Zgody i regulamin */}
                 <div className="section-title">Zgody i regulaminy</div>
                 <div className="consent-box">
+
                     <label className="consent-item">
-                    <input
-                        type="checkbox"
-                        name="data"
-                        checked={formData.consents.data}
-                        onChange={(e) => handleChange(e, 'consents')}
-                    />
-                    Potwierdzam, że wszytkie podane powyżej dane są zgodne z prawdą w momencie wypełnienia.
+                        <input
+                            type="checkbox"
+                            name="data"
+                            checked={formData.consents.data}
+                            onChange={(e) => handleChange(e, 'consents')}
+                        />
+                        <span className="consent-text">
+                            Potwierdzam, że wszystkie podane powyżej dane są zgodne z prawdą w momencie wypełnienia.</span>
+                        </label>
+
+                    <label className="consent-item">
+                        <input
+                            type="checkbox"
+                            name="rules"
+                            checked={formData.consents.rules}
+                            onChange={(e) => handleChange(e, 'consents')}
+                        />
+
+                        <div className="consent-content">
+                            <span className="consent-text">
+                                Potwierdzam, że zapoznałem się z treścia i zobowiązuję się przestrzegać regulaminu studiów AGH.
+                            </span>
+
+                            <a
+                                className="inline-link consent-link"
+                                href="/assets/dokumenty/regulamin-studiow-podyplomowych-agh.pdf"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Pełna treść dokumentu.
+                                <span className="material-symbols-outlined">open_in_new</span>
+                            </a>
+                        </div>
                     </label>
 
                     <label className="consent-item">
-                    <input
-                        type="checkbox"
-                        name="rules"
-                        checked={formData.consents.rules}
-                        onChange={(e) => handleChange(e, 'consents')}
-                    />
-                    Potwierdzam, że zapoznałem się z treścia i zobowiązuję się przestrzegać regulaminu studiów AGH, 
-                    <a className='inline-link' href ='/assets/dokumenty/regulamin-studiow-podyplomowych-agh.pdf' target="_blank">Link do pełnego dokumetnu.
-                    <span className="material-symbols-outlined">open_in_new</span></a>
-                    
+                        <input
+                            type="checkbox"
+                            name="rodo"
+                            checked={formData.consents.rodo}
+                            onChange={(e) => handleChange(e, 'consents')}
+                        />
+
+                        <div className="consent-content">
+                            <span className="consent-text">
+                                Zgodnie z Rozporządzeniem Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016 r. w sprawie ochrony osób fizycznych w związku z przetwarzaniem danych osobowych i w sprawie swobodnego przepływu takich danych oraz uchylenia dyrektywy 95/46/WE (ogólne rozporządzenie o ochronie danych) [Dz. U. UE.L.2016.119.1 z dnia 4 maja 2016 r.], zwanego dalej RODO, wyrażam zgodę na przetwarzanie moich danych osobowych w ramach procesu rekrutacji na powyższe studia i dokumentowanie ich przebiegu.
+                            </span>
+
+                            <a
+                                className="inline-link consent-link"
+                                href="/assets/dokumenty/zgoda_na_przetwarzanie_danych_osobowych.pdf"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Pełna treść dokumentu.
+                                <span className="material-symbols-outlined">open_in_new</span>
+                            </a>
+                        </div>
                     </label>
 
-                    <label className="consent-item">
-                    <input
-                        type="checkbox"
-                        name="rodo"
-                        checked={formData.consents.rodo}
-                        onChange={(e) => handleChange(e, 'consents')}
-                    />
-                    Zgodnie z Rozporządzeniem Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016 r. w sprawie ochrony osób fizycznych w związku z przetwarzaniem danych osobowych i w sprawie swobodnego przepływu takich danych oraz uchylenia dyrektywy 95/46/WE (ogólne rozporządzenie o ochronie danych) [Dz. U. UE.L.2016.119.1 z dnia 4 maja 2016 r.], zwanego dalej RODO, wyrażam zgodę na przetwarzanie moich danych osobowych w ramach procesu rekrutacji na powyższe studia i dokumentowanie ich przebiegu.
-                    <a className='inline-link' href = '/assets/dokumenty/zgoda_na_przetwarzanie_danych_osobowych.pdf' target="_blank">Link do pełnego dokumetnu. 
-                    <span className="material-symbols-outlined">open_in_new</span></a>
-                    </label>
-                </div> 
+                </div>
             
             {/* Komunikat o błędach zbiorczy */}
             {Object.keys(errors).length > 0 && (
@@ -455,7 +600,25 @@ export default function ApplicationForm() {
             {error && <div className="error-message">{error}</div>}
 
             {/* Wyslij formularz guzik */}
-            <button className='btn-submit' type='submit' disabled={isUserAlreadyEnrolled}>Wyślij wniosek</button>
+            {/*<button className='btn-submit' type='submit' disabled={isUserAlreadyEnrolled}>Wyślij wniosek</button>*/}
+            <div className="submit-buttons">
+                <button
+                    type="button"
+                    className="btn-save"
+                    onClick={() => submitApplication("SAVE")}
+                >
+                    Zapisz formularz
+                </button>
+
+                <button
+                    type="button"
+                    className="btn-submit"
+                    onClick={() => submitApplication("ENROLL")}
+                    disabled={isUserAlreadyEnrolled}
+                >
+                    Wyślij wniosek
+                </button>
+            </div>
 
             </form>
         </div>

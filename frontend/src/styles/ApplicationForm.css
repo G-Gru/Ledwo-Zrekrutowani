@@ -224,3 +224,22 @@
     border: 2px dotted black !important;
     background-color: black;
 }
+
+.consent-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.consent-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.consent-link {
+    display: block;
+    font-size: 0.9rem;
+    margin-left: 0;
+}
