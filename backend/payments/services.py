@@ -13,7 +13,7 @@ def create_fee_for_enrollment(enrollment, edition):
         enrollment=enrollment,
         title=f"Opłata za {edition.studies.name}",
         amount=edition.price,
-        due_date=edition.start_date,
+        due_date=edition.recruitment_end_date,
     )
     send_fee_issued_email(fee)
 

@@ -122,14 +122,6 @@ class Command(BaseCommand):
             education_country="Polska",
         )
 
-        # Nieopłacona opłata
-        unpaid_fee = Fees.objects.create(
-            enrollment=enrollment,
-            title=f"Opłata za {active_edition.studies.name}",
-            amount=active_edition.price,
-            due_date=active_edition.start_date,
-        )
-
         # Student2 — STUDENT z opłaconą płatnością
         student2 = User.objects.get(email="student2@gmail.com")
 
@@ -171,7 +163,7 @@ class Command(BaseCommand):
             enrollment=enrollment2,
             title=f"Opłata za {active_edition.studies.name}",
             amount=active_edition.price,
-            due_date=active_edition.start_date,
+            due_date=active_edition.recruitment_end_date,
             paid_date=date.today() - timedelta(days=3),
         )
 
