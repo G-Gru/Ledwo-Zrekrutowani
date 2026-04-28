@@ -11,7 +11,7 @@ const ENABLE_DEV_AUTH_BYPASS = true;
 const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 function buildDocumentUrl(documentId) {
-  return `${API_BASE_URL}/api/enrollments/files/${documentId}/`;
+  return `${API_BASE_URL}/api/files/${documentId}/`;
 }
 
 function paymentBadgeClass(isPaid) {

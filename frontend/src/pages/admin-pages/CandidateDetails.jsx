@@ -33,7 +33,7 @@ function documentStatusClass(status) {
 }
 
 function buildDocumentUrl(documentId) {
-  return `${API_BASE_URL}/api/enrollments/files/${documentId}/`;
+  return `${API_BASE_URL}/api/files/${documentId}/`;
 }
 
 export default function CandidateDetails() {
