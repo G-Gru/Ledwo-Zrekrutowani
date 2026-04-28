@@ -32,22 +32,35 @@ class EmployeeSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'first_name', 'last_name', 'academic_title', 'work_phones')
 
 class RegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        error_messages={
+            "invalid": "Podaj poprawny adres email.",
+            "blank": "Pole email jest wymagane.",
+            "required": "Pole email jest wymagane."
+        }
+    )
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name', 'password', 'phone')
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Istnieje już użytkownik z tym adresem email.")
+        return value
+
     def create(self, validated_data):
-        password = validated_data.pop("password")
+        password = validated_data.pop("password", None)
         user = User(**validated_data)
-        user.set_password(password)
+        if password:
+            user.set_password(password)
         user.save()
         return user
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
+    email = serializers.EmailField(error_messages={"invalid": "Niepoprawny format email.", "blank": "Pole email jest wymagane."})
+    password = serializers.CharField(write_only=True, error_messages={"blank": "Hasło jest wymagane."})
 
     def validate(self, data):
         user = authenticate(
@@ -56,7 +69,9 @@ class LoginSerializer(serializers.Serializer):
         )
 
         if not user:
-            raise serializers.ValidationError("Invalid credentials")
+            raise serializers.ValidationError("Niepoprawne dane logowania.")
+        if not user.is_active:
+            raise serializers.ValidationError("To konto jest nieaktywne.")
 
         data["user"] = user
         return data

@@ -3,7 +3,17 @@ export const apiClient = async (url, options) => {
   const response = await fetch(url, options);
 
   if (!response.ok) {
-    throw new Error("API error");
+    let errorMessage = "Wystąpił błąd po stronie serwera.";
+
+    try {
+      const errorData = await response.json();
+      
+      errorMessage = errorData.detail || Object.values(errorData)[0][0] || "API error";
+    } catch (e) {
+      console.error("Failed to parse error response", e);
+    }
+    
+    throw new Error(errorMessage);
   }
 
   return response.json();
