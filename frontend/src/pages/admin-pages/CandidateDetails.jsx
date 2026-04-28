@@ -32,9 +32,10 @@ function documentStatusClass(status) {
   return 'doc-status in-progress';
 }
 
-function buildDocumentUrl(documentId) {
-  return `${API_BASE_URL}/api/files/${documentId}/`;
-}
+
+const handleDownload = async (fileId) => {
+  await serverApi.downloadFile(fileId, getAccessToken());
+};
 
 export default function CandidateDetails() {
   const { id } = useParams();
@@ -219,8 +220,8 @@ export default function CandidateDetails() {
                     </tr>
                   </thead>
                   <tbody>
-                    {enrollment.documents.map((document) => (
-                      <tr key={document.id}>
+                    {enrollment.documents.map((document) => {
+                      return <tr key={document.id}>
                         <td>
                           <div className='doc-name-cell'>
                             <strong>{document.title || '-'}</strong>
@@ -233,41 +234,34 @@ export default function CandidateDetails() {
                         <td>{formatDateTimeInWarsaw(document.submitted_date)}</td>
                         <td>
                           <div className='doc-actions'>
-                            <a
-                              className='admin-details-link'
-                              href={buildDocumentUrl(document.id)}
-                              target='_blank'
-                              rel='noopener noreferrer'
-                            >
-                              Podgląd
-                            </a>
-                            <a
-                              className='admin-details-link'
-                              href={buildDocumentUrl(document.id)}
-                              download
+                            <button
+                                type="button"
+                                className='btn-ghost-icon'
+                                onClick={() => handleDownload(document.id)}
                             >
                               Pobierz
-                            </a>
+                            </button>
+
                             <button
-                              type='button'
-                              className='button-secondary'
-                              onClick={() => handleDocumentAction(document.id, 'accept')}
-                              disabled={documentActionLoading && documentActionLoading.startsWith(`${document.id}-`)}
+                                type='button'
+                                className='button-secondary'
+                                onClick={() => handleDocumentAction(document.id, 'accept')}
+                                disabled={documentActionLoading && documentActionLoading.startsWith(`${document.id}-`)}
                             >
                               {documentActionLoading === `${document.id}-accept` ? 'Akceptuję...' : 'Akceptuj'}
                             </button>
                             <button
-                              type='button'
-                              className='button-danger'
-                              onClick={() => handleDocumentAction(document.id, 'reject')}
-                              disabled={documentActionLoading && documentActionLoading.startsWith(`${document.id}-`)}
+                                type='button'
+                                className='button-danger'
+                                onClick={() => handleDocumentAction(document.id, 'reject')}
+                                disabled={documentActionLoading && documentActionLoading.startsWith(`${document.id}-`)}
                             >
                               {documentActionLoading === `${document.id}-reject` ? 'Odrzucam...' : 'Odrzuć'}
                             </button>
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    })}
                   </tbody>
                 </table>
               )}
