@@ -50,6 +50,14 @@ export default function Documents() {
         }
     };
 
+    function getDocumentStatusInPolish(status) {
+        if (status == "SIGN & DELIVER") return "Wymaga dostarczenia"
+        if (status == "ACCEPTED") return "Zaakceptowany"
+        if (status == "SUBMITTED") return "Dokument załączony przez Ciebie"
+        if (status == "REJECTED") return "Odrzucony"
+        if (status == "VERIFIED") return "Zweryfikowany"
+    }
+
     return (
         !userLoggedIn ? <LoginRedirectPage /> : (
         
@@ -77,30 +85,25 @@ export default function Documents() {
                     <div className='bg-panel history-list-container'>
                         { !systemDocumentsList || systemDocumentsList.length == 0 ? (<p style={{padding: '30px'}}> Brak wygenerowanych dokumentów </p>) : (
                             systemDocumentsList.map((item, index) => {
-                                const actionRequired = item.status !== 'ACCEPTED';
+                                const actionRequired = !(item.status === 'ACCEPTED' || item.status === 'SUBMITTED');
 
                                 return <div key={index} className='history-row-item'>
                                     <div className='row-main-info'>
-                                        <div className='status-icon-circle'
-                                             style={{backgroundColor: actionRequired ? actionColourBg : acceptedColourBg}}>
-                                            <span
-                                                className="material-symbols-outlined">{actionRequired ? "warning" : "done_all"}</span>
+                                        <div className='status-icon-circle' style={{backgroundColor: actionRequired ? actionColourBg : acceptedColourBg}}>
+                                            <span className="material-symbols-outlined">{actionRequired ? "warning" : "done_all"}</span>
                                         </div>
                                         <div className='text-group' style={{textAlign: 'left'}}>
                                             <div className='history-item-name'>{item.title}</div>
-                                            <div className='history-status-tag'
-                                                 style={{color: item.actionRequired ? actionColour : acceptedColour}}> {/*TODO naprawić action required*/}
-                                                {item.actionRequired ? "Wymaga Dostarczenia" : "Zaakceptowany"}
+                                            <div className='history-status-tag' style={{color: actionRequired ? actionColour : acceptedColour}}>
+                                                {getDocumentStatusInPolish(item.status)}
                                             </div>
                                         </div>
                                     </div>
                                     <div className='row-amount-info'>
-                                        <div className='history-item-sub'>Data
-                                            utworzenia: {formatDateInWarsaw(item.dateUpload)}</div>
-                                        {item.actionRequired &&
-                                            (<div className='history-item-sub'
-                                                  style={{color: actionColour, fontWeight: 850}}>Termin
-                                                dostarczenia: {formatDateInWarsaw(item.dateDeadline)}</div>)
+                                        <div className='history-item-sub'>Data utworzenia: {formatDateInWarsaw(item.dateUpload)}</div>
+                                        { actionRequired ?
+                                            (<div className='history-item-sub' style={{color: actionColour, fontWeight: 850}}>Termin dostarczenia: {formatDateInWarsaw(item.dateDeadline)}</div>)
+                                            : (<div className='history-item-sub' style={{color: acceptedColour}}>Termin akceptacji: {formatDateInWarsaw(item.dateAccepted)}</div>)
                                         }
 
                                     </div>
