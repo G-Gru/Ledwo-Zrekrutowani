@@ -119,9 +119,9 @@ export default function ApplicationForm() {
             if (otherEnrollmentData && Array.isArray(otherEnrollmentData.applications)) {
                 const alreadyEnrolled = otherEnrollmentData.applications.some(application => {
                     const editionId = application?.studies_edition?.id ?? application?.studies_edition;
-                    const status = application?.status;
+                    const statusCode = application?.status?.[0];
 
-                    return String(editionId) === String(courseId) && String(status) !== "DRAFT";
+                    return String(editionId) === String(courseId) && String(statusCode) !== "DRAFT";
                 });
 
                 setUserAlreadyEnrolled(alreadyEnrolled);

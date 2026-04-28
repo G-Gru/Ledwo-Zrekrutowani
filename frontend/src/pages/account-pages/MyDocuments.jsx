@@ -33,7 +33,7 @@ export default function Documents() {
 
         async function fetchDocumentsData() {
             // fetch docuemnts
-            var systemDocs = await serverApi.getSystemGeneratedEnrollmentDocuments(enrollmentId) 
+            const systemDocs = await serverApi.getAllEnrollmentDocuments(enrollmentId)
             setSystemDocuments( systemDocs.documents )
             if (systemDocs.error) setErrorMsg(systemDocs.errorMsg)
         }
@@ -63,41 +63,48 @@ export default function Documents() {
                     {error && <div className="error-message">{error}</div>}
 
                     {/* Title */}
-                    <div className='page-title'>Dokumenty</div>
+                    <div className='page-title'>Dokumenty dla wniosku</div>
                     {/* <p className='page-subtitle'>Monitoruj statusy opłat i wykonuj łączne transakcje w jednym miejscu.</p> */}
                 </header>
 
                 {/* Sekcja Historii */}
                 <div className='history-section-wide'>
-                    <div className='history-top-bar'>
-                        <h2 className='history-title'>Wygenerowane przez System</h2>
-                        <p> Te dokumenty nalezy przynieść podpisane do sekretariatu </p>
-                    </div>
+                    {/*<div className='history-top-bar'>*/}
+                    {/*    <h2 className='history-title'>Wygenerowane przez System</h2>*/}
+                    {/*    <p> Te dokumenty nalezy przynieść podpisane do sekretariatu </p>*/}
+                    {/*</div>*/}
 
                     <div className='bg-panel history-list-container'>
                         { !systemDocumentsList || systemDocumentsList.length == 0 ? (<p style={{padding: '30px'}}> Brak wygenerowanych dokumentów </p>) : (
-                            systemDocumentsList.map((item, index) => (
-                                <div key={index} className='history-row-item'>
+                            systemDocumentsList.map((item, index) => {
+                                const actionRequired = item.status !== 'ACCEPTED';
+
+                                return <div key={index} className='history-row-item'>
                                     <div className='row-main-info'>
-                                        <div className='status-icon-circle' style={{backgroundColor: item.actionRequired ? actionColourBg : acceptedColourBg}}>
-                                            <span className="material-symbols-outlined">{item.actionRequired ? "warning" : "done_all"}</span>
+                                        <div className='status-icon-circle'
+                                             style={{backgroundColor: actionRequired ? actionColourBg : acceptedColourBg}}>
+                                            <span
+                                                className="material-symbols-outlined">{actionRequired ? "warning" : "done_all"}</span>
                                         </div>
-                                        <div className='text-group' style={{textAlign:'left'}}>
-                                            <div className='history-item-name'>Podanie rekrutacyjne na kierunek <i>{item.studies_name}</i></div>
-                                            <div className='history-status-tag' style={{color: item.actionRequired ? actionColour : acceptedColour}}>
+                                        <div className='text-group' style={{textAlign: 'left'}}>
+                                            <div className='history-item-name'>{item.title}</div>
+                                            <div className='history-status-tag'
+                                                 style={{color: item.actionRequired ? actionColour : acceptedColour}}> {/*TODO naprawić action required*/}
                                                 {item.actionRequired ? "Wymaga Dostarczenia" : "Zaakceptowany"}
                                             </div>
                                         </div>
                                     </div>
                                     <div className='row-amount-info'>
-                                        <div className='history-item-sub'>Data utworzenia: {formatDateInWarsaw(item.dateUpload)}</div>
-                                        { item.actionRequired ? 
-                                            (<div className='history-item-sub' style={{color: actionColour, fontWeight: 850}}>Termin dostarczenia: {formatDateInWarsaw(item.dateDeadline)}</div>)
-                                            : (<div className='history-item-sub' style={{color: acceptedColour}}>Termin akceptacji: {formatDateInWarsaw(item.dateAccepted)}</div>)
+                                        <div className='history-item-sub'>Data
+                                            utworzenia: {formatDateInWarsaw(item.dateUpload)}</div>
+                                        {item.actionRequired &&
+                                            (<div className='history-item-sub'
+                                                  style={{color: actionColour, fontWeight: 850}}>Termin
+                                                dostarczenia: {formatDateInWarsaw(item.dateDeadline)}</div>)
                                         }
 
                                     </div>
-                                    { !item.file ? null : (
+                                    {!item.file ? null : (
                                         <button
                                             type="button"
                                             className='btn-ghost-icon'
@@ -107,7 +114,7 @@ export default function Documents() {
                                         </button>
                                     )}
                                 </div>
-                            ))
+                            })
                         )}
                     </div>
                 </div>

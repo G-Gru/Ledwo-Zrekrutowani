@@ -193,9 +193,9 @@ p {
 
 .studies-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(270px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
   gap: 1rem;
-  width: calc(100vw - 2rem);
+  width: 100%;
   max-width: 95%;
   margin: 0 auto;
 }

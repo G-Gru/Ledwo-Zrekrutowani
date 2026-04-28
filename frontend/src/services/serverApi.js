@@ -65,18 +65,18 @@ export class serverApi {
                 } catch {
                     errorDetail = response.statusText;
                 }
-                return { data: null, error: true, errorMsg: `HTTP ${response.status}`, errorDetail };
+                return {data: null, error: true, errorMsg: `HTTP ${response.status}`, errorDetail};
             }
 
             if (isBlob) {
-                return { data: response, error: false };
+                return {data: response, error: false};
             }
 
             const data = await response.json();
-            return { data, error: false, errorMsg: "" };
+            return {data, error: false, errorMsg: ""};
         } catch (err) {
             console.error(`API Error (${endpoint}):`, err);
-            return { data: null, error: true, errorMsg: err.message, errorDetail: err.detail };
+            return {data: null, error: true, errorMsg: err.message, errorDetail: err.detail};
         }
     }
 
@@ -89,7 +89,7 @@ export class serverApi {
                 email: user.email || "ziomeczek@mail.com"
             };
         }
-        return { firstName: "Imie", lastName: "Nazwisko", email: "ziomeczek@mail.com" };
+        return {firstName: "Imie", lastName: "Nazwisko", email: "ziomeczek@mail.com"};
     }
 
     static todayIsBefore(dateString) {
@@ -222,7 +222,7 @@ export class serverApi {
 
         return normalized;
     }
-   
+
     static async sendApplicationForm(token, applicationForm, createNew) {
         if (!applicationForm) {
             return {
@@ -255,7 +255,7 @@ export class serverApi {
             if (payload.street || payload.house_number || payload.flat_number || payload.city || payload.postal_code) {
                 return payload;
             }
-            return { ...placeholderAddress };
+            return {...placeholderAddress};
         };
 
         const findExistingAddressId = async (addressPayload) => {
@@ -280,9 +280,9 @@ export class serverApi {
                 : [];
 
             if (matches.length > 0) {
-                return { error: false, id: matches[0].id };
+                return {error: false, id: matches[0].id};
             }
-            return { error: false, id: null };
+            return {error: false, id: null};
         };
 
         const createAddress = async (addressPayload) => {
@@ -294,7 +294,7 @@ export class serverApi {
                     errorDetail: res.errorDetail || null
                 };
             }
-            return { error: false, id: res.data.id };
+            return {error: false, id: res.data.id};
         };
 
         const residencePayload = ensureAddressPayload(normalizeAddressPayload(applicationForm.formData.residenceAddress || {}));
@@ -362,7 +362,7 @@ export class serverApi {
         payload.append("phone", applicationForm.formData.phone);
 
         payload.append("education_university", applicationForm.formData.educationUniversity);
-        payload.append("education_year", applicationForm.formData.educationYear );
+        payload.append("education_year", applicationForm.formData.educationYear);
         payload.append("education_location", applicationForm.formData.educationLocation);
         payload.append("maturity_country", applicationForm.formData.maturity_country);
 
@@ -605,7 +605,7 @@ export class serverApi {
 
             emergencyName: existingData.emergency_name || "",
             emergencyLastName: existingData.emergency_last_name || "",
-            emergencyPhone:  existingData.emergency_phone || "",
+            emergencyPhone: existingData.emergency_phone || "",
 
             residenceAddress: residenceAddress,
             correspondenceAddress: correspondenceAddress
@@ -649,8 +649,9 @@ export class serverApi {
     static async getCourseInfo(editionId) {
         const res = await this.apiRequest(`/api/studies/editions/${editionId}/`, 'GET', null, getAccessToken());
         if (res && !res.error && res.data) return res.data
-        return { name: "Nieznany kierunek", recruitment_end_date: "2000-01-01", status: "-" };
+        return {name: "Nieznany kierunek", recruitment_end_date: "2000-01-01", status: "-"};
     }
+
     static async getCoursesInfo() {
         const res = await this.apiRequest('/api/studies/editions/', 'GET');
         if (!res.error) {
@@ -658,7 +659,9 @@ export class serverApi {
         }
         return {}
     }
+
     /* Applications */
+
     // dane: application { name: "", type: "", status: [""],  schedule: [title: "", startDate: "", endDate: "", flag: ""] }
     static async getUserUnfinishedApplications(userToken) {
         // let mock_schedule = await this.generateRecruitmentApplicationSchedule(null, null, false)
@@ -671,10 +674,11 @@ export class serverApi {
             errorMsg: "" //"Pobieranie roboczych wniosków: Funkcjonalnosc niezaimplementowana: wyświetlane dane mock-owe."
         }
     }
+
     static async getUserActiveApplications(token) {
-        
+
         const res = await this.apiRequest('/api/enrollments/active/', 'GET', null, token);
-        
+
         if (res.error) {
             /* mockowe dane */
             return {
@@ -691,7 +695,7 @@ export class serverApi {
 
         // Mapowanie danych z backendu na format frontendowy
         const mapped = await Promise.all(res.data.map(async item => {
-            const schedule = await serverApi.generateRecruitmentApplicationSchedule( token, item.id, true, formatDateInWarsaw(item.studies_edition.recruitment_end_date), item.status )
+            const schedule = await serverApi.generateRecruitmentApplicationSchedule(token, item.id, true, formatDateInWarsaw(item.studies_edition.recruitment_end_date), item.status)
             let isPaymentComplete = schedule?.[1]?.flag === "complete"
             let isDocuementsComplete = schedule?.[2]?.flag === "complete"
             let statuses = [item.status]
@@ -708,23 +712,32 @@ export class serverApi {
             };
         }));
 
-        return { applications: mapped, error: false, errorMsg: "" };
+        return {applications: mapped, error: false, errorMsg: ""};
     }
 
     /* Payments */
     static async getUserActivePayments(token) {
         let paymentsResponse = await serverApi.apiRequest('/api/payments/upcoming/', 'GET', null, token)
-        
+
         if (paymentsResponse.error) {
             let mock_data = [
-                { id: 1, name: "Czesne (Semestr Zimowy)", status: "Oczekuje", amount: "3,200.00 PLN", date: "15.10.2023", type: "pending" },
-                { id: 2, name: "Wpisowe", status: "Zaległe", amount: "250.00 PLN", date: "30.09.2023", type: "overdue" }
+                {
+                    id: 1,
+                    name: "Czesne (Semestr Zimowy)",
+                    status: "Oczekuje",
+                    amount: "3,200.00 PLN",
+                    date: "15.10.2023",
+                    type: "pending"
+                },
+                {id: 2, name: "Wpisowe", status: "Zaległe", amount: "250.00 PLN", date: "30.09.2023", type: "overdue"}
             ];
             return {
-                payments: mock_data, error: true, errorMsg: `Pobieranie nadchodzących płatności: bład komunikacji z serwerem, wyświetlane dane mock-owe. ${paymentsResponse.errorMsg}`
+                payments: mock_data,
+                error: true,
+                errorMsg: `Pobieranie nadchodzących płatności: bład komunikacji z serwerem, wyświetlane dane mock-owe. ${paymentsResponse.errorMsg}`
             }
         }
-        
+
         const mapped = paymentsResponse.data.map(item => ({
             id: item.id,
             title: item.title,
@@ -733,23 +746,38 @@ export class serverApi {
             status: serverApi.todayIsBefore(item.due_date) ? "Oczekuje" : "Po terminie ostatecznym",
             type: serverApi.todayIsBefore(item.due_date) ? "pending" : "overdue",
         }))
-        return { payments: mapped, error: false, errorMsg: "" }
+        return {payments: mapped, error: false, errorMsg: ""}
     }
+
     static async getUserPaymentsHistory(token) {
-        
+
         let paymentsResponse = await serverApi.apiRequest('/api/payments/history/', 'GET', null, token)
-        
+
         if (paymentsResponse.error) {
             let mock_data = [
-                { id: 101, title: "Czesne (Semestr Letni)", paid_date: "12.06.2023", amount: "3,200.00 PLN", status: "Zaksięgowano" },
-                { id: 102, title: "Opłata za legitymację", paid_date: "01.06.2023", amount: "22.00 PLN", status: "Zaksięgowano" },
-                { id: 103, title: "Ubezpieczenie", paid_date: "15.05.2023", amount: "55.00 PLN", status: "Zaksięgowano" }
+                {
+                    id: 101,
+                    title: "Czesne (Semestr Letni)",
+                    paid_date: "12.06.2023",
+                    amount: "3,200.00 PLN",
+                    status: "Zaksięgowano"
+                },
+                {
+                    id: 102,
+                    title: "Opłata za legitymację",
+                    paid_date: "01.06.2023",
+                    amount: "22.00 PLN",
+                    status: "Zaksięgowano"
+                },
+                {id: 103, title: "Ubezpieczenie", paid_date: "15.05.2023", amount: "55.00 PLN", status: "Zaksięgowano"}
             ];
             return {
-                payments: mock_data, error: true, errorMsg: `Pobieranie historii płatności: bład komunikacji z serwerem, wyświetlane dane mock-owe. ${paymentsResponse.errorMsg}`
+                payments: mock_data,
+                error: true,
+                errorMsg: `Pobieranie historii płatności: bład komunikacji z serwerem, wyświetlane dane mock-owe. ${paymentsResponse.errorMsg}`
             }
         }
-        
+
         const mapped = paymentsResponse.data.map(item => ({
             id: item.id,
             title: item.title,
@@ -757,37 +785,53 @@ export class serverApi {
             paid_date: item.paid_date,
             status: "Zaksięgowano" // na raize wszytkie takie
         }))
-        return { payments: mapped, error: false, errorMsg: "" }
+        return {payments: mapped, error: false, errorMsg: ""}
 
     }
+
     static async userPayment(token, paymentIds) {
         if (!Array.isArray(paymentIds) || paymentIds.length === 0) {
-            return { success: false, errorMsg: "Brak ID płatności do opłacenia." };
+            return {success: false, errorMsg: "Brak ID płatności do opłacenia."};
         }
 
         const results = [];
         for (const feePk of paymentIds) {
             const res = await serverApi.apiRequest(`/api/payments/${feePk}/pay/`, 'POST', null, token);
-            results.push({ id: feePk, success: !res.error, errorMsg: res.error ? res.errorMsg : "" });
+            results.push({id: feePk, success: !res.error, errorMsg: res.error ? res.errorMsg : ""});
         }
 
         const failed = results.filter(r => !r.success);
         if (failed.length > 0) {
-            return { success: false, errorMsg: `Błąd podczas opłacania płatności: ${failed[0].errorMsg}` };
+            return {success: false, errorMsg: `Błąd podczas opłacania płatności: ${failed[0].errorMsg}`};
         }
 
-        return { success: true, errorMsg: "" };
+        return {success: true, errorMsg: ""};
     }
 
     /* HELPER schedule generator for applications */
     static async generateRecruitmentApplicationSchedule(userToken = null, application_id = null, isActive = true, recruitmentEndDate = "--/--/----", candidateStatus = "CANDIDATE") {
-        
+
         /* general recruit schedule */
         const recruitmentSchedule = [
-            { title: "SKŁADANIE WNIOSKÓW", startDate: "--/--/--", endDate: recruitmentEndDate, flag: isActive ? "complete" : "in-progress" },
-            { title: "OPŁATA REKRUTACYJNA", startDate: "--/--/--", endDate: recruitmentEndDate, flag: isActive ? "in-progress" : "upcoming" },
-            { title: "PRZYNIESIENIE DOKUMENTÓW", startDate: "--/--/--", endDate: recruitmentEndDate, flag: isActive ? "in-progress" : "upcoming" },
-            { title: "DECYZJA KOMISJI", startDate: recruitmentEndDate, endDate: "--/--/--", flag: "upcoming" }
+            {
+                title: "SKŁADANIE WNIOSKÓW",
+                startDate: "--/--/--",
+                endDate: recruitmentEndDate,
+                flag: isActive ? "complete" : "in-progress"
+            },
+            {
+                title: "OPŁATA REKRUTACYJNA",
+                startDate: "--/--/--",
+                endDate: recruitmentEndDate,
+                flag: isActive ? "in-progress" : "upcoming"
+            },
+            {
+                title: "PRZYNIESIENIE DOKUMENTÓW",
+                startDate: "--/--/--",
+                endDate: recruitmentEndDate,
+                flag: isActive ? "in-progress" : "upcoming"
+            },
+            {title: "DECYZJA KOMISJI", startDate: recruitmentEndDate, endDate: "--/--/--", flag: "upcoming"}
         ]
 
         if (userToken == null || application_id == null) return recruitmentSchedule;
@@ -800,7 +844,7 @@ export class serverApi {
         //         recruitmentSchedule.forEach(step => step["endDate"] = recruitmentEndDate);
         //     }
         // }
-        
+
         /* get recruitment payment data for application */
         const paymentInfoResponse = await serverApi.apiRequest(`/api/enrollments/${application_id}/fees/`, 'GET', null, userToken);
         const paymentData = !paymentInfoResponse.error && Array.isArray(paymentInfoResponse.data)
@@ -854,10 +898,10 @@ export class serverApi {
         for (const endpoint of endpoints) {
             const res = await this.apiRequest(endpoint, 'POST', {}, token);
             if (!res.error) {
-                return { data: res.data, error: false, errorMsg: '' };
+                return {data: res.data, error: false, errorMsg: ''};
             }
         }
-        return { data: null, error: true, errorMsg: 'Nie udało się wysłać przypomnienia.' };
+        return {data: null, error: true, errorMsg: 'Nie udało się wysłać przypomnienia.'};
     }
 
     static async getAdminEnrollmentDetails(token, enrollmentId) {
@@ -888,14 +932,14 @@ export class serverApi {
             );
 
             if (normalized) {
-                return { enrollment: normalized, error: false, errorMsg: '', isMock: false };
+                return {enrollment: normalized, error: false, errorMsg: '', isMock: false};
             }
         }
 
         if (!token) {
             const mock = getMockAdminEnrollmentDetails(enrollmentId);
             if (mock) {
-                return { enrollment: mock, error: false, errorMsg: '', isMock: true };
+                return {enrollment: mock, error: false, errorMsg: '', isMock: true};
             }
         }
 
@@ -918,10 +962,10 @@ export class serverApi {
 
     static async reviewAdminEnrollment(token, enrollmentId, decision, statusNote = '') {
         const decisionEndpoints = [
-            { endpoint: `/api/admin/enrollments/${enrollmentId}/${decision}/`, body: { status_note: statusNote } },
-            { endpoint: `/admin/enrollments/${enrollmentId}/${decision}/`, body: { status_note: statusNote } },
-            { endpoint: `/api/admin/enrollments/${enrollmentId}/decision/`, body: { decision, status_note: statusNote } },
-            { endpoint: `/admin/enrollments/${enrollmentId}/decision/`, body: { decision, status_note: statusNote } },
+            {endpoint: `/api/admin/enrollments/${enrollmentId}/${decision}/`, body: {status_note: statusNote}},
+            {endpoint: `/admin/enrollments/${enrollmentId}/${decision}/`, body: {status_note: statusNote}},
+            {endpoint: `/api/admin/enrollments/${enrollmentId}/decision/`, body: {decision, status_note: statusNote}},
+            {endpoint: `/admin/enrollments/${enrollmentId}/decision/`, body: {decision, status_note: statusNote}},
         ];
 
         for (const candidate of decisionEndpoints) {
@@ -965,13 +1009,13 @@ export class serverApi {
         for (const endpoint of endpoints) {
             const res = await this.apiRequest(endpoint, 'GET', null, token);
             if (!res.error) {
-                return { enrollments: res.data || [], error: false, errorMsg: '', isMock: false };
+                return {enrollments: res.data || [], error: false, errorMsg: '', isMock: false};
             }
         }
 
         if (!token) {
             return {
-                enrollments: getMockAdminEnrollmentList({ unpaidOnly }),
+                enrollments: getMockAdminEnrollmentList({unpaidOnly}),
                 error: false,
                 errorMsg: '',
                 isMock: true,
@@ -994,7 +1038,7 @@ export class serverApi {
             }
         }
 
-        return { data: null, error: true, errorMsg: 'Request failed' };
+        return {data: null, error: true, errorMsg: 'Request failed'};
     }
 
     static async acceptDocument(token, enrollmentId, documentId, note = '') {
@@ -1003,16 +1047,16 @@ export class serverApi {
             `/admin/enrollments/${enrollmentId}/documents/${documentId}/accept/`,
         ];
 
-        const body = note ? { note } : {};
+        const body = note ? {note} : {};
 
         for (const endpoint of endpoints) {
             const res = await this.apiRequest(endpoint, 'POST', body, token);
             if (!res.error) {
-                return { data: res.data, error: false, errorMsg: '' };
+                return {data: res.data, error: false, errorMsg: ''};
             }
         }
 
-        return { data: null, error: true, errorMsg: 'Nie udało się zaakceptować dokumentu.' };
+        return {data: null, error: true, errorMsg: 'Nie udało się zaakceptować dokumentu.'};
     }
 
     static async rejectDocument(token, enrollmentId, documentId, note = '') {
@@ -1021,53 +1065,37 @@ export class serverApi {
             `/admin/enrollments/${enrollmentId}/documents/${documentId}/reject/`,
         ];
 
-        const body = note ? { note } : {};
+        const body = note ? {note} : {};
 
         for (const endpoint of endpoints) {
             const res = await this.apiRequest(endpoint, 'POST', body, token);
             if (!res.error) {
-                return { data: res.data, error: false, errorMsg: '' };
+                return {data: res.data, error: false, errorMsg: ''};
             }
         }
 
-        return { data: null, error: true, errorMsg: 'Nie udało się odrzucić dokumentu.' };
+        return {data: null, error: true, errorMsg: 'Nie udało się odrzucić dokumentu.'};
     }
 
     /* Getting documents per enrollment from server */
-    static async getAllEnrollmentDocuments() {
+    static async getAllEnrollmentDocuments(enrollmentId) {
         let token = getAccessToken()
-        let enrollmentsResponse = await this.apiRequest('/api/enrollments/active/', 'GET', null, token);        
-        let anyResponseError = enrollmentsResponse == null || enrollmentsResponse.error
-        let anyResponseErrorMsg = enrollmentsResponse ? enrollmentsResponse.errorMsg : ""
+        let documentsResponse = await this.apiRequest(`/api/enrollments/${enrollmentId}/documents/`, 'GET', null, token)
+
+        let anyResponseError = documentsResponse == null || documentsResponse.error
+        let anyResponseErrorMsg = documentsResponse ? documentsResponse.errorMsg : ""
 
         // get document for all active user enrollments
-        let returnDocuments = []
         if (!anyResponseError) {
-            for (const enrollment of enrollmentsResponse.data) { // for each active user enrollment
-                if (anyResponseError) break
-                let editionData = enrollment.studies_edition
-                let documentsResponse = await this.apiRequest(`/api/enrollments/${enrollment.id}/documents/`, 'GET', null, token)
+            const mapped = documentsResponse.data.map(doc => ({ // go thru each document for enrollment
+                title: doc.studies_document.name,
+                dateUpload: doc.submitted_date,
+                file: doc.file,
+                status: doc.status,
+                dateDeadline: doc.studies_document.due_date,
+            }))
 
-                // on error
-                if (documentsResponse.error) {
-                    anyResponseErrorMsg += documentsResponse.errorMsg;
-                    break;
-                }
-    
-                // map document data to frontend format
-                else {
-                    const mapped = documentsResponse.data.map(doc => ({ // go thru each document for enrollment
-                        title: doc.id == 1 ? "Podanie o przyjęcie na studia" : "Dyplom studiów wyższych", // should be only 2 types of documents 
-                        studies_name: editionData.name,
-                        dateUpload: doc.submitted_date,
-                        fileUrl: doc.file,
-                        actionRequired: doc.status != "ACCEPTED",
-                        dateDeadline: editionData.recruitment_end_date,
-                        dateAccepted: "",
-                    }))
-                    returnDocuments.push(mapped)
-                }
-            }
+            return {documents: mapped, error: false, errorMsg: ""}
         }
 
         // if any db call returned error - return mock data
@@ -1096,13 +1124,11 @@ export class serverApi {
                 },
             ];
 
-            return { documents: mockDocuments, error: true, errorMsg: `Brak komunikacji z serwerem: Wyswietlane dane mock-owe (${anyResponseErrorMsg})` };
-        }
-
-        
-        // if no error
-        else {
-            return { documents: returnDocuments.flat(), error: false, errorMsg: ""}
+            return {
+                documents: mockDocuments,
+                error: true,
+                errorMsg: `Brak komunikacji z serwerem: Wyswietlane dane mock-owe (${anyResponseErrorMsg})`
+            };
         }
     }
 
@@ -1164,55 +1190,4 @@ export class serverApi {
         };
     }
 
-    /* Get system generated enrollment document for a specific user application (enrollment id) */
-    static async getSystemGeneratedEnrollmentDocuments(enrollmentId) {
-
-        let token = getAccessToken()
-        let documentsResponse = await this.apiRequest(`/api/enrollments/${enrollmentId}/documents/`, 'GET', null, token)
-        let enrollmentResponse = await this.apiRequest(`/api/enrollments/${enrollmentId}/`, 'GET', null, token)
-        let recruitmentEndDateResponse = await this.apiRequest(`/api/enrollments/${enrollmentId}/recruitment-end-date/`, 'GET', null, token)
-
-        // on error - return mock docs
-        if (documentsResponse.error || enrollmentResponse.error || recruitmentEndDateResponse.error) {
-            const mockDocuments = [
-                // SYSTEMOWE (Do wydruku)
-                {
-                    title: "Podanie o przyjęcie na studia",
-                    studies_name: 'Nieznany Kierunek',
-                    edition_name: 'edycja',
-                    dateUpload: "10.03.2025",
-                    fileUrl: "#",
-                    actionRequired: true,
-                    dateDeadline: "01.06.2025",
-                    dateAccepted: "01.06.2025",
-                },
-                {
-                    title: "Podanie o przyjęcie na studia",
-                    studies_name: 'Nieznany Kierunek',
-                    edition_name: 'edycja',
-                    dateUpload: "10.03.2025",
-                    fileUrl: "#",
-                    actionRequired: false,
-                    dateDeadline: "01.06.2025",
-                    dateAccepted: "01.06.2025",
-                },
-            ];
-            return { documents: mockDocuments, error: true, errorMsg: `Brak komunikacji z serwerem: Wyswietlane dane mock-owe (${anyResponseErrorMsg})` };
-        }
-
-        const editionName = enrollmentResponse.data.studies_edition.name
-        const editionRecruitmentEnd = recruitmentEndDateResponse.data.recruitment_end_date
-
-        // map document data to frontend format
-        const mapped = documentsResponse.data.map(doc => ({ // go thru each document for enrollment
-            title: doc.id == 1 ? "Podanie o przyjęcie na studia" : "Dyplom studiów wyższych", // should be only 2 types of documents
-            studies_name: editionName,
-            dateUpload: doc.submitted_date,
-            fileUrl: doc.file_url,
-            actionRequired: doc.status != "ACCEPTED",
-            dateDeadline: formatDateInWarsaw(editionRecruitmentEnd),
-            dateAccepted: "",
-        }))
-        return { documents: mapped, error: false, errorMsg: ""  }
-    }
 }
