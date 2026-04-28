@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import '../styles/Style.css';
 import { serverApi } from '../services/serverApi';
 import { formatDateInWarsaw } from '../utils/dateTime';
+import { getUserRole } from '../services/authService';
 
 const sampleEdition = {
   id: 1,
@@ -210,16 +211,21 @@ export default function StudiesDetailPage() {
         </div>
       </section>
       
-      { !recruitmentActive ? <p style={{border: '1px solid lightgrey', borderRadius: '15px', padding: '15px'}}> Kierunek nie prowadzi obecnie rekrutacji </p> : (
-        <div className="apply-section">
-            <button
-            className="button-primary apply-button"
-            onClick={() => navigate(`/applicationForm?edition_id=${edition.id}`)}
-            >
-            Rekrutuj się
-            </button>
-        </div>
-      )}
+      { (() => {
+        const role = getUserRole();
+        const isStaffOrAdmin = role === 'ADMIN' || role === 'STUDIES_DIRECTOR' || role === 'ADMINISTRATIVE_COORDINATOR' || role === 'FINANCE_COORDINATOR';
+        if (isStaffOrAdmin) return null;
+        return !recruitmentActive ? <p style={{border: '1px solid lightgrey', borderRadius: '15px', padding: '15px'}}> Kierunek nie prowadzi obecnie rekrutacji </p> : (
+          <div className="apply-section">
+              <button
+              className="button-primary apply-button"
+              onClick={() => navigate(`/applicationForm?edition_id=${edition.id}`)}
+              >
+              Rekrutuj się
+              </button>
+          </div>
+        );
+      })()}
     </div>
   );
 }

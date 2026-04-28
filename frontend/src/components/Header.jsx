@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import '../styles/Header.css';
 import { useState, useEffect } from 'react';
-import { getUserType, isLoggedIn } from '../services/authService';
+import { getUserRole, isLoggedIn } from '../services/authService';
 
 export default function Header() {
     const location = useLocation();
@@ -11,17 +11,20 @@ export default function Header() {
     const isStudiesActive = pathname === '/studies' || pathname.startsWith('/studies/editions/');
     const isAccountActive = pathname.startsWith('/my-');
 
-    const isAdminSectionActive = pathname === '/admin/export' || pathname === '/admin/finances';
-    const isRecruitmentPanelActive = pathname.startsWith('/admin/candidates') || pathname.startsWith('/admin/applications');
-    const isCoordinatorPanelActive = pathname.startsWith('/manage-studies');
+    const isAdminPanelActive = pathname === '/manage-studies/offers' || pathname === '/manage-studies/editions';
+    const isCoordinatorPanelActive = 
+      pathname.startsWith('/admin/candidates') || 
+      pathname.startsWith('/admin/applications') || 
+      pathname.startsWith('/admin/export');
+    const isFinancePanelActive = pathname === '/admin/finances';
 
     const [isUserLoggedIn, setUserLoggedIn] = useState(false);
-    const [userType, setUserType] = useState(null);
+    const [userRole, setUserRole] = useState(null);
 
     useEffect(() => {
         const checkLoginStatus = () => {
             setUserLoggedIn(isLoggedIn());
-            setUserType(getUserType());
+            setUserRole(getUserRole());
         };
 
         checkLoginStatus();
@@ -30,9 +33,16 @@ export default function Header() {
         return () => { clearInterval(interval); };
     }, [location.pathname]);
 
-    const canSeeRecruitmentPanel = userType === 'ADMIN' || userType === 'EMPLOYEE';
-    const canSeeCoordinatorPanel = userType === 'ADMIN' || userType === 'EMPLOYEE';
-    const canSeeAdminPanel = userType === 'ADMIN';
+    const canSeeCoordinatorPanel = 
+      userRole === 'STUDIES_DIRECTOR' || 
+      userRole === 'ADMINISTRATIVE_COORDINATOR' || 
+      userRole === 'ADMIN';
+    
+    const canSeeFinancePanel = 
+      userRole === 'FINANCE_COORDINATOR' || 
+      userRole === 'ADMIN';
+    
+    const canSeeAdminPanel = userRole === 'ADMIN';
 
     return (
         <header className="header">
@@ -44,19 +54,19 @@ export default function Header() {
             <Link to="/studies" className={`btn btn-secondary ${isStudiesActive ? 'active' : ''}`}>
                 Oferty Studiów
             </Link>
-            {canSeeRecruitmentPanel && (
-                <Link to='/admin/candidates' className={`btn btn-secondary ${isRecruitmentPanelActive ? 'active' : ''}`}>
-                    Panel Rekrutacji
+            {canSeeCoordinatorPanel && (
+                <Link to='/admin/candidates' className={`btn btn-secondary ${isCoordinatorPanelActive ? 'active' : ''}`}>
+                    Panel koordynatora
                 </Link>
             )}
-            {canSeeCoordinatorPanel && (
-                <Link to='/manage-studies' className={`btn btn-secondary ${isCoordinatorPanelActive ? 'active' : ''}`}>
-                    Panel Koordynatora
+            {canSeeFinancePanel && (
+                <Link to='/admin/finances' className={`btn btn-secondary ${isFinancePanelActive ? 'active' : ''}`}>
+                    Panel finansowy
                 </Link>
             )}
             {canSeeAdminPanel && (
-                <Link to='/admin/export' className={`btn btn-secondary ${isAdminSectionActive ? 'active' : ''}`}>
-                    Panel Admina
+                <Link to='/manage-studies/editions' className={`btn btn-secondary ${isAdminPanelActive ? 'active' : ''}`}>
+                    Panel administratora
                 </Link>
             )}
             <Link to={isUserLoggedIn ? "/my-profile" : "/login"} className={`btn btn-primary ${(!isUserLoggedIn && isActive('/login')) || (isUserLoggedIn && isAccountActive) ? 'active' : ''}`}>

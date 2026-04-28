@@ -56,6 +56,8 @@ export const getUser = () => {
 
 export const getUserType = () => getUser()?.type || null;
 
+export const getUserRole = () => getUser()?.role || null;
+
 export const isLoggedIn = () => !!getAccessToken();
 
 /**

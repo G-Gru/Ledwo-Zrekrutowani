@@ -7,6 +7,7 @@ import StudiesDetailPage from './pages/StudiesDetailPage';
 import ApplicationForm from './pages/ApplicationForm';
 import ApplicationSent from './pages/ApplicationSent';
 import ManageStudiesOffers from './pages/ManageStudiesOffers';
+import ManageStudiesEditions from './pages/ManageStudiesEditions';
 
 import MyApplications from './pages/account-pages/MyApplications';
 import Payments from './pages/account-pages/MyPayments';
@@ -22,17 +23,17 @@ import ApplicationReviewDetails from './pages/admin-pages/ApplicationReviewDetai
 import { getUser, isLoggedIn } from './services/authService';
 import NavigationPage from './pages/NavigationPage';
 
-function ProtectedRoute({ children, allowedTypes = [] }) {
+function ProtectedRoute({ children, allowedRoles = [] }) {
   if (!isLoggedIn()) {
     return <Navigate to='/login' replace />;
   }
 
-  if (allowedTypes.length === 0) {
+  if (allowedRoles.length === 0) {
     return children;
   }
 
-  const userType = getUser()?.type;
-  if (!allowedTypes.includes(userType)) {
+  const userRole = getUser()?.role;
+  if (!allowedRoles.includes(userRole)) {
     return <Navigate to='/studies' replace />;
   }
 
@@ -49,10 +50,18 @@ function App() {
         <Route path="/studies" element={<StudiesPage />} />
         <Route path="/studies/editions/:id" element={<StudiesDetailPage />} />
         <Route
-          path='/manage-studies'
+          path='/manage-studies/offers'
           element={(
-            <ProtectedRoute allowedTypes={['ADMIN', 'EMPLOYEE']}>
+            <ProtectedRoute allowedRoles={['ADMIN']}>
               <ManageStudiesOffers />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path='/manage-studies/editions'
+          element={(
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <ManageStudiesEditions />
             </ProtectedRoute>
           )}
         />
@@ -99,7 +108,7 @@ function App() {
         <Route
           path='/admin/candidates'
           element={(
-            <ProtectedRoute allowedTypes={['ADMIN', 'EMPLOYEE']}>
+            <ProtectedRoute allowedRoles={['ADMIN', 'STUDIES_DIRECTOR', 'ADMINISTRATIVE_COORDINATOR']}>
               <Candidates />
             </ProtectedRoute>
           )}
@@ -107,7 +116,7 @@ function App() {
         <Route
           path='/admin/candidates/:id'
           element={(
-            <ProtectedRoute allowedTypes={['ADMIN', 'EMPLOYEE']}>
+            <ProtectedRoute allowedRoles={['ADMIN', 'STUDIES_DIRECTOR', 'ADMINISTRATIVE_COORDINATOR']}>
               <CandidateDetails />
             </ProtectedRoute>
           )}
@@ -115,7 +124,7 @@ function App() {
         <Route
           path='/admin/applications'
           element={(
-            <ProtectedRoute allowedTypes={['ADMIN', 'EMPLOYEE']}>
+            <ProtectedRoute allowedRoles={['ADMIN', 'STUDIES_DIRECTOR', 'ADMINISTRATIVE_COORDINATOR']}>
               <ApplicationsReview />
             </ProtectedRoute>
           )}
@@ -123,7 +132,7 @@ function App() {
         <Route
           path='/admin/applications/:id'
           element={(
-            <ProtectedRoute allowedTypes={['ADMIN', 'EMPLOYEE']}>
+            <ProtectedRoute allowedRoles={['ADMIN', 'STUDIES_DIRECTOR', 'ADMINISTRATIVE_COORDINATOR']}>
               <ApplicationReviewDetails />
             </ProtectedRoute>
           )}
@@ -131,7 +140,7 @@ function App() {
         <Route
           path='/admin/finances'
           element={(
-            <ProtectedRoute allowedTypes={['ADMIN']}>
+            <ProtectedRoute allowedRoles={['ADMIN', 'FINANCE_COORDINATOR']}>
               <Finanses />
             </ProtectedRoute>
           )}
@@ -139,7 +148,7 @@ function App() {
         <Route
           path='/admin/export'
           element={(
-            <ProtectedRoute allowedTypes={['ADMIN']}>
+            <ProtectedRoute allowedRoles={['ADMIN', 'STUDIES_DIRECTOR', 'ADMINISTRATIVE_COORDINATOR']}>
               <DataExport />
             </ProtectedRoute>
           )}
