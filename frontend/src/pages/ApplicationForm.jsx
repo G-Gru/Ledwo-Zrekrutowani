@@ -6,6 +6,7 @@ import '../styles/ApplicationForm.css';
 import DocumentUploadCard from '../components/DocumentUploadCard'
 import LoginRedirectPage from '../components/LoginRedirectPage';
 import DuplicateRecruitmentFormRedirectPage from '../components/DuplicateRecruitmentFormRedirectPage';
+import * as authService from "../services/authService.js";
 
 export default function ApplicationForm() {
     // Pobieranie danych uzytkownika
@@ -29,7 +30,7 @@ export default function ApplicationForm() {
         residenceAddress: { street: "", house: "", apartment: "", city: "", country: "Polska", postalCode: "" },
         correspondenceAddress: { street: "", house: "", apartment: "", city: "", country: "Polska", postalCode: "" },
         phone: "",
-        educationUniversity: "", educationLocation: "", educationYear: "", maturity_country: "Polska",
+        educationUniversity: "", educationLocation: "", educationYear: "", maturityCountry: "Polska",
         emergencyName: "", emergencyLastName: "", emergencyPhone: "",
         consents: { data: false, rules: false, rodo: false }
     });
@@ -54,14 +55,14 @@ export default function ApplicationForm() {
         setUserLoggedIn(true);
 
         async function bootstrapForm() {
-            const userData = await serverApi.getUserData(token);
+            const userData = await authService.getUser();
 
             let mergedFormData = {
-                firstName: userData.firstName || "logged_account_name",
-                lastName: userData.lastName || "logged_account_surname",
-                email: userData.email || "logged_account_email@mail.com"
+                firstName: userData.first_name,
+                lastName: userData.last_name,
+                email: userData.email,
+                phone: userData.phone,
             };
-
 
             const existingApplication = await serverApi.getExistingApplicationForm(token, courseId);
             if (!existingApplication.error && existingApplication.data) {
@@ -171,7 +172,7 @@ export default function ApplicationForm() {
             setFormData(prev => ({
                 ...prev,
                 [section]: {
-                    ...prev[section],
+                    ...(prev[section] || {}),
                     [name]: newValue
                 }
             }));
@@ -193,7 +194,9 @@ export default function ApplicationForm() {
     };
 
     // wysylanie formularza
-    const submitApplication = async (actionType) => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const actionType = e.nativeEvent.submitter.value;
         setError(null);
 
         if (actionType === "ENROLL" && isUserAlreadyEnrolled) {
@@ -228,91 +231,205 @@ export default function ApplicationForm() {
         }
     };
 
+    const isValidPesel = (pesel) => {
+        const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
+        const digits = pesel.split("").map(Number);
+
+        let sum = 0;
+
+        for (let i = 0; i < 10; i++) {
+            sum += digits[i] * weights[i];
+        }
+
+        const controlDigit = (10 - (sum % 10)) % 10;
+        return controlDigit === digits[10];
+    };
+
+    const decodePeselBirthdate = (pesel) => {
+        const year = parseInt(pesel.slice(0, 2), 10);
+        let month = parseInt(pesel.slice(2, 4), 10);
+        const day = parseInt(pesel.slice(4, 6), 10);
+
+        let fullYear;
+        if (month > 80) {
+            fullYear = 1800;
+            month -= 80;
+        } else if (month > 60) {
+            fullYear = 2200;
+            month -= 60;
+        } else if (month > 40) {
+            fullYear = 2100;
+            month -= 40;
+        } else if (month > 20) {
+            fullYear = 2000;
+            month -= 20;
+        } else {
+            fullYear = 1900;
+        }
+
+        fullYear += year;
+        return new Date(fullYear, month - 1, day);
+    };
+
+    const isAtLeast18 = (birthDate) => {
+        if (!birthDate) return false;
+
+        const today = new Date();
+        const birth = new Date(birthDate);
+
+        const age = today.getFullYear() - birth.getFullYear();
+
+        const hasHadBirthdayThisYear =
+            today.getMonth() > birth.getMonth() ||
+            (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+
+        return hasHadBirthdayThisYear ? age >= 18 : age - 1 >= 18;
+    };
+
+    const isValidEducationYear = (year) => {
+        if (!year) return false;
+
+        if (!/^\d{4}$/.test(year)) return false;
+
+        const y = Number(year);
+        const currentYear = new Date().getFullYear();
+
+        return y >= 1900 && y <= currentYear;
+    };
 
     const validate = (actionType = "ENROLL") => {
-        let newErrors = {};
-
+        const errors = {};
         const isFinalSubmit = actionType === "ENROLL";
+        const isRequired = (condition) => isFinalSubmit || condition;
+        const test = (value, regex) => regex.test(value || "");
 
-        // Docs
-        if (isFinalSubmit) {
-            documents.forEach(doc => {
-                const hasNewFile = !!files[doc.id];
-                const hasExistingFile = !!existingDocuments?.[doc.id];
+        const validators = {
+            age18: () => {
+                if (!isFinalSubmit) return;
 
-                if (doc.required && !hasNewFile && !hasExistingFile) {
-                    newErrors[`doc_${doc.id}`] = `${doc.name} jest wymagany.`;
+                const value = formData.birthdate;
+
+                if (!value) return;
+
+                if (!isAtLeast18(value)) {
+                    errors.birthdate = "Musisz mieć ukończone 18 lat.";
                 }
-            });
-        }
+            },
 
-        // pesel
-        if (isFinalSubmit) {
-            if (!/^\d{11}$/.test(formData.pesel)) {
-                newErrors.pesel = "PESEL musi mieć 11 cyfr.";
-            }
-        } else {
-            if (formData.pesel && !/^\d{11}$/.test(formData.pesel)) {
-                newErrors.pesel = "PESEL musi mieć 11 cyfr.";
-            }
-        }
+            pesel: () => {
+                if (!isRequired(formData.pesel)) return;
 
-        // phone
-        if (isFinalSubmit) {
-            if (!formData.phone || formData.phone.length < 9) {
-                newErrors.phone = "Numer telefonu jest za krótki.";
-            }
-        } else {
-            if (formData.phone && formData.phone.length < 9) {
-                newErrors.phone = "Numer telefonu jest za krótki.";
-            }
-        }
-
-        // postal
-        if (isFinalSubmit) {
-            if (!/^\d{2}-\d{3}$/.test(formData.residenceAddress.postalCode)) {
-                newErrors.residenceAddress_postalCode = "Błędny kod pocztowy.";
-            }
-        } else {
-            if (
-                formData.residenceAddress.postalCode &&
-                !/^\d{2}-\d{3}$/.test(formData.residenceAddress.postalCode)
-            ) {
-                newErrors.residenceAddress_postalCode = "Błędny kod pocztowy.";
-            }
-        }
-
-        // addreses
-        if (hasCorrespondenceAddress) {
-            if (isFinalSubmit) {
-                if (!/^\d{2}-\d{3}$/.test(formData.correspondenceAddress.postalCode)) {
-                    newErrors.correspondenceAddress_postalCode = "Błędny kod pocztowy.";
+                if (!test(formData.pesel, /^\d{11}$/)) {
+                    errors.pesel = "PESEL musi mieć 11 cyfr.";
+                } else if (!isValidPesel(formData.pesel)) {
+                    errors.pesel = "PESEL jest niepoprawny."
                 }
-            } else {
-                if (
-                    formData.correspondenceAddress.postalCode &&
-                    !/^\d{2}-\d{3}$/.test(formData.correspondenceAddress.postalCode)
-                ) {
-                    newErrors.correspondenceAddress_postalCode = "Błędny kod pocztowy.";
+            },
+
+            birthdatePesel: () => {
+                if (!isRequired(formData.birthdate) && !formData.birthdate) return;
+                if (!formData.pesel || !formData.birthdate) return;
+
+                const peselDate = decodePeselBirthdate(formData.pesel);
+                const inputDate = new Date(formData.birthdate);
+
+                const same =
+                    peselDate.getFullYear() === inputDate.getFullYear() &&
+                    peselDate.getMonth() === inputDate.getMonth() &&
+                    peselDate.getDate() === inputDate.getDate();
+
+                if (!same) {
+                    errors.birthdate = "Data urodzenia nie zgadza się z numerem PESEL.";
                 }
+            },
+
+            phone: () => {
+                if (!isRequired(formData.phone) && !formData.phone) return;
+
+                if (!formData.phone || formData.phone.length < 9) {
+                    errors.phone = "Numer telefonu jest za krótki.";
+                }
+            },
+
+            emergencyPhone: () => {
+                if (!hasEmergencyContact) return;
+
+                if (!isRequired(formData.emergencyPhone) && !formData.emergencyPhone) return;
+
+                if (!formData.emergencyPhone || formData.emergencyPhone.length < 9) {
+                    errors.phone = "Numer telefonu jest za krótki.";
+                }
+            },
+
+            educationYear: () => {
+                if (!isRequired(formData.educationYear) && !formData.educationYear) return;
+
+                if (!isValidEducationYear(formData.educationYear)) {
+                    errors.educationYear = "Rok zakończenia jest niepoprawny.";
+                }
+            },
+
+            residencePostal: () => {
+                const value = formData.residenceAddress.postalCode;
+
+                if (!isRequired(value) && !value) return;
+
+                if (!test(value, /^\d{2}-\d{3}$/)) {
+                    errors.residenceAddress_postalCode = "Błędny kod pocztowy.";
+                }
+            },
+
+            correspondencePostal: () => {
+                if (!hasCorrespondenceAddress) return;
+
+                const value = formData.correspondenceAddress.postalCode;
+
+                if (!isRequired(value) && !value) return;
+
+                if (!test(value, /^\d{2}-\d{3}$/)) {
+                    errors.correspondenceAddress_postalCode = "Błędny kod pocztowy.";
+                }
+            },
+
+            consents: () => {
+                if (!isFinalSubmit) return;
+
+                if (!formData.consents.data) {
+                    errors.data = "Musisz potwierdzić poprawność danych.";
+                }
+
+                if (!formData.consents.rules) {
+                    errors.rules = "Musisz zaakceptować regulamin.";
+                }
+
+                if (!formData.consents.rodo) {
+                    errors.rodo = "Zgoda RODO jest wymagana.";
+                }
+            },
+
+            documents: () => {
+                if (!isFinalSubmit) return;
+
+                documents.forEach(doc => {
+                    const hasNewFile = !!files[doc.id];
+                    const hasExistingFile = !!existingDocuments?.[doc.id];
+
+                    if (doc.required && !hasNewFile && !hasExistingFile) {
+                        errors[`doc_${doc.id}`] = `${doc.name} jest wymagany.`;
+                    }
+                });
             }
-        }
+        };
 
-        // checkboxes
-        if (isFinalSubmit) {
-            if (!formData.consents.data) newErrors.rules = "Musisz potwierdzić poprawność danych.";
-            if (!formData.consents.rules) newErrors.rules = "Musisz zaakceptować regulamin.";
-            if (!formData.consents.rodo) newErrors.rodo = "Zgoda RODO jest wymagana.";
-        }
+        Object.values(validators).forEach(fn => fn());
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        setErrors(errors);
+        return Object.keys(errors).length === 0;
     };
   
   return (
     <div>
     { !isUserLoggedIn ? <LoginRedirectPage /> 
-    // : isUserAlreadyEnrolled ? <DuplicateRecruitmentFormRedirectPage />
     : (
         <div className='page-layout'>
 
@@ -324,13 +441,13 @@ export default function ApplicationForm() {
             </div>
 
         <div className='bg-panel'>
-            <form>
+            <form onSubmit={handleSubmit}>
                 {isUserAlreadyEnrolled && (
                     <div className="error-banner">
                         <span className="material-symbols-outlined">error</span>
                         <div className="error-banner-text">
                             <strong>Już uczestniczysz w rekrutacji do tego kierunku.</strong>
-                            <p>Nie możesz wysłać kolejnego wniosku dla tego samego wydania studiów.</p>
+                            <p>Nie możesz wysłać kolejnego wniosku dla tej samej edycji studiów.</p>
                         </div>
                     </div>
                 )}
@@ -350,7 +467,7 @@ export default function ApplicationForm() {
                     <input disabled className="input-readonly" id="lastName" name="lastName" autoComplete="family-name" value={formData.lastName} onChange={handleChange} required />
 
                     <label htmlFor="title">Tytuł</label>
-                    <select name="title" value={formData.title} onChange={handleChange}>
+                    <select name="title" value={formData.title} onChange={handleChange} required>
                         <option value="">Wybierz...</option>
                         <option value="lic">Licencjat</option>
                         <option value="inz">Inżynier</option>
@@ -360,7 +477,7 @@ export default function ApplicationForm() {
                     </select>
 
                     <label htmlFor="familyName">Nazwisko rodowe</label>
-                    <input id="familyName" name="familyName" autoComplete="additional-name" value={formData.familyName} onChange={handleChange} />
+                    <input id="familyName" name="familyName" autoComplete="family-name" value={formData.familyName} onChange={handleChange} required/>
                 </div>
 
                 <div className="form-group">
@@ -368,13 +485,15 @@ export default function ApplicationForm() {
                     <input id="birthdate" name="birthdate" type="date" autoComplete="bday" value={formData.birthdate} onChange={handleChange} required />
 
                     <label htmlFor="birthplace">Miejsce urodzenia</label>
-                    <input id="birthplace" name="birthplace" autoComplete="birthplace" value={formData.birthplace} onChange={handleChange} />
+                    <input id="birthplace" name="birthplace" autoComplete="country-name" value={formData.birthplace} onChange={handleChange} required/>
 
                     <label htmlFor="pesel">PESEL</label>
-                    <input id="pesel" className={errors.pesel ? 'input-error' : ''} name="pesel" maxLength="11" autoComplete="off" value={formData.pesel} onChange={handleChange} required />
+                    <input id="pesel" className={errors.pesel ? 'input-error' : ''} name="pesel"
+                           type="text" inputMode="numeric" pattern="\d{11}" maxLength={11}
+                           value={formData.pesel} onChange={handleChange} required />
 
                     <label htmlFor="citizenship">Obywatelstwo</label>
-                    <input id="citizenship" name="citizenship" autoComplete="citizenship" value={formData.citizenship} onChange={handleChange} required />
+                    <input id="citizenship" name="citizenship" value={formData.citizenship} onChange={handleChange} required />
                 </div>
             </div>
 
@@ -390,7 +509,7 @@ export default function ApplicationForm() {
                 </div>
                 <div className="form-group">
                     <label htmlFor="phone">Telefon</label>
-                    <input id="phone" className={errors.phone ? 'input-error' : ''} name="phone" type="tel" autoComplete="tel" value={formData.phone} onChange={handleChange} required />
+                    <input disabled id="phone" className="input-readonly" name="phone" type="tel" inputMode="tel" autoComplete="tel" value={formData.phone} onChange={handleChange} required />
                 </div>
             </div>
 
@@ -403,23 +522,25 @@ export default function ApplicationForm() {
             <div className="form-row">
                 <div className="form-group">
                     <label htmlFor="address-street">Ulica </label>
-                    <input id="address-street" name="street" autoComplete="address-street" value={formData.residenceAddress.street} onChange={(e) => handleChange(e, 'residenceAddress')} required />
+                    <input id="address-street" name="street" autoComplete="address-line1" value={formData.residenceAddress.street} onChange={(e) => handleChange(e, 'residenceAddress')} required />
 
                     <label htmlFor="address-homeNum">Numer domu</label>
-                    <input id="address-homeNum" name="house" autoComplete="address-homeNum" value={formData.residenceAddress.house} onChange= {(e) => handleChange(e, 'residenceAddress')} required />
+                    <input id="address-homeNum" name="house" autoComplete="address-line2" value={formData.residenceAddress.house} onChange= {(e) => handleChange(e, 'residenceAddress')} required />
 
                     <label htmlFor="address-zip">Kod pocztowy</label>
-                    <input id="address-zip" className={errors.residenceAddress_postalCode ? 'input-error' : ''} name="postalCode" autoComplete="address-zip" value={formData.residenceAddress.postalCode} onChange={(e) => handleChange(e, 'residenceAddress')} required />
+                    <input id="address-zip" className={errors.residenceAddress_postalCode ? 'input-error' : ''} name="postalCode"
+                           type="text" inputMode="numeric" pattern="\d{2}-\d{3}" maxLength={6} autoComplete="postal-code"
+                           value={formData.residenceAddress.postalCode} onChange={(e) => handleChange(e, 'residenceAddress')} required />
                 </div>
                 <div className="form-group">
                     <label htmlFor="address-city">Miasto</label>
-                    <input id="address-city" name="city" autoComplete="address-city" value={formData.residenceAddress.city} onChange={(e) => handleChange(e, 'residenceAddress')} required />
+                    <input id="address-city" name="city" autoComplete="address-level2" value={formData.residenceAddress.city} onChange={(e) => handleChange(e, 'residenceAddress')} required />
 
                     <label htmlFor="address-apartNum">Numer mieszkania</label>
-                    <input id="address-apartNum" name="apartment" autoComplete="address-apartNum" value={formData.residenceAddress.apartment} onChange={(e) => handleChange(e, 'residenceAddress')} />
+                    <input id="address-apartNum" name="apartment" value={formData.residenceAddress.apartment} onChange={(e) => handleChange(e, 'residenceAddress')} />
 
                     <label htmlFor="address-country">Kraj</label>
-                    <input id="address-country" name="country" autoComplete="address-country" value={formData.residenceAddress.country} onChange={(e) => handleChange(e, 'residenceAddress')} required />
+                    <input id="address-country" name="country" autoComplete="country-name" value={formData.residenceAddress.country} onChange={(e) => handleChange(e, 'residenceAddress')} required />
                 </div>
             </div>
 
@@ -441,7 +562,9 @@ export default function ApplicationForm() {
                         <input id="correspondence-homeNum" name="house" autoComplete="correspondence-homeNum" value={formData.correspondenceAddress.house} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
 
                         <label htmlFor="correspondence-zip">Kod pocztowy</label>
-                        <input id="correspondence-zip" className={errors.correspondenceAddress_postalCode ? 'input-error' : ''} name="postalCode" autoComplete="correspondence-zip" value={formData.correspondenceAddress.postalCode} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
+                        <input id="correspondence-zip" className={errors.correspondenceAddress_postalCode ? 'input-error' : ''} name="postalCode"
+                               type="text" inputMode="numeric" pattern="\d{2}-\d{3}" maxLength={6} autoComplete="postal-code"
+                               value={formData.correspondenceAddress.postalCode} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
                     </div>
                     <div className="form-group">
                         <label htmlFor="correspondence-city">Miasto</label>
@@ -464,24 +587,26 @@ export default function ApplicationForm() {
                 <div className="form-row">
                     <div className="form-group">
                         <label htmlFor="studiesName">Nazwa uczeli wyższej</label>
-                        <input id="studiesName" name="educationUniversity" value={formData.educationUniversity} onChange={handleChange} />
+                        <input id="studiesName" name="educationUniversity" value={formData.educationUniversity} onChange={handleChange} required/>
 
                         <label htmlFor="studiesLocation">Lokalizacja</label>
-                        <input id="studiesLocation" name="educationLocation" value={formData.educationLocation} onChange={handleChange} />
+                        <input id="studiesLocation" name="educationLocation" value={formData.educationLocation} onChange={handleChange} required/>
                     </div>
                     <div className="form-group">
-                        <label htmlFor="studiesEndYear">Rok zakończenia</label>
-                        <input id="studiesEndYear" name="educationYear" value={formData.educationYear} onChange={handleChange} />
+                        <label htmlFor="educationYear">Rok zakończenia</label>
+                        <input id="educationYear" name="educationYear" type="text" inputMode="numeric"
+                               pattern="\d{4}" maxLength={4} value={formData.educationYear} onChange={handleChange} required/>
 
                         <label>Miejsce uzyskania świadectwa dojrzałości *</label>
                         <select
                             className="radio-group"
-                            name="educationCountry"
-                            value={formData.maturity_country}
+                            name="maturityCountry"
+                            value={formData.maturityCountry}
                             onChange={handleChange}
+                            required
                         >
                             <option value="Polska">Polska</option>
-                            <option value="Inne">Inne</option>
+                            <option value="Poza Polską">Poza Polską</option>
                         </select>
                     </div>
                 </div>
@@ -505,7 +630,7 @@ export default function ApplicationForm() {
                             <input id="emergencyName" name="emergencyName" autoComplete="name" value={formData.emergencyName} onChange={handleChange} />
 
                             <label htmlFor="emergencyPhone">Telefon kontaktu awaryjnego</label>
-                            <input id="emergencyPhone" name="emergencyPhone" type="tel" autoComplete="tel" value={formData.emergencyPhone} onChange={handleChange} />
+                            <input id="emergencyPhone" name="emergencyPhone" type="tel" inputMode="tel" autoComplete="tel" value={formData.emergencyPhone} onChange={handleChange} />
                         </div>
                         <div className="form-group">
                             <label htmlFor="emergencyLastName">Nazwisko kontaktu</label>
@@ -626,17 +751,19 @@ export default function ApplicationForm() {
             {/*<button className='btn-submit' type='submit' disabled={isUserAlreadyEnrolled}>Wyślij wniosek</button>*/}
             <div className="submit-buttons">
                 <button
-                    type="button"
+                    type="submit"
                     className="btn-save"
-                    onClick={() => submitApplication("SAVE")}
+                    name="action"
+                    value="SAVE"
                 >
                     Zapisz formularz
                 </button>
 
                 <button
-                    type="button"
+                    type="submit"
                     className="btn-submit"
-                    onClick={() => submitApplication("ENROLL")}
+                    name="action"
+                    value="ENROLL"
                     disabled={isUserAlreadyEnrolled}
                 >
                     Wyślij wniosek

@@ -7,6 +7,7 @@ from files.models import File
 from studies.models import StudiesEdition, StudiesDocument
 from studies.serializers import StudiesEditionListSerializer, StudiesDocumentSerializer
 from .models import Enrollment, SubmittedDocument, FormData, Address
+from .validators import is_valid_pesel, pesel_to_birthdate, is_valid_phone, is_valid_education_year, is_at_least_18
 
 
 class AdminEnrollmentSerializer(serializers.ModelSerializer):
@@ -88,12 +89,6 @@ class FormDataSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         return form_data_validate(attrs)
 
-    @staticmethod
-    def validate_birth_date(value):
-        if value and value > date.today():
-            raise serializers.ValidationError("Birth date cannot be in the future")
-        return value
-
     def create(self, validated_data):
         validated_data.pop("action")
         validated_data.pop("files", [])
@@ -120,6 +115,25 @@ def form_data_validate(attrs):
                 field: "This field is required for enrollment."
                 for field in missing
             })
+
+        birth_date = attrs.get("birth_date")
+        if not is_at_least_18(birth_date):
+            raise serializers.ValidationError("You must be 18 years old.")
+
+        pesel = attrs.get("pesel")
+        if not is_valid_pesel(pesel):
+            raise serializers.ValidationError("PESEL is not valid")
+
+        if birth_date != pesel_to_birthdate(pesel):
+            raise serializers.ValidationError("Birth date does not match with PESEL")
+
+        phone = attrs.get("phone")
+        if not is_valid_phone(phone):
+            raise serializers.ValidationError("Phone is not valid")
+
+        education_year = attrs.get("education_year")
+        if not is_valid_education_year(education_year):
+            raise serializers.ValidationError("Education year is not valid")
 
     return attrs
 

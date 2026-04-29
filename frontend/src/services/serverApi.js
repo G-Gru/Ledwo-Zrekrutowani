@@ -80,18 +80,6 @@ export class serverApi {
         }
     }
 
-    static getUserData() {
-        const user = getUser();
-        if (user) {
-            return {
-                firstName: user.firstName || user.name || user.first_name || "Imie",
-                lastName: user.lastName || user.last_name || "Nazwisko",
-                email: user.email || "ziomeczek@mail.com"
-            };
-        }
-        return {firstName: "Imie", lastName: "Nazwisko", email: "ziomeczek@mail.com"};
-    }
-
     static todayIsBefore(dateString) {
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Set to start of day for date comparison
@@ -601,7 +589,7 @@ export class serverApi {
             educationUniversity: existingData.education_university || "",
             educationLocation: existingData.education_location || "",
             educationYear: existingData.education_year || "",
-            educationCountry: existingData.education_country || "",
+            maturityCountry: existingData.maturity_country || "",
 
             emergencyName: existingData.emergency_name || "",
             emergencyLastName: existingData.emergency_last_name || "",

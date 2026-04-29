@@ -46,7 +46,7 @@ export default function Profile({}) {
             <div className='bg-panel' style={{padding: '5px 20px'}}>
 
                 <div className='profile-section-1'> 
-                    <img src='/profile.png' />
+                    <img src='/profile.svg' width={150}/>
                     <div className='profile-main-data'>
                         <p className='profile-full-name'> {user.first_name} {user.last_name} </p>
                         {/* <p className='profile-status'> {user.type} </p> */}
@@ -59,6 +59,7 @@ export default function Profile({}) {
                     <TitledField title={"Imię"} value={user.first_name || 'Brak danych'} />
                     <TitledField title={"Nazwisko"} value={user.last_name || 'Brak danych'} />
                     <TitledField title={"Email"} value={user.email || 'Brak danych'} />
+                    <TitledField title={"Numer telefonu"} value={user.phone || 'Brak danych'} />
                 </div>
             </div>
 

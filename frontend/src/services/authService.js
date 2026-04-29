@@ -63,7 +63,7 @@ export const isLoggedIn = () => !!getAccessToken();
 /**
  * Logowanie użytkownika
  * Endpoint: POST /api/auth/login
- * Oczekiwana odpowiedź: { token: string, user: { id, email, name } }
+ * Oczekiwana odpowiedź: { token: string, user: { id, email, phone, first_name, last_name } }
  */
 export const login = async (email, password) => {
     try {
