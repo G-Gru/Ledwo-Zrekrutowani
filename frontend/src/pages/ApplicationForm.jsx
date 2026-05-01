@@ -5,7 +5,6 @@ import { getAccessToken, isLoggedIn } from '../services/authService';
 import '../styles/ApplicationForm.css';
 import DocumentUploadCard from '../components/DocumentUploadCard'
 import LoginRedirectPage from '../components/LoginRedirectPage';
-import DuplicateRecruitmentFormRedirectPage from '../components/DuplicateRecruitmentFormRedirectPage';
 import * as authService from "../services/authService.js";
 
 export default function ApplicationForm() {
@@ -194,9 +193,16 @@ export default function ApplicationForm() {
     };
 
     // wysylanie formularza
-    const handleSubmit = async (e) => {
+    const handleSaveForm = async () => {
+        await handleSubmit('SAVE')
+    }
+
+    const handleEnrollForm = async (e) => {
         e.preventDefault();
-        const actionType = e.nativeEvent.submitter.value;
+        await handleSubmit('ENROLL');
+    }
+
+    const handleSubmit = async (actionType) => {
         setError(null);
 
         if (actionType === "ENROLL" && isUserAlreadyEnrolled) {
@@ -441,7 +447,7 @@ export default function ApplicationForm() {
             </div>
 
         <div className='bg-panel'>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleEnrollForm}>
                 {isUserAlreadyEnrolled && (
                     <div className="error-banner">
                         <span className="material-symbols-outlined">error</span>
@@ -751,10 +757,11 @@ export default function ApplicationForm() {
             {/*<button className='btn-submit' type='submit' disabled={isUserAlreadyEnrolled}>Wyślij wniosek</button>*/}
             <div className="submit-buttons">
                 <button
-                    type="submit"
+                    type="button"
                     className="btn-save"
                     name="action"
                     value="SAVE"
+                    onClick={handleSaveForm}
                 >
                     Zapisz formularz
                 </button>
