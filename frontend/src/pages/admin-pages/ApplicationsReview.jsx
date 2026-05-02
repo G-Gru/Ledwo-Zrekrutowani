@@ -61,6 +61,7 @@ export default function ApplicationsReview() {
   const [isBypassMode, setIsBypassMode] = useState(false);
   const [isMockData, setIsMockData] = useState(false);
   const [onlyUnpaid, setOnlyUnpaid] = useState(false);
+  const [onlyMissingDocs, setOnlyMissingDocs] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -80,9 +81,7 @@ export default function ApplicationsReview() {
       setLoading(true);
       setError('');
 
-      const response = onlyUnpaid
-        ? await serverApi.getAdminUnpaidEnrollments(token)
-        : await serverApi.getAdminEnrollments(token);
+      const response = await serverApi.getAdminEnrollments(token);
 
       if (response.error) {
         setEnrollments([]);
@@ -105,23 +104,35 @@ export default function ApplicationsReview() {
     }, 30000);
 
     return () => clearInterval(watchInterval);
-  }, [onlyUnpaid, refreshTick]);
+  }, [refreshTick]);
+
+  const filteredEnrollments = useMemo(() => {
+    return enrollments.filter((item) => {
+      if (onlyUnpaid && item.is_fully_paid) {
+        return false;
+      }
+      if (onlyMissingDocs && !item.missing_documents) {
+        return false;
+      }
+      return true;
+    });
+  }, [enrollments, onlyUnpaid, onlyMissingDocs]);
 
   const summary = useMemo(() => {
-    const total = enrollments.length;
-    const unpaid = enrollments.filter((e) => !e.is_fully_paid).length;
-    const missingDocs = enrollments.filter((e) => e.missing_documents).length;
-    const inProgress = enrollments.filter(
+    const total = filteredEnrollments.length;
+    const unpaid = filteredEnrollments.filter((e) => !e.is_fully_paid).length;
+    const missingDocs = filteredEnrollments.filter((e) => e.missing_documents).length;
+    const inProgress = filteredEnrollments.filter(
       (e) => normalizeEnrollmentStatus(e.status) === 'IN_PROGRESS'
     ).length;
     return { total, unpaid, missingDocs, inProgress };
-  }, [enrollments]);
+  }, [filteredEnrollments]);
 
   async function handleSendReminders() {
     setReminderLoading(true);
     setReminderMsg('');
     const token = getAccessToken();
-    const unpaidEnrollments = enrollments.filter((e) => !e.is_fully_paid);
+    const unpaidEnrollments = filteredEnrollments.filter((e) => !e.is_fully_paid);
 
     if (unpaidEnrollments.length === 0) {
       setReminderMsg('Brak nieopłaconych zgłoszeń.');
@@ -150,9 +161,9 @@ export default function ApplicationsReview() {
   }
 
   function handleExportCsv() {
-    if (!enrollments.length) return;
+    if (!filteredEnrollments.length) return;
     const headers = ['ID', 'Kandydat', 'Status', 'Płatność', 'Dokumenty', 'Data zgłoszenia'];
-    const rows = enrollments.map((e) => [
+    const rows = filteredEnrollments.map((e) => [
       e.id,
       `"${(e.student_name || '').replace(/"/g, '""')}"`,
       enrollmentStatusLabel(e.status),
@@ -239,14 +250,24 @@ export default function ApplicationsReview() {
           )}
 
           <div className='admin-applications-toolbar'>
-            <label className='admin-filter-checkbox'>
-              <input
-                type='checkbox'
-                checked={onlyUnpaid}
-                onChange={(e) => setOnlyUnpaid(e.target.checked)}
-              />
-              Tylko nieopłacone zgłoszenia
-            </label>
+            <div className='admin-filter-group'>
+              <label className='admin-filter-checkbox'>
+                <input
+                  type='checkbox'
+                  checked={onlyUnpaid}
+                  onChange={(e) => setOnlyUnpaid(e.target.checked)}
+                />
+                Tylko nieopłacone zgłoszenia
+              </label>
+              <label className='admin-filter-checkbox'>
+                <input
+                  type='checkbox'
+                  checked={onlyMissingDocs}
+                  onChange={(e) => setOnlyMissingDocs(e.target.checked)}
+                />
+                Tylko zgłoszenia z brakami dokumentów
+              </label>
+            </div>
             <button
               className='button-secondary admin-refresh-button'
               type='button'
@@ -261,7 +282,7 @@ export default function ApplicationsReview() {
 
           {!loading && !error && (
             <>
-              {enrollments.length === 0 ? (
+              {filteredEnrollments.length === 0 ? (
                 <p>Brak zgłoszeń dla aktualnego filtra.</p>
               ) : (
                 <table className='styled-table'>
@@ -277,7 +298,7 @@ export default function ApplicationsReview() {
                     </tr>
                   </thead>
                   <tbody>
-                    {enrollments.map((item) => (
+                    {filteredEnrollments.map((item) => (
                       <tr key={item.id}>
                         <td>{item.id}</td>
                         <td>{item.student_name}</td>

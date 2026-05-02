@@ -21,6 +21,7 @@ import Candidates from './pages/admin-pages/Candidates';
 import CandidateDetails from './pages/admin-pages/CandidateDetails';
 import ApplicationsReview from './pages/admin-pages/ApplicationsReview';
 import ApplicationReviewDetails from './pages/admin-pages/ApplicationReviewDetails';
+import CoordinatorRecruitmentStats from './pages/admin-pages/CoordinatorRecruitmentStats';
 import { getUser, isLoggedIn } from './services/authService';
 import NavigationPage from './pages/NavigationPage';
 
@@ -113,6 +114,14 @@ function App() {
           )}
         />
 
+        <Route
+          path='/admin/recruitment-stats'
+          element={(
+            <ProtectedRoute allowedRoles={['ADMIN', 'STUDIES_DIRECTOR', 'ADMINISTRATIVE_COORDINATOR']}>
+              <CoordinatorRecruitmentStats />
+            </ProtectedRoute>
+          )}
+        />
         <Route
           path='/admin/candidates'
           element={(

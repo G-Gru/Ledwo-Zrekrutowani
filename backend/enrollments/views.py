@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from payments.models import Fees
 from payments.serializers import FeesSerializer
-from studies.models import StudiesEdition
+from studies.models import StudiesEdition, StudiesEditionStaff
 from users.permissions import IsObjectOwner, IsStudent, CanViewDocument, IsEmployee
 from . import services
 from .models import Enrollment, FormData, Address, SubmittedDocument, DocumentHistory
@@ -17,6 +17,21 @@ from .serializers import AdminEnrollmentSerializer, AdminEnrollmentDetailSeriali
     AddressSerializer, EnrollmentSerializer, ActiveEnrollmentSerializer, \
     EnrollmentRecruitmentEndDateSerializer, SubmittedDocumentsCreateSerializer, SubmittedDocumentsListSerializer
 from .services import get_enrollable_edition
+
+
+def _scope_enrollments_queryset_for_user(enrollments_qs, user):
+    if user.is_staff:
+        return enrollments_qs
+
+    assigned_edition_ids = list(
+        StudiesEditionStaff.objects.filter(user=user)
+        .values_list('studies_edition_id', flat=True)
+    )
+
+    if not assigned_edition_ids:
+        return enrollments_qs.none()
+
+    return enrollments_qs.filter(studies_edition_id__in=assigned_edition_ids)
 
 
 ## PUBLIC
@@ -145,18 +160,22 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
         return AdminEnrollmentSerializer
 
     def get_queryset(self):
-        if self.action in ['retrieve', 'decide']:
-            return Enrollment.objects.all().select_related(
+        if self.action in ['retrieve', 'decide', 'get_details', 'get_documents', 'get_fees', 'accept', 'reject', 'send_payment_reminder']:
+            base_qs = Enrollment.objects.all().select_related(
                 'user',
+                'studies_edition',
                 'form', 'form__residential_address', 'form__registered_address',
             ).prefetch_related('fees', 'submitteddocument_set')
+            return _scope_enrollments_queryset_for_user(base_qs, self.request.user)
 
-        qs = Enrollment.objects.all().select_related('user').prefetch_related('fees')
+        qs = Enrollment.objects.all().select_related('user', 'studies_edition').prefetch_related('fees', 'submitteddocument_set')
+        qs = _scope_enrollments_queryset_for_user(qs, self.request.user)
         
         # Filtrowanie po nieopłaconych, jeśli w URL pojawi się ?unpaid_only=true
         unpaid_only = self.request.query_params.get('unpaid_only')
         if unpaid_only == 'true':
             qs = qs.filter(fees__paid_date__isnull=True).distinct()
+
         return qs
 
     @action(detail=True, methods=['post'], url_path='accept')

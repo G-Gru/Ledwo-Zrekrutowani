@@ -870,12 +870,12 @@ export class serverApi {
         return recruitmentSchedule;
     }
 
-    static async getAdminEnrollments(token) {
-        return this.#getAdminEnrollmentsFromApi(token, false);
+    static async getAdminEnrollments(token, {unpaidOnly = false} = {}) {
+        return this.#getAdminEnrollmentsFromApi(token, {unpaidOnly});
     }
 
     static async getAdminUnpaidEnrollments(token) {
-        return this.#getAdminEnrollmentsFromApi(token, true);
+        return this.#getAdminEnrollmentsFromApi(token, {unpaidOnly: true});
     }
 
     static async sendPaymentReminder(token, enrollmentId) {
@@ -987,8 +987,13 @@ export class serverApi {
         };
     }
 
-    static async #getAdminEnrollmentsFromApi(token, unpaidOnly = false) {
-        const suffix = unpaidOnly ? '?unpaid_only=true' : '';
+    static async #getAdminEnrollmentsFromApi(token, {unpaidOnly = false} = {}) {
+        const query = new URLSearchParams();
+        if (unpaidOnly) {
+            query.set('unpaid_only', 'true');
+        }
+
+        const suffix = query.toString() ? `?${query.toString()}` : '';
         const endpoints = [
             `/api/admin/enrollments/${suffix}`,
             `/admin/enrollments/${suffix}`,

@@ -121,6 +121,12 @@
   font-weight: 600;
 }
 
+.admin-filter-group {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
 .admin-refresh-button {
   margin: 0;
   padding: 8px 14px;
