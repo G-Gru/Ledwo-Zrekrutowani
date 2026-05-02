@@ -84,3 +84,19 @@
   line-height: 14px;
 }
 
+.consent-item.required {
+  font-weight: 500;
+}
+
+.required-mark {
+  color: #d32f2f;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.required-inline-mark {
+  color: #d32f2f;
+  font-weight: 700;
+  margin-left: 2px;
+}
+

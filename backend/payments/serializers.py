@@ -30,11 +30,26 @@ class FeesWithEditionSerializer(serializers.ModelSerializer):
 class AdminFeeSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
     studies_name = serializers.CharField(source='enrollment.studies_edition.studies.name', read_only=True)
+    edition_id = serializers.IntegerField(source='enrollment.studies_edition.id', read_only=True)
+    academic_year = serializers.CharField(source='enrollment.studies_edition.academic_year', read_only=True)
     status = serializers.SerializerMethodField()
 
     class Meta:
         model = Fees
-        fields = ('id', 'title', 'amount', 'due_date', 'issued_date', 'paid_date', 'status', 'student_name', 'studies_name', 'enrollment')
+        fields = (
+            'id',
+            'title',
+            'amount',
+            'due_date',
+            'issued_date',
+            'paid_date',
+            'status',
+            'student_name',
+            'studies_name',
+            'edition_id',
+            'academic_year',
+            'enrollment',
+        )
 
     def get_student_name(self, obj):
         if hasattr(obj.enrollment, 'form'):

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import '../styles/Style.css';
 import { serverApi } from '../services/serverApi';
 import { formatDateInWarsaw } from '../utils/dateTime';
-import { getUserRole } from '../services/authService';
+import { getUserRole, isLoggedIn } from '../services/authService';
 
 const sampleEdition = {
   id: 1,
@@ -197,7 +197,11 @@ export default function StudiesDetailPage() {
                       <td>{roleLabels[member.role] || member.role || '-'}</td>
                       <td>{fullName || '-'}</td>
                       <td>{member?.user?.email || '-'}</td>
-                      <td>{member?.user?.phone || '-'}</td>
+                      <td>
+                        {Array.isArray(member?.user?.work_phones) && member.user.work_phones.length > 0
+                          ? member.user.work_phones.map((wp) => wp.phone).join(', ')
+                          : '-'}
+                      </td>
                     </tr>
                   );
                 })
@@ -219,7 +223,14 @@ export default function StudiesDetailPage() {
           <div className="apply-section">
               <button
               className="button-primary apply-button"
-              onClick={() => navigate(`/applicationForm?edition_id=${edition.id}`)}
+              onClick={() => {
+                const target = `/applicationForm?edition_id=${edition.id}`;
+                if (!isLoggedIn()) {
+                  navigate(`/login?redirect=${encodeURIComponent(target)}`);
+                } else {
+                  navigate(target);
+                }
+              }}
               >
               Rekrutuj się
               </button>

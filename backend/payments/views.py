@@ -9,8 +9,34 @@ from rest_framework.response import Response
 from payments import services
 from payments.models import Fees, Payments
 from payments.serializers import FeesWithEditionSerializer, AdminFeeSerializer, AdminPaymentSerializer
-from studies.models import StudiesEdition
+from studies.models import StudiesEdition, StudiesEditionStaff
 from users.permissions import IsStudent, IsEmployee
+
+
+def _get_finance_coordinator_edition_ids(user):
+    if user.is_staff:
+        return None
+
+    return list(
+        StudiesEditionStaff.objects.filter(
+            user=user,
+            role=StudiesEditionStaff.Roles.FINANCE_COORDINATOR,
+        ).values_list('studies_edition_id', flat=True)
+    )
+
+
+def _scope_fees_queryset_for_user(fees_qs, user):
+    edition_ids = _get_finance_coordinator_edition_ids(user)
+    if edition_ids is None:
+        return fees_qs
+    return fees_qs.filter(enrollment__studies_edition_id__in=edition_ids)
+
+
+def _scope_payments_queryset_for_user(payments_qs, user):
+    edition_ids = _get_finance_coordinator_edition_ids(user)
+    if edition_ids is None:
+        return payments_qs
+    return payments_qs.filter(fee__enrollment__studies_edition_id__in=edition_ids)
 
 
 class PaymentHistoryListAPIView(generics.ListAPIView):
@@ -54,11 +80,13 @@ class AdminFeesListAPIView(generics.ListAPIView):
     serializer_class = AdminFeeSerializer
 
     def get_queryset(self):
-        return Fees.objects.select_related(
+        base_qs = Fees.objects.select_related(
             'enrollment__user',
             'enrollment__form',
             'enrollment__studies_edition__studies'
-        ).all().order_by('-issued_date')
+        ).all()
+
+        return _scope_fees_queryset_for_user(base_qs, self.request.user).order_by('-issued_date')
 
 
 class AdminPaymentsListAPIView(generics.ListAPIView):
@@ -66,10 +94,13 @@ class AdminPaymentsListAPIView(generics.ListAPIView):
     serializer_class = AdminPaymentSerializer
 
     def get_queryset(self):
-        return Payments.objects.select_related(
+        base_qs = Payments.objects.select_related(
             'fee__enrollment__user',
-            'fee__enrollment__form'
-        ).all().order_by('-id')
+            'fee__enrollment__form',
+            'fee__enrollment__studies_edition',
+        ).all()
+
+        return _scope_payments_queryset_for_user(base_qs, self.request.user).order_by('-id')
 
 
 class AdminFinanceDashboardAPIView(views.APIView):
@@ -78,7 +109,8 @@ class AdminFinanceDashboardAPIView(views.APIView):
     def get(self, request):
         today = datetime.date.today()
 
-        fees_qs = Fees.objects.all()
+        fees_qs = _scope_fees_queryset_for_user(Fees.objects.all(), request.user)
+        payments_qs = _scope_payments_queryset_for_user(Payments.objects.all(), request.user)
 
         total_collected = fees_qs.filter(paid_date__isnull=False).aggregate(
             s=Sum('amount'))['s'] or 0
@@ -86,13 +118,14 @@ class AdminFinanceDashboardAPIView(views.APIView):
             s=Sum('amount'))['s'] or 0
         total_overdue = fees_qs.filter(paid_date__isnull=True, due_date__lt=today).aggregate(
             s=Sum('amount'))['s'] or 0
-        pending_transfers_count = Payments.objects.filter(status="PENDING").count()
+        pending_transfers_count = payments_qs.filter(status="PENDING").count()
 
         editions = (StudiesEdition.objects
-                    .filter(enrollment__fees__isnull=False)
+                    .filter(id__in=fees_qs.values('enrollment__studies_edition_id'))
                     .distinct()
                     .select_related('studies')
                     .annotate(
+                        enrollment_count=Count('enrollment', distinct=True),
                         fees_count=Count('enrollment__fees', distinct=True),
                         collected=Sum('enrollment__fees__amount',
                                      filter=Q(enrollment__fees__paid_date__isnull=False)),
@@ -109,6 +142,7 @@ class AdminFinanceDashboardAPIView(views.APIView):
                 "edition_id": e.id,
                 "studies_name": e.studies.name,
                 "academic_year": e.academic_year,
+                "enrollment_count": e.enrollment_count,
                 "fees_count": e.fees_count,
                 "collected": e.collected or 0,
                 "pending": e.pending or 0,
@@ -132,7 +166,8 @@ class AdminPaymentApproveAPIView(views.APIView):
     permission_classes = [IsEmployee]
 
     def post(self, request, payment_pk):
-        payment = get_object_or_404(Payments, pk=payment_pk)
+        payments_qs = _scope_payments_queryset_for_user(Payments.objects.all(), request.user)
+        payment = get_object_or_404(payments_qs, pk=payment_pk)
         if payment.status != "PENDING":
             return Response({"detail": "Ta płatność nie oczekuje na zatwierdzenie."}, status=status.HTTP_400_BAD_REQUEST)
         services.approve_payment(payment)

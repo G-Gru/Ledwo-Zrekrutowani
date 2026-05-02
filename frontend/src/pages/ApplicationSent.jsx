@@ -112,7 +112,7 @@ export default function ApplicationSent(
 
                     {/* Buttons */}
                     <div style={{display: 'flex', flexDirection: 'row'}}>
-                        <button onClick={() => navigate('/my-documents')}> Przejdź do Moje Dokumenty </button>
+                        <button onClick={() => navigate('/my-applications')}> Przejdź do Moje wnioski </button>
                         <button className='button-secondary' onClick={() => handleDismissCard(setShowDocumentCard)}> Zrozumiałem </button>
                     </div>
                 </div>

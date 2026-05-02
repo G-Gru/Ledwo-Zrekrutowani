@@ -466,13 +466,13 @@ export default function ApplicationForm() {
 
             <div className="form-row">
                 <div className="form-group">
-                    <label htmlFor="firstName">Imię</label>
+                    <label htmlFor="firstName">Imię <span className="required-inline-mark">*</span></label>
                     <input disabled className="input-readonly" id="firstName" name="firstName" autoComplete="given-name" value={formData.firstName} onChange={handleChange} required />
 
-                    <label htmlFor="lastName">Nazwisko</label>
+                    <label htmlFor="lastName">Nazwisko <span className="required-inline-mark">*</span></label>
                     <input disabled className="input-readonly" id="lastName" name="lastName" autoComplete="family-name" value={formData.lastName} onChange={handleChange} required />
 
-                    <label htmlFor="title">Tytuł</label>
+                    <label htmlFor="title">Tytuł <span className="required-inline-mark">*</span></label>
                     <select name="title" value={formData.title} onChange={handleChange} required>
                         <option value="">Wybierz...</option>
                         <option value="lic">Licencjat</option>
@@ -482,23 +482,23 @@ export default function ApplicationForm() {
                         <option value="dr">Doktor</option>
                     </select>
 
-                    <label htmlFor="familyName">Nazwisko rodowe</label>
+                    <label htmlFor="familyName">Nazwisko rodowe <span className="required-inline-mark">*</span></label>
                     <input id="familyName" name="familyName" autoComplete="family-name" value={formData.familyName} onChange={handleChange} required/>
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="birthdate">Data urodzenia</label>
+                    <label htmlFor="birthdate">Data urodzenia <span className="required-inline-mark">*</span></label>
                     <input id="birthdate" name="birthdate" type="date" autoComplete="bday" value={formData.birthdate} onChange={handleChange} required />
 
-                    <label htmlFor="birthplace">Miejsce urodzenia</label>
+                    <label htmlFor="birthplace">Miejsce urodzenia <span className="required-inline-mark">*</span></label>
                     <input id="birthplace" name="birthplace" autoComplete="country-name" value={formData.birthplace} onChange={handleChange} required/>
 
-                    <label htmlFor="pesel">PESEL</label>
+                    <label htmlFor="pesel">PESEL <span className="required-inline-mark">*</span></label>
                     <input id="pesel" className={errors.pesel ? 'input-error' : ''} name="pesel"
                            type="text" inputMode="numeric" pattern="\d{11}" maxLength={11}
                            value={formData.pesel} onChange={handleChange} required />
 
-                    <label htmlFor="citizenship">Obywatelstwo</label>
+                    <label htmlFor="citizenship">Obywatelstwo <span className="required-inline-mark">*</span></label>
                     <input id="citizenship" name="citizenship" value={formData.citizenship} onChange={handleChange} required />
                 </div>
             </div>
@@ -510,11 +510,11 @@ export default function ApplicationForm() {
             </div>
             <div className="form-row">
                 <div className="form-group">
-                    <label htmlFor="email">Email</label>
+                    <label htmlFor="email">Email <span className="required-inline-mark">*</span></label>
                     <input disabled id="email" className="input-readonly" name="email" type="email" autoComplete="email" value={formData.email} onChange={handleChange} required />
                 </div>
                 <div className="form-group">
-                    <label htmlFor="phone">Telefon</label>
+                    <label htmlFor="phone">Telefon <span className="required-inline-mark">*</span></label>
                     <input disabled id="phone" className="input-readonly" name="phone" type="tel" inputMode="tel" autoComplete="tel" value={formData.phone} onChange={handleChange} required />
                 </div>
             </div>
@@ -527,25 +527,25 @@ export default function ApplicationForm() {
 
             <div className="form-row">
                 <div className="form-group">
-                    <label htmlFor="address-street">Ulica </label>
+                    <label htmlFor="address-street">Ulica <span className="required-inline-mark">*</span></label>
                     <input id="address-street" name="street" autoComplete="address-line1" value={formData.residenceAddress.street} onChange={(e) => handleChange(e, 'residenceAddress')} required />
 
-                    <label htmlFor="address-homeNum">Numer domu</label>
+                    <label htmlFor="address-homeNum">Numer domu <span className="required-inline-mark">*</span></label>
                     <input id="address-homeNum" name="house" autoComplete="address-line2" value={formData.residenceAddress.house} onChange= {(e) => handleChange(e, 'residenceAddress')} required />
 
-                    <label htmlFor="address-zip">Kod pocztowy</label>
+                    <label htmlFor="address-zip">Kod pocztowy <span className="required-inline-mark">*</span></label>
                     <input id="address-zip" className={errors.residenceAddress_postalCode ? 'input-error' : ''} name="postalCode"
                            type="text" inputMode="numeric" pattern="\d{2}-\d{3}" maxLength={6} autoComplete="postal-code"
                            value={formData.residenceAddress.postalCode} onChange={(e) => handleChange(e, 'residenceAddress')} required />
                 </div>
                 <div className="form-group">
-                    <label htmlFor="address-city">Miasto</label>
+                    <label htmlFor="address-city">Miasto <span className="required-inline-mark">*</span></label>
                     <input id="address-city" name="city" autoComplete="address-level2" value={formData.residenceAddress.city} onChange={(e) => handleChange(e, 'residenceAddress')} required />
 
                     <label htmlFor="address-apartNum">Numer mieszkania</label>
                     <input id="address-apartNum" name="apartment" value={formData.residenceAddress.apartment} onChange={(e) => handleChange(e, 'residenceAddress')} />
 
-                    <label htmlFor="address-country">Kraj</label>
+                    <label htmlFor="address-country">Kraj <span className="required-inline-mark">*</span></label>
                     <input id="address-country" name="country" autoComplete="country-name" value={formData.residenceAddress.country} onChange={(e) => handleChange(e, 'residenceAddress')} required />
                 </div>
             </div>
@@ -561,25 +561,25 @@ export default function ApplicationForm() {
                 <div className="form-row">
                     <div className="form-group">
 
-                        <label htmlFor="correspondence-street">Ulica </label>
+                        <label htmlFor="correspondence-street">Ulica <span className="required-inline-mark">*</span></label>
                         <input id="correspondence-street" name="street" autoComplete="correspondence-street" value={formData.correspondenceAddress.street} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
 
-                        <label htmlFor="correspondence-homeNum">Numer domu</label>
+                        <label htmlFor="correspondence-homeNum">Numer domu <span className="required-inline-mark">*</span></label>
                         <input id="correspondence-homeNum" name="house" autoComplete="correspondence-homeNum" value={formData.correspondenceAddress.house} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
 
-                        <label htmlFor="correspondence-zip">Kod pocztowy</label>
+                        <label htmlFor="correspondence-zip">Kod pocztowy <span className="required-inline-mark">*</span></label>
                         <input id="correspondence-zip" className={errors.correspondenceAddress_postalCode ? 'input-error' : ''} name="postalCode"
                                type="text" inputMode="numeric" pattern="\d{2}-\d{3}" maxLength={6} autoComplete="postal-code"
                                value={formData.correspondenceAddress.postalCode} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="correspondence-city">Miasto</label>
+                        <label htmlFor="correspondence-city">Miasto <span className="required-inline-mark">*</span></label>
                         <input id="correspondence-city" name="city" autoComplete="correspondence-city" value={formData.correspondenceAddress.city} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
 
                         <label htmlFor="correspondence-apartNum">Numer mieszkania</label>
                         <input id="correspondence-apartNum" name="apartment" autoComplete="correspondence-apartNum" value={formData.correspondenceAddress.apartment} onChange={(e) => handleChange(e, 'correspondenceAddress')} />
 
-                        <label htmlFor="correspondence-country">Kraj</label>
+                        <label htmlFor="correspondence-country">Kraj <span className="required-inline-mark">*</span></label>
                         <input id="correspondence-country" name="country" autoComplete="correspondence-country" value={formData.correspondenceAddress.country} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
                     </div>
                 </div>
@@ -592,18 +592,18 @@ export default function ApplicationForm() {
                     </div>
                 <div className="form-row">
                     <div className="form-group">
-                        <label htmlFor="studiesName">Nazwa uczeli wyższej</label>
+                        <label htmlFor="studiesName">Nazwa uczeli wyższej <span className="required-inline-mark">*</span></label>
                         <input id="studiesName" name="educationUniversity" value={formData.educationUniversity} onChange={handleChange} required/>
 
-                        <label htmlFor="studiesLocation">Lokalizacja</label>
+                        <label htmlFor="studiesLocation">Lokalizacja <span className="required-inline-mark">*</span></label>
                         <input id="studiesLocation" name="educationLocation" value={formData.educationLocation} onChange={handleChange} required/>
                     </div>
                     <div className="form-group">
-                        <label htmlFor="educationYear">Rok zakończenia</label>
+                        <label htmlFor="educationYear">Rok zakończenia <span className="required-inline-mark">*</span></label>
                         <input id="educationYear" name="educationYear" type="text" inputMode="numeric"
                                pattern="\d{4}" maxLength={4} value={formData.educationYear} onChange={handleChange} required/>
 
-                        <label>Miejsce uzyskania świadectwa dojrzałości *</label>
+                        <label>Miejsce uzyskania świadectwa dojrzałości <span className="required-inline-mark">*</span></label>
                         <select
                             className="radio-group"
                             name="maturityCountry"
@@ -680,6 +680,7 @@ export default function ApplicationForm() {
                             onChange={(e) => handleChange(e, 'consents')}
                         />
                         <span className="consent-text">
+                            <span className="required-inline-mark">*</span>
                             Potwierdzam, że wszystkie podane powyżej dane są zgodne z prawdą w momencie wypełnienia.</span>
                         </label>
 
@@ -693,6 +694,7 @@ export default function ApplicationForm() {
 
                         <div className="consent-content">
                             <span className="consent-text">
+                                <span className="required-inline-mark">*</span>
                                 Potwierdzam, że zapoznałem się z treścia i zobowiązuję się przestrzegać regulaminu studiów AGH.
                             </span>
 
@@ -718,6 +720,7 @@ export default function ApplicationForm() {
 
                         <div className="consent-content">
                             <span className="consent-text">
+                                <span className="required-inline-mark">*</span>
                                 Zgodnie z Rozporządzeniem Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016 r. w sprawie ochrony osób fizycznych w związku z przetwarzaniem danych osobowych i w sprawie swobodnego przepływu takich danych oraz uchylenia dyrektywy 95/46/WE (ogólne rozporządzenie o ochronie danych) [Dz. U. UE.L.2016.119.1 z dnia 4 maja 2016 r.], zwanego dalej RODO, wyrażam zgodę na przetwarzanie moich danych osobowych w ramach procesu rekrutacji na powyższe studia i dokumentowanie ich przebiegu.
                             </span>
 

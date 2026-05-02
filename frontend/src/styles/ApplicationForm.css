@@ -243,3 +243,10 @@
     font-size: 0.9rem;
     margin-left: 0;
 }
+
+.required-inline-mark {
+  color: #d32f2f;
+  font-weight: 700;
+  margin-left: 2px;
+  margin-right: 2px;
+}

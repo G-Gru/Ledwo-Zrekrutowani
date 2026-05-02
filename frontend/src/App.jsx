@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import Header from './components/Header';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -23,6 +24,12 @@ import ApplicationReviewDetails from './pages/admin-pages/ApplicationReviewDetai
 import { getUser, isLoggedIn } from './services/authService';
 import NavigationPage from './pages/NavigationPage';
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 function ProtectedRoute({ children, allowedRoles = [] }) {
   if (!isLoggedIn()) {
     return <Navigate to='/login' replace />;
@@ -43,6 +50,7 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Header />
       <Routes>
         <Route path='/' element={<Navigate to='/studies' replace />} />

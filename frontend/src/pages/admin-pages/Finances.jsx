@@ -146,18 +146,6 @@ export default function Finances() {
   const overdueCount = fees.filter((f) => getFeeStatus(f, transactionByFee[f.id]) === 'overdue').length;
   const totalCollected = dashboard?.overall?.total_collected ?? 0;
 
-  /* ── budget: group editions by academic year ── */
-  const byYear = useMemo(() => {
-    const editions = dashboard?.by_edition || [];
-    const map = {};
-    editions.forEach((ed) => {
-      const yr = ed.academic_year || 'Brak roku';
-      if (!map[yr]) map[yr] = [];
-      map[yr].push(ed);
-    });
-    return Object.entries(map).sort((a, b) => b[0].localeCompare(a[0]));
-  }, [dashboard]);
-
   /* ─── render ─────────────────────────────────────────── */
   return (
     <div className="account-page-layout admin-finances-layout">
@@ -189,10 +177,10 @@ export default function Finances() {
             )}
           </button>
           <button
-            className={`finances-tab-btn${activeTab === 'budget' ? ' active' : ''}`}
-            onClick={() => setActiveTab('budget')}
+            className={`finances-tab-btn${activeTab === 'stats' ? ' active' : ''}`}
+            onClick={() => setActiveTab('stats')}
           >
-            Kosztorys rekrutacyjny
+            Statystyki rekrutacyjne
           </button>
         </div>
 
@@ -216,7 +204,12 @@ export default function Finances() {
             approvingId={approvingId}
           />
         ) : (
-          <BudgetTab byYear={byYear} overall={dashboard?.overall} />
+          <StatsTab
+            allEditions={dashboard?.by_edition || []}
+            overall={dashboard?.overall}
+            fees={fees}
+            transactionByFee={transactionByFee}
+          />
         )}
       </div>
     </div>
@@ -295,7 +288,7 @@ function PaymentsTab({ fees, transactionByFee, paidCount, overdueCount, totalCol
 
       {/* Table section */}
       <div className="finances-section-header">
-        <h3 className="finances-section-title">Lista wpłat</h3>
+        <h3 className="finances-section-title">Lista wymaganych wpłat</h3>
         <button className="btn-export" onClick={() => exportFeesCsv(fees, transactionByFee)}>
           ↓ Eksportuj do pliku
         </button>
@@ -482,9 +475,35 @@ function PendingTransfersTab({ transactions, fees, onApprove, approvingId }) {
 }
 
 /* ─────────────────────────────────────────────────────── */
-/*  Tab 3: Kosztorys rekrutacyjny                         */
+/*  Tab 3: Statystyki rekrutacyjne                        */
 /* ─────────────────────────────────────────────────────── */
-function BudgetTab({ byYear, overall }) {
+function StatsTab({ allEditions, overall, fees, transactionByFee }) {
+  const [selectedEdition, setSelectedEdition] = React.useState(null);
+
+  const current = selectedEdition || (allEditions.length > 0 ? allEditions[0] : null);
+
+  const paidEnrollmentIds = useMemo(() => {
+    if (!current) {
+      return new Set();
+    }
+
+    const ids = new Set();
+    fees
+      .filter((fee) => String(fee.edition_id) === String(current.edition_id))
+      .forEach((fee) => {
+        if (getFeeStatus(fee, transactionByFee[fee.id]) === 'paid') {
+          ids.add(fee.enrollment);
+        }
+      });
+    return ids;
+  }, [current, fees, transactionByFee]);
+
+  const paidCount = paidEnrollmentIds.size;
+  const totalEnrollmentCount = current?.enrollment_count || 0;
+  const unpaidCount = Math.max(0, totalEnrollmentCount - paidCount);
+  const overdueAmount = current?.overdue || 0;
+  const pendingAmount = current?.pending || 0;
+
   return (
     <>
       {/* Overall summary */}
@@ -503,63 +522,115 @@ function BudgetTab({ byYear, overall }) {
         </div>
       </div>
 
-      {byYear.length === 0 ? (
-        <p style={{ color: 'var(--text-muted)' }}>Brak danych o edycjach studiów.</p>
-      ) : (
-        byYear.map(([year, editions]) => {
-          const totalStudents = editions.reduce((s, e) => s + (e.fees_count || 0), 0);
-          const totalRevenue = editions.reduce((s, e) => s + Number(e.collected || 0), 0);
-          return (
-            <div key={year} className="budget-year-section">
-              {/* Year card */}
-              <div className="budget-year-header">
-                <span className="budget-year-label">Rekrutacja {year}</span>
-              </div>
-              <div className="budget-year-card">
-                <div className="budget-kpi">
-                  <div className="budget-kpi-label">Liczba kierunków</div>
-                  <div className="budget-kpi-value">{editions.length}</div>
-                </div>
-                <div className="budget-kpi">
-                  <div className="budget-kpi-label">Łączna liczba studentów</div>
-                  <div className="budget-kpi-value">{totalStudents}</div>
-                </div>
-                <div className="budget-kpi">
-                  <div className="budget-kpi-label">Łączne przychody</div>
-                  <div className="budget-kpi-value" style={{ color: '#2e7d32' }}>{formatCurrency(totalRevenue)}</div>
-                </div>
+      {/* Edition selector */}
+      {allEditions.length > 0 && (
+        <div style={{ marginBottom: '2rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>
+            Wybierz edycję:
+          </label>
+          <select
+            value={current?.edition_id || ''}
+            onChange={(e) => {
+              const ed = allEditions.find((x) => String(x.edition_id) === e.target.value);
+              setSelectedEdition(ed || null);
+            }}
+            style={{
+              width: '100%',
+              maxWidth: '400px',
+              padding: '0.75rem',
+              fontSize: '1rem',
+              border: '1px solid var(--surface-border)',
+              borderRadius: '8px',
+              backgroundColor: 'var(--surface-color)',
+              color: 'var(--text-main)',
+              fontWeight: 500,
+            }}
+          >
+            {allEditions.map((ed) => (
+              <option key={ed.edition_id} value={ed.edition_id}>
+                {ed.studies_name} ({ed.academic_year})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {current ? (
+        <>
+          <div className="stats-edition-panel">
+            <h3 className="stats-edition-title">{current.studies_name}</h3>
+            <div className="stats-selected-cards-row">
+              <div className="stats-selected-card">
+                <div className="stats-selected-card-label">Liczba osób</div>
+                <div className="stats-selected-card-value">{totalEnrollmentCount}</div>
               </div>
 
-              {/* Per-direction table */}
-              <div className="finances-table-wrap">
-                <table className="finances-table">
-                  <thead>
-                    <tr>
-                      <th>Kierunek</th>
-                      <th>Rok akad.</th>
-                      <th>Liczba opłat</th>
-                      <th>Zebrano</th>
-                      <th>Oczekuje</th>
-                      <th>Zaległe</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {editions.map((ed) => (
-                      <tr key={ed.edition_id}>
-                        <td>{ed.studies_name}</td>
-                        <td className="mono">{ed.academic_year}</td>
-                        <td>{ed.fees_count}</td>
-                        <td style={{ color: '#2e7d32', fontWeight: 600 }}>{formatCurrency(ed.collected)}</td>
-                        <td style={{ color: '#e65100', fontWeight: 600 }}>{formatCurrency(ed.pending)}</td>
-                        <td style={{ color: '#c62828', fontWeight: 600 }}>{formatCurrency(ed.overdue)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="stats-selected-card">
+                <div className="stats-selected-card-label">Wpłaciło</div>
+                <div className="stats-selected-card-value stats-green">{paidCount}/{totalEnrollmentCount}</div>
+              </div>
+
+              <div className="stats-selected-card">
+                <div className="stats-selected-card-label">Nie wpłaciło</div>
+                <div className="stats-selected-card-value stats-red">{unpaidCount}/{totalEnrollmentCount}</div>
+              </div>
+
+              <div className="stats-selected-card">
+                <div className="stats-selected-card-label">Kwota wpłacona</div>
+                <div className="stats-selected-card-value stats-green amount">{formatCurrency(current.collected)}</div>
+              </div>
+
+              <div className="stats-selected-card">
+                <div className="stats-selected-card-label">Oczekujące</div>
+                <div className="stats-selected-card-value stats-orange amount">{formatCurrency(pendingAmount)}</div>
+              </div>
+
+              <div className="stats-selected-card">
+                <div className="stats-selected-card-label">Zaległości</div>
+                <div className="stats-selected-card-value stats-red amount">{formatCurrency(overdueAmount)}</div>
               </div>
             </div>
-          );
-        })
+            <div className="stats-edition-year-box">
+              <div className="stats-edition-year-label">Rok akademicki</div>
+              <div className="stats-edition-year-value">{current.academic_year}</div>
+            </div>
+          </div>
+
+          {/* Detailed list of all editions */}
+          <h4 className="stats-all-editions-title">Wszystkie edycje</h4>
+          <div className="stats-all-editions-row">
+            {allEditions.map((ed) => (
+              <div
+                key={ed.edition_id}
+                onClick={() => setSelectedEdition(ed)}
+                className={`stats-edition-card${current?.edition_id === ed.edition_id ? ' active' : ''}`}
+              >
+                <div className="stats-edition-card-title">
+                  {ed.studies_name}
+                </div>
+                <div className="stats-edition-card-year">
+                  {ed.academic_year}
+                </div>
+                <div className="stats-edition-card-row">
+                  <span className="stats-edition-card-row-label">Osób:</span>
+                  <span className="stats-edition-card-row-value">{ed.enrollment_count || 0}</span>
+                </div>
+                <div className="stats-edition-card-row">
+                  <span className="stats-edition-card-row-label">Wpłacono:</span>
+                  <span className="stats-edition-card-row-value stats-green">{formatCurrency(ed.collected)}</span>
+                </div>
+                <div className="stats-edition-card-row">
+                  <span className="stats-edition-card-row-label">Zaległości:</span>
+                  <span className="stats-edition-card-row-value stats-red">{formatCurrency(ed.overdue)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
+          Brak danych o edycjach studiów.
+        </p>
       )}
     </>
   );
