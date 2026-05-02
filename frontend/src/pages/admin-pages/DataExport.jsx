@@ -135,10 +135,11 @@ export default function DataExport() {
       return;
     }
 
-    const headers = ['Imię i nazwisko', 'PESEL', 'Kierunek', 'Nr indeksu', 'Status'];
+    const headers = ['Imię i nazwisko', 'PESEL', 'Email', 'Kierunek', 'Nr indeksu', 'Status'];
     const body = filteredRows.map((row) => [
       mapCsvCell(row.student_name || '-'),
       mapCsvCell(row.personal?.pesel || ''),
+      mapCsvCell(row.contact?.email || ''),
       mapCsvCell(row.studies_name || ''),
       mapCsvCell('-'),
       mapCsvCell(mapExportStatus(row)),
@@ -200,6 +201,7 @@ export default function DataExport() {
                   <tr>
                     <th>Imię i nazwisko</th>
                     <th>PESEL</th>
+                    <th>Email</th>
                     <th>Kierunek</th>
                     <th>Nr indeksu</th>
                     <th>Status</th>
@@ -211,6 +213,7 @@ export default function DataExport() {
                       <tr key={row.id}>
                         <td>{row.student_name || '-'}</td>
                         <td>{row.personal?.pesel || '-'}</td>
+                        <td>{row.contact?.email || '-'}</td>
                         <td>{row.studies_name || '-'}</td>
                         <td>-</td>
                         <td>{mapExportStatus(row)}</td>
@@ -218,7 +221,7 @@ export default function DataExport() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5}>Brak rekordów dla wybranego kierunku.</td>
+                      <td colSpan={6}>Brak rekordów dla wybranego kierunku.</td>
                     </tr>
                   )}
                 </tbody>
