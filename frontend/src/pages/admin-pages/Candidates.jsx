@@ -19,6 +19,8 @@ function mapStatus(status) {
   return { value: 'in-progress', label: 'W trakcie', className: 'candidate-status in-progress' };
 }
 
+const defaultDisplayLimit = 10
+
 export default function Candidates() {
   const [userLoggedIn, setUserLoggedIn] = useState(false);
   const [isBypassMode, setIsBypassMode] = useState(false);
@@ -28,6 +30,7 @@ export default function Candidates() {
   const [candidates, setCandidates] = useState([]);
   const [studiesFilter, setStudiesFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [displayLimit, setDisplayLimit] = useState(defaultDisplayLimit);
 
   useEffect(() => {
     const token = getAccessToken();
@@ -50,20 +53,10 @@ export default function Candidates() {
         setIsMockData(false);
         setError(response.errorMsg || 'Wystąpił błąd podczas pobierania kandydatów.');
       } else {
-        const baseList = response.enrollments || [];
-        const details = await Promise.all(
-          baseList.map((item) => serverApi.getAdminEnrollmentDetails(token, item.id))
-        );
-
-        const enriched = baseList.map((item, index) => ({
-          ...item,
-          studies_name: details[index]?.enrollment?.studies_name || '-',
-        }));
-
-        setCandidates(enriched);
+        setCandidates(response.enrollments);
         setIsMockData(Boolean(response.isMock));
       }
-
+      
       setLoading(false);
     }
 
@@ -91,6 +84,10 @@ export default function Candidates() {
       return studiesOk && statusOk;
     });
   }, [candidates, studiesFilter, statusFilter]);
+
+  useEffect(() => {
+    setDisplayLimit(defaultDisplayLimit);
+  }, [studiesFilter, statusFilter]);
 
   if (!userLoggedIn) {
     return <LoginRedirectPage />;
@@ -141,41 +138,62 @@ export default function Candidates() {
           {loading && <p>Ładowanie kandydatów...</p>}
 
           {!loading && !error && (
-            <table className='styled-table'>
-              <thead>
-                <tr>
-                  <th>Imię i nazwisko</th>
-                  <th>Kierunek</th>
-                  <th>Status</th>
-                  <th>Więcej szczegółów</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCandidates.length > 0 ? (
-                  filteredCandidates.map((item) => {
-                    const status = mapStatus(item.status);
-                    return (
-                      <tr key={item.id}>
-                        <td>{item.student_name || '-'}</td>
-                        <td>{item.studies_name || '-'}</td>
-                        <td>
-                          <span className={status.className}>{status.label}</span>
-                        </td>
-                        <td>
-                          <Link className='admin-details-link' to={`/admin/candidates/${item.id}`}>
-                            Więcej szczegółów
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
+            <>
+              <table className='styled-table'>
+                <thead>
                   <tr>
-                    <td colSpan={4}>Brak kandydatów dla wybranych filtrów.</td>
+                    <th>Imię i nazwisko</th>
+                    <th>Kierunek</th>
+                    <th>Status</th>
+                    <th>Więcej szczegółów</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredCandidates.length > 0 ? (
+                    filteredCandidates.slice(0, displayLimit).map((item) => {
+                      const status = mapStatus(item.status);
+                      return (
+                        <tr key={item.id}>
+                          <td>{item.student_name || '-'}</td>
+                          <td>{item.studies_name || '-'}</td>
+                          <td>
+                            <span className={status.className}>{status.label}</span>
+                          </td>
+                          <td>
+                            <Link className='admin-details-link' to={`/admin/candidates/${item.id}`}>
+                              Więcej szczegółów
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={4}>Brak kandydatów dla wybranych filtrów.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+
+              {filteredCandidates.length > 0 && (
+                <div className='admin-candidates-footer'>
+                  <span className='admin-candidates-count'>
+                    Wyświetlono: {Math.min(displayLimit, filteredCandidates.length)} z {filteredCandidates.length} kandydatów
+                  </span>
+                  
+                  {displayLimit < filteredCandidates.length && (
+                    <div className='admin-show-all-container'>
+                      <button
+                        className='admin-show-all-button'
+                        onClick={() => setDisplayLimit(filteredCandidates.length)}
+                      >
+                        Wyświetl wszystkich {filteredCandidates.length} kandydatów
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </section>
       </div>

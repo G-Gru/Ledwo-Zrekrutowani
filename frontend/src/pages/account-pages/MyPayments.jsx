@@ -17,7 +17,7 @@ export default function Payments() {
     const [userHasPaymentHistory, setUserHasPaymentHistory] = useState(false);
 
     const [userToken, setUserToken] = useState(null);
-    const [userLoggedIn, setUserLoggedIn] = useState(false)
+    const [userLoggedIn, setUserLoggedIn] = useState(true)
     const [error, setError] = useState("");
 
     const [showPaymentOptions, setShowPaymentOptions] = useState(false);

@@ -83,6 +83,7 @@ export const login = async (email, password) => {
         if (response.user) {
             localStorage.setItem('user-data', JSON.stringify(response.user));
         }
+        console.log(response.user)
         return response;
     } catch (error) {
         throw new Error(error.message || "Logowanie nie powiodło się");

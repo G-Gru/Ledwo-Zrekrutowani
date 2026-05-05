@@ -9,7 +9,7 @@ export default function Header() {
 
     const isActive = (path) => pathname === path;
     const isStudiesActive = pathname === '/studies' || pathname.startsWith('/studies/editions/');
-    const isAccountActive = pathname.startsWith('/my-');
+    const isAccountActive = pathname === '/my-profile'
 
     const isAdminPanelActive = pathname === '/manage-studies/offers' || pathname === '/manage-studies/editions';
     const isCoordinatorPanelActive = 
@@ -17,6 +17,9 @@ export default function Header() {
       pathname.startsWith('/admin/applications') || 
       pathname.startsWith('/admin/export');
     const isFinancePanelActive = pathname === '/admin/finances';
+
+    const isApplicationsPanelActive = pathname === '/my-applications' 
+    const isPaymentsPanelActive = pathname === '/my-payments';
 
     const [isUserLoggedIn, setUserLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState(null);
@@ -41,6 +44,10 @@ export default function Header() {
     const canSeeFinancePanel = 
       userRole === 'FINANCE_COORDINATOR' || 
       userRole === 'ADMIN';
+
+    const canSeeCandidatePanels = 
+      userRole === "STUDENT" ||
+      userRole === "CANDIDATE"
     
     const canSeeAdminPanel = userRole === 'ADMIN';
 
@@ -69,6 +76,16 @@ export default function Header() {
                     Panel administratora
                 </Link>
             )}
+            {canSeeCandidatePanels && ( <>
+                <Link to='/my-applications' className={`btn btn-secondary ${isApplicationsPanelActive ? 'active' : ''}`}>
+                    Moje Wnioski
+                </Link>
+                <Link to='/my-payments' className={`btn btn-secondary ${isPaymentsPanelActive ? 'active' : ''}`}>
+                    Płatności
+                </Link>
+                </>
+            )}
+            
             <Link to={isUserLoggedIn ? "/my-profile" : "/login"} className={`btn btn-primary ${(!isUserLoggedIn && isActive('/login')) || (isUserLoggedIn && isAccountActive) ? 'active' : ''}`}>
                 { isUserLoggedIn ? (
                     <span className="material-symbols-outlined text-primary profile-icon">person</span>

@@ -663,7 +663,7 @@ export class serverApi {
         }
     }
 
-    static async getUserActiveApplications(token) {
+    static async getUserApplications(token) {
 
         const res = await this.apiRequest('/api/enrollments/active/', 'GET', null, token);
 

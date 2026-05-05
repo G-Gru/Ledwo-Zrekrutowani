@@ -90,6 +90,7 @@
     border-radius: 12px;
     font-size: 0.6rem;
     font-weight: 600;
+    width: 75%;
     text-transform: uppercase;
     display: inline-block;
 }
@@ -98,6 +99,11 @@
 .status-yellow { background-color: #fff4cc; color: #b38600; border: 1px solid #b38600; }
 .status-blue { background-color: #cce0ff; color: #005ce6; border: 1px solid #005ce6; }
 .status-grey { background-color: #e6e6e6; color: #666; border: 1px solid #999; }
+
+.status-type-main { 
+    border-radius: 0;
+    width: 85%;
+}
 
 
 /* Układ prawej kolumny */

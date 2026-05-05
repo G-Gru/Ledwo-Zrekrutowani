@@ -24,13 +24,12 @@
             text-transform: uppercase;
         }
         .student-studies {
-            background-color: rgba(135, 206, 250, 0.306);
             padding: 10px;
             border-radius: 15px;
             text-transform: uppercase;
             font-weight: bolder;
             color: var(--text-muted);
-            margin: 15px;
+            /* margin: 15px; */
             text-align: center;
         }
     }

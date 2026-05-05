@@ -9,7 +9,7 @@ import * as authService from "../services/authService.js";
 
 export default function ApplicationForm() {
     // Pobieranie danych uzytkownika
-    const [isUserLoggedIn, setUserLoggedIn] = useState(false)
+    const [isUserLoggedIn, setUserLoggedIn] = useState(true)
     const [userToken, setUserToken] = useState(null)
     const [isUserAlreadyEnrolled, setUserAlreadyEnrolled] = useState(false)
     const [enrollmentId, setEnrollmentId] = useState(null)
@@ -42,6 +42,9 @@ export default function ApplicationForm() {
     const [documents, setDocuments] = useState([]);
     const [existingDocuments, setExistingDocuments] = useState({});
     const [files, setFiles] = useState({});
+
+    // zapis formularza
+    const [applicationFormRecentlySaved, setApplicationFormRecentlySaved] = useState(false)
 
     useEffect(() => {
         const token = getAccessToken();
@@ -115,7 +118,7 @@ export default function ApplicationForm() {
             }));
 
 
-            const otherEnrollmentData = await serverApi.getUserActiveApplications(token);
+            const otherEnrollmentData = await serverApi.getUserApplications(token);
             if (otherEnrollmentData && Array.isArray(otherEnrollmentData.applications)) {
                 const alreadyEnrolled = otherEnrollmentData.applications.some(application => {
                     const editionId = application?.studies_edition?.id ?? application?.studies_edition;
@@ -158,14 +161,17 @@ export default function ApplicationForm() {
 
     const handleFileSelect = (id, file) => {
         setFiles(prev => ({ ...prev, [id]: file }));
+        setApplicationFormRecentlySaved(false)
     };
     const handleFileRemove = (id) => {
         setFiles(prev => ({ ...prev, [id]: null }));
+        setApplicationFormRecentlySaved(false)
     };
 
     const handleChange = (e, section = null) => {
         const { name, value, type, checked } = e.target;
         const newValue = type === 'checkbox' ? checked : value;
+        setApplicationFormRecentlySaved(false)
 
         if (section) {
             setFormData(prev => ({
@@ -194,7 +200,11 @@ export default function ApplicationForm() {
 
     // wysylanie formularza
     const handleSaveForm = async () => {
-        await handleSubmit('SAVE')
+        if (! await handleSubmit('SAVE')) {
+            setError("Nie udało się zapisać formularza")
+        } else {
+            setApplicationFormRecentlySaved(true)
+        }
     }
 
     const handleEnrollForm = async (e) => {
@@ -207,11 +217,11 @@ export default function ApplicationForm() {
 
         if (actionType === "ENROLL" && isUserAlreadyEnrolled) {
             setError('Jesteś już zapisany na ten sam kierunek. Nie możesz wysłać kolejnego wniosku.');
-            return;
+            return false;
         }
 
         if (!validate(actionType)) {
-            return;
+            return false;
         }
 
         console.log(`Próba wysłania formularza z akcją ${actionType}`, formData, files);
@@ -228,6 +238,7 @@ export default function ApplicationForm() {
             if (actionType === "ENROLL") {
                 navigate(`/applicationSent?edition_id=${courseId}`);
             }
+            return true
         } else {
             const message = result
                 ? (result.errorDetail || result.errorMsg || 'Błąd komunikacji z serwerem')
@@ -235,6 +246,7 @@ export default function ApplicationForm() {
 
             setError(`Błąd przy wysyłaniu formularza: ${message}`);
         }
+        return false
     };
 
     const isValidPesel = (pesel) => {
@@ -467,10 +479,10 @@ export default function ApplicationForm() {
             <div className="form-row">
                 <div className="form-group">
                     <label htmlFor="firstName">Imię <span className="required-inline-mark">*</span></label>
-                    <input disabled className="input-readonly" id="firstName" name="firstName" autoComplete="given-name" value={formData.firstName} onChange={handleChange} required />
+                    <input className="input-readonly" id="firstName" name="firstName" autoComplete="given-name" value={formData.firstName} onChange={handleChange} required />
 
                     <label htmlFor="lastName">Nazwisko <span className="required-inline-mark">*</span></label>
-                    <input disabled className="input-readonly" id="lastName" name="lastName" autoComplete="family-name" value={formData.lastName} onChange={handleChange} required />
+                    <input className="input-readonly" id="lastName" name="lastName" autoComplete="family-name" value={formData.lastName} onChange={handleChange} required />
 
                     <label htmlFor="title">Tytuł <span className="required-inline-mark">*</span></label>
                     <select name="title" value={formData.title} onChange={handleChange} required>
@@ -511,11 +523,11 @@ export default function ApplicationForm() {
             <div className="form-row">
                 <div className="form-group">
                     <label htmlFor="email">Email <span className="required-inline-mark">*</span></label>
-                    <input disabled id="email" className="input-readonly" name="email" type="email" autoComplete="email" value={formData.email} onChange={handleChange} required />
+                    <input id="email" className="input-readonly" name="email" type="email" autoComplete="email" value={formData.email} onChange={handleChange} required />
                 </div>
                 <div className="form-group">
                     <label htmlFor="phone">Telefon <span className="required-inline-mark">*</span></label>
-                    <input disabled id="phone" className="input-readonly" name="phone" type="tel" inputMode="tel" autoComplete="tel" value={formData.phone} onChange={handleChange} required />
+                    <input id="phone" className="input-readonly" name="phone" type="tel" inputMode="tel" autoComplete="tel" value={formData.phone} onChange={handleChange} required />
                 </div>
             </div>
 
@@ -601,7 +613,8 @@ export default function ApplicationForm() {
                     <div className="form-group">
                         <label htmlFor="educationYear">Rok zakończenia <span className="required-inline-mark">*</span></label>
                         <input id="educationYear" name="educationYear" type="text" inputMode="numeric"
-                               pattern="\d{4}" maxLength={4} value={formData.educationYear} onChange={handleChange} required/>
+                               pattern="\d{4}" maxLength={4} value={formData.educationYear} onChange={handleChange}
+                               className={errors.educationYear ? 'input-error' : ''} required/>
 
                         <label>Miejsce uzyskania świadectwa dojrzałości <span className="required-inline-mark">*</span></label>
                         <select
@@ -757,16 +770,18 @@ export default function ApplicationForm() {
             {error && <div className="error-message">{error}</div>}
 
             {/* Wyslij formularz guzik */}
-            {/*<button className='btn-submit' type='submit' disabled={isUserAlreadyEnrolled}>Wyślij wniosek</button>*/}
             <div className="submit-buttons">
                 <button
                     type="button"
-                    className="btn-save"
+                    className={"btn-save"}
                     name="action"
-                    value="SAVE"
+                    value=""
                     onClick={handleSaveForm}
+                    style={{
+                        background: applicationFormRecentlySaved ? "lightgrey" : ""
+                    }}
                 >
-                    Zapisz formularz
+                    {applicationFormRecentlySaved ? 'Zapisano!' : 'Zapisz formularz'}
                 </button>
 
                 <button

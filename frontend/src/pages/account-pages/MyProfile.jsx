@@ -6,7 +6,7 @@ import '../../styles/Profile.css'
 
 export default function Profile({}) {
     const [user, setUser] = useState({ firstName: '', lastName: '', email: '' , type: ''});
-    const [userLoggedIn, setUserLoggedIn] = useState(false);
+    const [userLoggedIn, setUserLoggedIn] = useState(true);
 
     useEffect(() => {
         setUserLoggedIn(isLoggedIn());
@@ -34,6 +34,29 @@ export default function Profile({}) {
         )
     }
 
+    function userRoleStyling(role) {
+        if (!role) return "status-grey"
+
+        switch (role.toUpperCase()) {
+            case 'CANDIDATE': return "status-yellow" 
+            default: return "status-blue"
+        }
+    }
+    function userRolePolishTranslation(role) {
+        if (!role) return role
+
+        switch (role.toUpperCase()) {
+            case "ADMIN": return "Administrator Systemu"
+            case "EMPLOYEE": return "Pracownik"
+            case 'STUDIES_DIRECTOR': return "Dyrektor Kierunku"
+            case 'ADMINISTRATIVE_COORDINATOR': return "Koordynator Administracyjny"
+            case 'FINANCE_COORDINATOR': return "Koordynator Finansowy"
+            case 'CANDIDATE': return "Kandydat" 
+            // student jest juz tak samo po polsku
+            default: return role
+        }
+    }
+    
   return (
     <div className='account-page-layout'>
         <AccountPageLeftMenu/>
@@ -50,7 +73,7 @@ export default function Profile({}) {
                     <div className='profile-main-data'>
                         <p className='profile-full-name'> {user.first_name} {user.last_name} </p>
                         {/* <p className='profile-status'> {user.type} </p> */}
-                        <p className='student-studies'> {user.type} </p>
+                        <p className={'student-studies ' + userRoleStyling(user.role)}> {userRolePolishTranslation(user.role)} </p>
                     </div>
                 </div>
 

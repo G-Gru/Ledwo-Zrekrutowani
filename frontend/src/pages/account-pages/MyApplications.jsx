@@ -13,14 +13,23 @@ function getStatusColorClass(statusText) {
     // if (text.includes("brak zapłaty")) return "status-red";
     // if (text.includes("oczekuje wypełnienia")) return "status-yellow";
     // if (text.includes("odpowiedź")) return "status-blue";
-    if (text.includes("student")) return "status-blue";
-    if (text.includes("candidate")) return "status-yellow";
+    if (text.includes("student")) return "status-blue status-type-main";
+    if (text.includes("candidate")) return "status-yellow status-type-main";
+    if (text.includes("draft")) return "status-grey status-type-main";
     if (text.includes("dokumen") || text.includes("płatno")) return "status-red";
     return "status-grey";
 }
 
 function getIconFromDocumentType(docType) {
     return "school"
+}
+
+function getStatusPolishTranslation(status) {
+    console.log
+    switch (status.toLowerCase()) {
+        case "candidate": return "Kandydat"
+        default: return status
+    }
 }
 
 export default function MyApplications({}) {
@@ -32,7 +41,7 @@ export default function MyApplications({}) {
     const [activeApplications, setActiveApplications] = useState([])
     const [userHasActiveApplications, setUserHasActiveApplications] = useState(false)
 
-    const [userLoggedIn, setUserLoggedIn] = useState(false)
+    const [userLoggedIn, setUserLoggedIn] = useState(true)
     
     const allApps = [...unfinishedApplications, ...activeApplications];
     const activeApp = activeCardId !== null && allApps[activeCardId] ? allApps[activeCardId] : null;
@@ -52,7 +61,8 @@ export default function MyApplications({}) {
                 className={`single-application-card ${activeCardId === keyId ? 'active' : ''}`}
                 onClick={() => setActiveCardId(keyId)}
                 style={{display: 'flex', flexDirection: 'column' }}
-            >
+            >   
+                {/* Info wniosku podsatwowe */}
                 <div className="application-card-row">
                     <span className="material-symbols-outlined application-card-icon">
                         {unfinished ? "edit_note" : getIconFromDocumentType(type)}
@@ -65,19 +75,30 @@ export default function MyApplications({}) {
                         </p>
                     </div>
 
+                    {/* Statusy */}
                     <div className="status-badges-container">
-                        {statuses.map((status, idx) => (
-                            <div key={idx} className={`application-status ${getStatusColorClass(status)}`}>
-                                {status}
-                            </div>
-                        ))}
+                        { !unfinished ? 
+                            statuses.map((status, idx) => (
+                                <div key={idx} className={`application-status ${getStatusColorClass(status)}`}>
+                                    {getStatusPolishTranslation(status)}
+                                </div>
+                            ))
+                        :  <div className={`application-status ${getStatusColorClass("draft")}`}> Wniosek niewypełniony </div>
+                        }
                     </div>
 
-                    {unfinished && <span className="material-symbols-outlined application-card-chevron">chevron_right</span>}
+                    {unfinished && 
+                        <span className="material-symbols-outlined application-card-chevron"
+                            onClick={() => navigate(`/applicationForm?edition_id=${studies_edition.id}`)}
+                            style={{cursor: 'pointer'}}
+                        >
+                            chevron_right
+                        </span> 
+                    }
                 </div>
 
                 {/* Linki do platnosci i dokumentow */}
-                { !studies_edition ? null : (
+                { !studies_edition || unfinished ? null : (
                     <div className="application-card-actions">
                         { isPaymentComplete ? null : (
                             <div className="docs-inline-link" 
@@ -110,20 +131,20 @@ export default function MyApplications({}) {
         setUserLoggedIn(true);
 
         async function fetchApplicationData() {
-            /* get unfinished applications */
-            let unfinishedAppsResponse = await serverApi.getUserUnfinishedApplications(token)
-            if (unfinishedAppsResponse != null) {
-                setUserHasUnfinishedApplications(unfinishedAppsResponse.applications.length > 0)
-                setUnfinishedApplications(unfinishedAppsResponse.applications)
-                if (unfinishedAppsResponse["error"]) setError(unfinishedAppsResponse["errorMsg"]);
-            }
-            
-            /* get active applications */
-            let activeAppsResponse = await serverApi.getUserActiveApplications(token)
-            if (activeAppsResponse != null && activeAppsResponse.applications) {
-                setUserHasActiveApplications(activeAppsResponse.applications.length > 0)
-                setActiveApplications(activeAppsResponse.applications)
-                if (activeAppsResponse["error"]) setError(activeAppsResponse["errorMsg"]);
+            /* get user applications */
+            let appsResponse = await serverApi.getUserApplications(token)
+            console.log(appsResponse)
+            if (appsResponse != null && appsResponse.applications && !appsResponse.error) {
+                let draftApps = appsResponse.applications.filter(item => item.status.some(status => status.toLowerCase().includes("draft")))
+                setUnfinishedApplications(draftApps)
+                setUserHasUnfinishedApplications(draftApps.length > 0)
+                
+                let activeApps = appsResponse.applications.filter(item => !item.status.some(status => status.toLowerCase().includes("draft")))
+                setUserHasActiveApplications(activeApps.length > 0)
+                setActiveApplications(activeApps)
+
+            } else {
+                setError(appsResponse["errorMsg"]);
             }
         }
         fetchApplicationData();
