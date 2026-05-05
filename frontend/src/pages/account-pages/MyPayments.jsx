@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AccountPageLeftMenu from '../../components/AccountPageLeftMenu';
 import LoginRedirectPage from '../../components/LoginRedirectPage';
 import { serverApi } from '../../services/serverApi';
-import { getAccessToken, isLoggedIn } from '../../services/authService';
+import { getAccessToken, getUser, isLoggedIn } from '../../services/authService';
 import { formatDateInWarsaw } from '../../utils/dateTime';
 import '../../styles/Payments.css';
 import DocumentUploadCard from '../../components/DocumentUploadCard'
@@ -219,8 +219,8 @@ export default function Payments() {
                         return sum + amt;
                     }, 0).toFixed(2).replace('.', ',') + ' PLN';
                     const idsString = selectedIds.join(', ');
-                    const userData = serverApi.getUserData(userToken) // to bedzie async w przyszlosci i wsztyko zepsuje
-                    const transferTitle = `Opłata-${userData.firstName}${userData.lastName}-ID${idsString}`;
+                    const userData = getUser()
+                    const transferTitle = `Opłata-${userData.first_name}${userData.last_name}-ID${idsString}`;
 
                     return (
                         <div className='bg-panel payment-methods-panel'>
