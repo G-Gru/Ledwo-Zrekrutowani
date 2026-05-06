@@ -2,10 +2,10 @@ from datetime import date, timedelta
 
 from django.core.management.base import BaseCommand
 
-from enrollments.models import Enrollment, Address, FormData
+from enrollments.models import Enrollment, Address, FormData, SubmittedDocument, DocumentHistory
 from payments.models import Fees, Payments, PaymentsHistory
 from studies.models import Studies, StudiesEdition, StudiesEditionStaff, StudiesDocument
-from users.models import User, Employee
+from users.models import User, Employee, WorkPhoneNumber
 
 
 class Command(BaseCommand):
@@ -13,6 +13,23 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         today = date.today()
+
+        # ── Czyszczenie bazy ────────────────────────────────────────────────
+        PaymentsHistory.objects.all().delete()
+        Payments.objects.all().delete()
+        Fees.objects.all().delete()
+        DocumentHistory.objects.all().delete()
+        SubmittedDocument.objects.all().delete()
+        FormData.objects.all().delete()
+        Enrollment.objects.all().delete()
+        Address.objects.all().delete()
+        WorkPhoneNumber.objects.all().delete()
+        Employee.objects.all().delete()
+        StudiesEditionStaff.objects.all().delete()
+        StudiesDocument.objects.all().delete()
+        StudiesEdition.objects.all().delete()
+        Studies.objects.all().delete()
+        User.objects.all().delete()
 
         # ── Users ──────────────────────────────────────────────────────────
         users_raw = [
@@ -49,6 +66,19 @@ class Command(BaseCommand):
             Employee(user=um["finansowy@gmail.com"]),
             Employee(user=um["administracyjny@gmail.com"]),
             Employee(user=um["kierownik@gmail.com"]),
+        ])
+
+        em = {e.user.email: e for e in Employee.objects.filter(user__email__in=[
+            "admin@gmail.com", "finansowy@gmail.com", "administracyjny@gmail.com", "kierownik@gmail.com"
+        ])}
+        WorkPhoneNumber.objects.bulk_create([
+            WorkPhoneNumber(employee=em["admin@gmail.com"], phone="100200300"),
+            WorkPhoneNumber(employee=em["admin@gmail.com"], phone="100200301"),
+            WorkPhoneNumber(employee=em["finansowy@gmail.com"], phone="100200302"),
+            WorkPhoneNumber(employee=em["finansowy@gmail.com"], phone="100200303"),
+            WorkPhoneNumber(employee=em["administracyjny@gmail.com"], phone="100200304"),
+            WorkPhoneNumber(employee=em["kierownik@gmail.com"], phone="100200305"),
+            WorkPhoneNumber(employee=em["kierownik@gmail.com"], phone="100200306"),
         ])
 
         finance = um["finansowy@gmail.com"]

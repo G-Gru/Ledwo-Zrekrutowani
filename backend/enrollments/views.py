@@ -1,5 +1,6 @@
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models import Count
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, generics
@@ -9,7 +10,7 @@ from rest_framework.response import Response
 
 from payments.models import Fees
 from payments.serializers import FeesSerializer
-from studies.models import StudiesEdition, StudiesEditionStaff
+from studies.models import StudiesEdition, StudiesEditionStaff, StudiesDocument
 from users.permissions import IsObjectOwner, IsStudent, CanViewDocument, IsEmployee
 from . import services
 from .models import Enrollment, FormData, Address, SubmittedDocument, DocumentHistory
@@ -340,3 +341,137 @@ class AdminDocumentRejectAPIView(generics.GenericAPIView):
 
         serializer = self.get_serializer(document)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AdminRecruitmentStatsAPIView(generics.GenericAPIView):
+    permission_classes = [IsEmployee]
+
+    def get(self, request):
+        enrollments_qs = Enrollment.objects.select_related(
+            'studies_edition__studies'
+        ).prefetch_related(
+            'fees',
+            'submitteddocument_set',
+        )
+        enrollments_qs = _scope_enrollments_queryset_for_user(enrollments_qs, request.user)
+        enrollment_list = list(enrollments_qs)
+
+        edition_ids = {e.studies_edition_id for e in enrollment_list}
+        required_docs_per_edition = {}
+        if edition_ids:
+            required_docs_per_edition = dict(
+                StudiesDocument.objects.filter(
+                    studies_edition_id__in=edition_ids,
+                    required=True,
+                ).values('studies_edition_id').annotate(
+                    count=Count('id')
+                ).values_list('studies_edition_id', 'count')
+            )
+
+        stats = {}
+        for enrollment in enrollment_list:
+            edition = enrollment.studies_edition
+            studies_name = edition.studies.name
+            academic_year = edition.academic_year
+            key = f"{studies_name}::{academic_year}"
+
+            if key not in stats:
+                stats[key] = {
+                    'edition_id': key,
+                    'studies_name': studies_name,
+                    'academic_year': academic_year,
+                    'candidates_total': 0,
+                    'paid_entries_count': 0,
+                    'unpaid_entries_count': 0,
+                    'missing_documents_count': 0,
+                    'statuses': {'candidate': 0, 'student': 0, 'expelled': 0},
+                    'amounts': {'total_fees': 0.0, 'paid_fees': 0.0, 'unpaid_fees': 0.0},
+                }
+
+            row = stats[key]
+            row['candidates_total'] += 1
+
+            fees = list(enrollment.fees.all())
+            is_fully_paid = all(f.paid_date is not None for f in fees)
+            if is_fully_paid:
+                row['paid_entries_count'] += 1
+            else:
+                row['unpaid_entries_count'] += 1
+
+            for fee in fees:
+                amount = float(fee.amount)
+                row['amounts']['total_fees'] += amount
+                if fee.paid_date:
+                    row['amounts']['paid_fees'] += amount
+                else:
+                    row['amounts']['unpaid_fees'] += amount
+
+            required_count = required_docs_per_edition.get(enrollment.studies_edition_id, 0)
+            accepted_count = sum(
+                1 for d in enrollment.submitteddocument_set.all()
+                if d.status == 'ACCEPTED'
+            )
+            if required_count > accepted_count:
+                row['missing_documents_count'] += 1
+
+            if enrollment.status == Enrollment.Status.STUDENT:
+                row['statuses']['student'] += 1
+            elif enrollment.status == Enrollment.Status.EXPELLED:
+                row['statuses']['expelled'] += 1
+            else:
+                row['statuses']['candidate'] += 1
+
+        return Response(list(stats.values()))
+
+
+class AdminUsosExportAPIView(generics.GenericAPIView):
+    permission_classes = [IsEmployee]
+
+    def get(self, request):
+        enrollments_qs = Enrollment.objects.select_related(
+            'user',
+            'studies_edition__studies',
+            'form',
+        ).prefetch_related(
+            'fees',
+            'submitteddocument_set',
+        )
+        enrollments_qs = _scope_enrollments_queryset_for_user(enrollments_qs, request.user)
+        enrollment_list = list(enrollments_qs)
+
+        edition_ids = {e.studies_edition_id for e in enrollment_list}
+        required_docs_per_edition = {}
+        if edition_ids:
+            required_docs_per_edition = dict(
+                StudiesDocument.objects.filter(
+                    studies_edition_id__in=edition_ids,
+                    required=True,
+                ).values('studies_edition_id').annotate(
+                    count=Count('id')
+                ).values_list('studies_edition_id', 'count')
+            )
+
+        result = []
+        for enrollment in enrollment_list:
+            form = getattr(enrollment, 'form', None)
+            fees = list(enrollment.fees.all())
+            is_fully_paid = all(f.paid_date is not None for f in fees)
+
+            required_count = required_docs_per_edition.get(enrollment.studies_edition_id, 0)
+            accepted_count = sum(
+                1 for d in enrollment.submitteddocument_set.all()
+                if d.status == 'ACCEPTED'
+            )
+
+            result.append({
+                'id': enrollment.id,
+                'student_name': f"{enrollment.user.first_name} {enrollment.user.last_name}",
+                'pesel': form.pesel if form else '',
+                'email': form.email if form else '',
+                'studies_name': enrollment.studies_edition.studies.name,
+                'status': enrollment.status,
+                'is_fully_paid': is_fully_paid,
+                'missing_documents': required_count > accepted_count,
+            })
+
+        return Response(result)

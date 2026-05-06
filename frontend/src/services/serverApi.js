@@ -874,6 +874,22 @@ export class serverApi {
         return this.#getAdminEnrollmentsFromApi(token, {unpaidOnly});
     }
 
+    static async getAdminRecruitmentStats(token) {
+        const res = await this.apiRequest('/api/admin/enrollments/recruitment-stats/', 'GET', null, token);
+        if (!res.error && Array.isArray(res.data)) {
+            return {stats: res.data, error: false, errorMsg: ''};
+        }
+        return {stats: [], error: true, errorMsg: 'Nie udało się pobrać statystyk rekrutacji.'};
+    }
+
+    static async getAdminUsosExport(token) {
+        const res = await this.apiRequest('/api/admin/enrollments/usos-export/', 'GET', null, token);
+        if (!res.error && Array.isArray(res.data)) {
+            return {rows: res.data, error: false, errorMsg: ''};
+        }
+        return {rows: [], error: true, errorMsg: 'Nie udało się pobrać danych do eksportu.'};
+    }
+
     static async getAdminUnpaidEnrollments(token) {
         return this.#getAdminEnrollmentsFromApi(token, {unpaidOnly: true});
     }
