@@ -6,6 +6,7 @@ import '../styles/ApplicationForm.css';
 import DocumentUploadCard from '../components/DocumentUploadCard'
 import LoginRedirectPage from '../components/LoginRedirectPage';
 import * as authService from "../services/authService.js";
+import AddressTile from '../components/AddressTile.jsx';
 
 export default function ApplicationForm() {
     // Pobieranie danych uzytkownika
@@ -17,6 +18,7 @@ export default function ApplicationForm() {
     const navigate = useNavigate();
     const [errors, setErrors] = useState({});
     const [error, setError] = useState(null);
+    const [addrError, setAddrError] = useState(null);
 
     // dane kierunku i wydzialu
     const [searchParams] = useSearchParams();
@@ -35,7 +37,7 @@ export default function ApplicationForm() {
     });
 
     // info nieobowiazkowe
-    const [hasCorrespondenceAddress, setHasCorrespondenceAddress] = useState(false);
+    const [hasDifferentCorrespondenceAddress, setHasDifferentCorrespondenceAddress ] = useState(false);
     const [hasEmergencyContact, setHasEmergencyContact] = useState(false);
 
     // dokumenty
@@ -45,6 +47,27 @@ export default function ApplicationForm() {
 
     // zapis formularza
     const [applicationFormRecentlySaved, setApplicationFormRecentlySaved] = useState(false)
+
+    // adresy
+    const [addressData, setAddressData] = useState([])
+    const [selectedResidenceAddressId, setSelectedResidenceAddressId] = useState(null)
+    const [selectedCorrespondenceAddressId, setSelectedCorrespondenceAddressId] = useState(null)
+    const [addResidenceAddressExpanded, setAddResidenceAddressExpanded] = useState(null)
+    const [addCorrespondenceAddressExpanded, setAddCorrespondenceAddressExpanded] = useState(null)
+
+    const updateAddress = (section, addr) => {
+        setFormData(prev => ({
+            ...prev,
+            [section]: {
+                street: addr.street || "",
+                house: addr.house_number || "",
+                apartment: addr.flat_number || "",
+                city: addr.city || "",
+                country: addr.country || "",
+                postalCode: addr.postal_code || ""
+            }
+        }));
+    };
 
     useEffect(() => {
         const token = getAccessToken();
@@ -84,7 +107,7 @@ export default function ApplicationForm() {
                     existingApplication.data.registered_address &&
                     existingApplication.data.residential_address &&
                     String(existingApplication.data.registered_address) !== String(existingApplication.data.residential_address);
-                setHasCorrespondenceAddress(hasDifferentCorrespondence);
+                setHasDifferentCorrespondenceAddress(hasDifferentCorrespondence);
 
 
                 const hasEmergency =
@@ -146,7 +169,7 @@ export default function ApplicationForm() {
         }, 30000);
 
         return () => clearInterval(watchInterval);
-    }, [courseId, enrollmentId]);
+    }, [courseId]);
 
     useEffect(() => {
         const fetchCourseData = async () => {
@@ -158,6 +181,43 @@ export default function ApplicationForm() {
         fetchCourseData();
     }, [courseId, userToken]);
 
+    async function fetchAddressesData() {
+        let addressesResponse = await serverApi.getUserAddresses()
+        
+        if (!addressesResponse || addressesResponse.error) {
+            setAddressData([])
+            setAddrError( `Error getting user addresses, returning empty (${addressesResponse.errorMsg})` )
+        } else {
+            setAddressData(addressesResponse.data || [])
+            // setAddrError("")
+        }
+    }
+
+    useEffect( () => {
+        fetchAddressesData()
+    }, [])
+    
+    async function addNewAddressToServer( address ) {
+        let addressesResponse = await serverApi.addUserAddress( address )
+        if (!addressesResponse || addressesResponse.error) {
+            setAddrError( `Error adding user address (${addressesResponse.errorMsg})` )
+        } else {
+            setAddrError(null)
+        }
+        fetchAddressesData()
+    } 
+    async function onDeleteAddress( id ) {
+        let addressesResponse = await serverApi.deleteUserAddress( id )
+        if (!addressesResponse || addressesResponse.error) {
+            setAddrError( `Error deleting user address (${addressesResponse.errorMsg})` )
+        } else {
+            setAddrError(null)
+        }
+        fetchAddressesData()
+    } 
+    function setCorrespondenceAddress(addr) {
+        updateAddress('correspondenceAddress', addr)
+    }
 
     const handleFileSelect = (id, file) => {
         setFiles(prev => ({ ...prev, [id]: file }));
@@ -398,7 +458,7 @@ export default function ApplicationForm() {
             },
 
             correspondencePostal: () => {
-                if (!hasCorrespondenceAddress) return;
+                if (!hasDifferentCorrespondenceAddress) return;
 
                 const value = formData.correspondenceAddress.postalCode;
 
@@ -444,6 +504,13 @@ export default function ApplicationForm() {
         setErrors(errors);
         return Object.keys(errors).length === 0;
     };
+
+    const AddressSelectPanel = ({ id, selectedAddressId, onSelectAddress, panelExpanded, onExpandPanel }) => {
+
+        return ( <>
+            
+        </>)
+    }
   
   return (
     <div>
@@ -530,226 +597,362 @@ export default function ApplicationForm() {
                     <input id="phone" className="input-readonly" name="phone" type="tel" inputMode="tel" autoComplete="tel" value={formData.phone} onChange={handleChange} required />
                 </div>
             </div>
-
+            
             {/* Dane adresowe */}
             <div className="section-title">
                 <span className="material-symbols-outlined text-primary">home</span>
                 Dane adresowe
             </div>  
+            
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
+            }}>
+                { addressData && addressData.length > 0 ?
+                    addressData.map((item) => {
+                        const isSelected = selectedResidenceAddressId === item.id;
 
+                        return (
+                            <AddressTile
+                                key={`${0}-${item.id}`}
+                                data={item}
+                                selected={isSelected}
+                                onDeleteAddress={onDeleteAddress}
+                                onSelect={() => {
+                                    setSelectedResidenceAddressId(item.id)
+                                    updateAddress('residenceAddress', item)
+                                    if (!hasDifferentCorrespondenceAddress) {
+                                        updateAddress('correspondenceAddress', item)
+                                        setSelectedCorrespondenceAddressId(null)
+                                    }
+                                }}
+                                selectedMessage={`Zaznaczono jako adres zamieszkania`}
+                            />
+                        )
+                    }) : null
+                }
+            </div>
+
+            {/* addr error msg */}
+            {addrError && <div className="error-message">{addrError}</div> }
+
+            { !addResidenceAddressExpanded ?
+                <button className='show-add-adress-panel-button' type="button" name="action"
+                    onClick={() => { setAddResidenceAddressExpanded(true); setAddrError(null)} }> 
+                    Dodaj inny adres 
+                </button> : (null)
+            }
+
+            { addResidenceAddressExpanded ? <>
+                <div className="form-row">
+                    <div className="form-group">
+                        <label htmlFor="address-street">Ulica <span className="required-inline-mark">*</span></label>
+                        <input id="address-street" name="street" autoComplete="address-line1" value={formData.residenceAddress.street} onChange={(e) => handleChange(e, 'residenceAddress')} required />
+
+                        <label htmlFor="address-homeNum">Numer domu <span className="required-inline-mark">*</span></label>
+                        <input id="address-homeNum" name="house" autoComplete="address-line2" value={formData.residenceAddress.house} onChange= {(e) => handleChange(e, 'residenceAddress')} required />
+
+                        <label htmlFor="address-zip">Kod pocztowy <span className="required-inline-mark">*</span></label>
+                        <input id="address-zip" className={errors.residenceAddress_postalCode ? 'input-error' : ''} name="postalCode"
+                            type="text" inputMode="numeric" pattern="\d{2}-\d{3}" maxLength={6} autoComplete="postal-code"
+                            value={formData.residenceAddress.postalCode} onChange={(e) => handleChange(e, 'residenceAddress')} required />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="address-city">Miasto <span className="required-inline-mark">*</span></label>
+                        <input id="address-city" name="city" autoComplete="address-level2" value={formData.residenceAddress.city} onChange={(e) => handleChange(e, 'residenceAddress')} required />
+
+                        <label htmlFor="address-apartNum">Numer mieszkania</label>
+                        <input id="address-apartNum" name="apartment" value={formData.residenceAddress.apartment} onChange={(e) => handleChange(e, 'residenceAddress')} />
+
+                        <label htmlFor="address-country">Kraj <span className="required-inline-mark">*</span></label>
+                        <input id="address-country" name="country" autoComplete="country-name" value={formData.residenceAddress.country} onChange={(e) => handleChange(e, 'residenceAddress')} required />
+                    </div>
+                </div>
+
+                <button className='add-adress-button' type="button" name="action"
+                    onClick={ () => {
+                        addNewAddressToServer( {
+                            "street": formData.residenceAddress.street,
+                            "house_number": formData.residenceAddress.house,
+                            "flat_number": formData.residenceAddress.apartment,
+                            "city": formData.residenceAddress.city,
+                            "country": formData.residenceAddress.country,
+                            "postal_code": formData.residenceAddress.postalCode
+                        });
+                        setAddResidenceAddressExpanded(false);
+                }}> Przypisz nowy adres do konta </button>
+
+                </> : (null) 
+            }
+
+            <div> 
+                <label className="checkbox-container">
+                    <input
+                        type="checkbox"
+                        checked={hasDifferentCorrespondenceAddress}
+                        onChange={(e) => {
+                            const checked = e.target.checked;
+                            setHasDifferentCorrespondenceAddress(checked);
+
+                            if (!checked) {
+                                updateAddress('correspondenceAddress', {
+                                    street: formData.residenceAddress.street,
+                                    house_number: formData.residenceAddress.house,
+                                    flat_number: formData.residenceAddress.apartment,
+                                    city: formData.residenceAddress.city,
+                                    country: formData.residenceAddress.country,
+                                    postal_code: formData.residenceAddress.postalCode
+                                });
+                                setSelectedCorrespondenceAddressId(null);
+                            }
+                        }}
+                    />
+                    Adres korespondencyjny jest inny niż zamieszkania
+                </label>
+            </div>
+
+            { hasDifferentCorrespondenceAddress && ( <div>
+                {/* Dane adresowe */}
+                <div className="section-title">
+                    <span className="material-symbols-outlined text-primary">home</span>
+                    Dane do korespondencji
+                </div>  
+                
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px'
+                }}>
+                    { addressData && addressData.length > 0 ?
+                        addressData.map((item) => {
+                            const isSelected = selectedCorrespondenceAddressId === item.id;
+
+                            return (
+                                <AddressTile
+                                    key={`1-${item.id}`}
+                                    data={item}
+                                    selected={isSelected}
+                                    onDeleteAddress={onDeleteAddress}
+                                    onSelect={() => {
+                                        setSelectedCorrespondenceAddressId(item.id)
+                                        updateAddress('correspondenceAddress', item)
+                                    }}
+                                    selectedMessage={`Zaznaczono jako adres korespondencyjny`}
+                                />
+                            )
+                        }) : null
+                    }
+                </div>
+
+                {/* addr error msg */}
+                {addrError && <div className="error-message">{addrError}</div> }
+
+                { !addCorrespondenceAddressExpanded ?
+                    <button className='show-add-adress-panel-button' type="button" name="action"
+                        onClick={() => { setAddCorrespondenceAddressExpanded(true); setAddrError(null)} }> 
+                        Dodaj inny adres 
+                    </button> : (null)
+                }
+
+                { addCorrespondenceAddressExpanded ? <>
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="address-street">Ulica <span className="required-inline-mark">*</span></label>
+                            <input id="address-street" name="street" autoComplete="address-line1" value={formData.correspondenceAddress.street} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
+
+                            <label htmlFor="address-homeNum">Numer domu <span className="required-inline-mark">*</span></label>
+                            <input id="address-homeNum" name="house" autoComplete="address-line2" value={formData.correspondenceAddress.house} onChange= {(e) => handleChange(e, 'correspondenceAddress')} required />
+
+                            <label htmlFor="address-zip">Kod pocztowy <span className="required-inline-mark">*</span></label>
+                            <input id="address-zip" className={errors.correspondenceAddress_postalCode ? 'input-error' : ''} name="postalCode"
+                                type="text" inputMode="numeric" pattern="\d{2}-\d{3}" maxLength={6} autoComplete="postal-code"
+                                value={formData.correspondenceAddress.postalCode} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="address-city">Miasto <span className="required-inline-mark">*</span></label>
+                            <input id="address-city" name="city" autoComplete="address-level2" value={formData.correspondenceAddress.city} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
+
+                            <label htmlFor="address-apartNum">Numer mieszkania</label>
+                            <input id="address-apartNum" name="apartment" value={formData.correspondenceAddress.apartment} onChange={(e) => handleChange(e, 'correspondenceAddress')} />
+
+                            <label htmlFor="address-country">Kraj <span className="required-inline-mark">*</span></label>
+                            <input id="address-country" name="country" autoComplete="country-name" value={formData.correspondenceAddress.country} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
+                        </div>
+                    </div>
+
+                    <button className='add-adress-button' type="button" name="action"
+                        onClick={ () => {
+                            addNewAddressToServer( {
+                                "street": formData.correspondenceAddress.street,
+                                "house_number": formData.correspondenceAddress.house,
+                                "flat_number": formData.correspondenceAddress.apartment,
+                                "city": formData.correspondenceAddress.city,
+                                "country": formData.correspondenceAddress.country,
+                                "postal_code": formData.correspondenceAddress.postalCode
+                            });
+                            setAddCorrespondenceAddressExpanded(false);
+                    }}> Przypisz nowy adres do konta </button>
+
+                    </> : (null) 
+                }
+            </div> )}
+
+            {/* WYKSZTALCENIE */}
+            <div className="section-title">
+                <span className="material-symbols-outlined text-primary">school</span>
+                Wykształcenie
+                </div>
             <div className="form-row">
                 <div className="form-group">
-                    <label htmlFor="address-street">Ulica <span className="required-inline-mark">*</span></label>
-                    <input id="address-street" name="street" autoComplete="address-line1" value={formData.residenceAddress.street} onChange={(e) => handleChange(e, 'residenceAddress')} required />
+                    <label htmlFor="studiesName">Nazwa uczeli wyższej <span className="required-inline-mark">*</span></label>
+                    <input id="studiesName" name="educationUniversity" value={formData.educationUniversity} onChange={handleChange} required/>
 
-                    <label htmlFor="address-homeNum">Numer domu <span className="required-inline-mark">*</span></label>
-                    <input id="address-homeNum" name="house" autoComplete="address-line2" value={formData.residenceAddress.house} onChange= {(e) => handleChange(e, 'residenceAddress')} required />
-
-                    <label htmlFor="address-zip">Kod pocztowy <span className="required-inline-mark">*</span></label>
-                    <input id="address-zip" className={errors.residenceAddress_postalCode ? 'input-error' : ''} name="postalCode"
-                           type="text" inputMode="numeric" pattern="\d{2}-\d{3}" maxLength={6} autoComplete="postal-code"
-                           value={formData.residenceAddress.postalCode} onChange={(e) => handleChange(e, 'residenceAddress')} required />
+                    <label htmlFor="studiesLocation">Lokalizacja <span className="required-inline-mark">*</span></label>
+                    <input id="studiesLocation" name="educationLocation" value={formData.educationLocation} onChange={handleChange} required/>
                 </div>
                 <div className="form-group">
-                    <label htmlFor="address-city">Miasto <span className="required-inline-mark">*</span></label>
-                    <input id="address-city" name="city" autoComplete="address-level2" value={formData.residenceAddress.city} onChange={(e) => handleChange(e, 'residenceAddress')} required />
+                    <label htmlFor="educationYear">Rok zakończenia <span className="required-inline-mark">*</span></label>
+                    <input id="educationYear" name="educationYear" type="text" inputMode="numeric"
+                            pattern="\d{4}" maxLength={4} value={formData.educationYear} onChange={handleChange}
+                            className={errors.educationYear ? 'input-error' : ''} required/>
 
-                    <label htmlFor="address-apartNum">Numer mieszkania</label>
-                    <input id="address-apartNum" name="apartment" value={formData.residenceAddress.apartment} onChange={(e) => handleChange(e, 'residenceAddress')} />
-
-                    <label htmlFor="address-country">Kraj <span className="required-inline-mark">*</span></label>
-                    <input id="address-country" name="country" autoComplete="country-name" value={formData.residenceAddress.country} onChange={(e) => handleChange(e, 'residenceAddress')} required />
+                    <label>Miejsce uzyskania świadectwa dojrzałości <span className="required-inline-mark">*</span></label>
+                    <select
+                        className="radio-group"
+                        name="maturityCountry"
+                        value={formData.maturityCountry}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="Polska">Polska</option>
+                        <option value="Poza Polską">Poza Polską</option>
+                    </select>
                 </div>
+            </div>
+            <small className="hint-text">* dane pobierane tylko dla celów statystycznych</small>
+
+            {/* KONTAKT AWARYJNY */}
+            <div className="section-title">
+                <span className="material-symbols-outlined text-primary">phone</span>
+                Kontakt awaryjny
             </div>
 
             <label className="checkbox-container">
-                <input type="checkbox" checked={hasCorrespondenceAddress} onChange={(e) => setHasCorrespondenceAddress(e.target.checked)} />
-                Adres korespondencyjny jest inny niż zamieszkania
+                <input type="checkbox" checked={hasEmergencyContact} onChange={(e) => setHasEmergencyContact(e.target.checked)} />
+                Chcę dodać kontakt awaryjny
             </label>
 
+            <div className="form-row">
+                {hasEmergencyContact && (
+                    <><div className="form-group">
+                        <label htmlFor="emergencyName">Imię kontaktu</label>
+                        <input id="emergencyName" name="emergencyName" autoComplete="name" value={formData.emergencyName} onChange={handleChange} />
 
-            { hasCorrespondenceAddress && ( <div>
-                <div className="section-title"> Adres korespondencyjny </div>
-                <div className="form-row">
-                    <div className="form-group">
-
-                        <label htmlFor="correspondence-street">Ulica <span className="required-inline-mark">*</span></label>
-                        <input id="correspondence-street" name="street" autoComplete="correspondence-street" value={formData.correspondenceAddress.street} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
-
-                        <label htmlFor="correspondence-homeNum">Numer domu <span className="required-inline-mark">*</span></label>
-                        <input id="correspondence-homeNum" name="house" autoComplete="correspondence-homeNum" value={formData.correspondenceAddress.house} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
-
-                        <label htmlFor="correspondence-zip">Kod pocztowy <span className="required-inline-mark">*</span></label>
-                        <input id="correspondence-zip" className={errors.correspondenceAddress_postalCode ? 'input-error' : ''} name="postalCode"
-                               type="text" inputMode="numeric" pattern="\d{2}-\d{3}" maxLength={6} autoComplete="postal-code"
-                               value={formData.correspondenceAddress.postalCode} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
+                        <label htmlFor="emergencyPhone">Telefon kontaktu awaryjnego</label>
+                        <input id="emergencyPhone" name="emergencyPhone" type="tel" inputMode="tel" autoComplete="tel" value={formData.emergencyPhone} onChange={handleChange} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="correspondence-city">Miasto <span className="required-inline-mark">*</span></label>
-                        <input id="correspondence-city" name="city" autoComplete="correspondence-city" value={formData.correspondenceAddress.city} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
+                        <label htmlFor="emergencyLastName">Nazwisko kontaktu</label>
+                        <input id="emergencyLastName" name="emergencyLastName" autoComplete="family-name" value={formData.emergencyLastName} onChange={handleChange} />
+                    </div></>
+                )}
+            </div>
 
-                        <label htmlFor="correspondence-apartNum">Numer mieszkania</label>
-                        <input id="correspondence-apartNum" name="apartment" autoComplete="correspondence-apartNum" value={formData.correspondenceAddress.apartment} onChange={(e) => handleChange(e, 'correspondenceAddress')} />
+            {/* DOKUMENTY */}
+            <div className="section-title">
+            <span className="material-symbols-outlined text-primary">upload_file</span>
+                Dokumenty
+            </div>
 
-                        <label htmlFor="correspondence-country">Kraj <span className="required-inline-mark">*</span></label>
-                        <input id="correspondence-country" name="country" autoComplete="correspondence-country" value={formData.correspondenceAddress.country} onChange={(e) => handleChange(e, 'correspondenceAddress')} required />
-                    </div>
-                </div>
-            </div> )}
+            <div className="form-row" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                {documents.map(doc => (
+                    <DocumentUploadCard
+                        key={doc.id}
+                        id={doc.id}
+                        title={doc.name + (doc.required ? " *" : "")}
+                        formats="PDF, DOC"
+                        maxSize="5MB"
+                        icon="description"
+                        onFileSelect={handleFileSelect}
+                        onFileRemove={handleFileRemove}
+                        required={doc.required}
+                        previouslyUploaded={!!existingDocuments[doc.id]}
+                    />
+                ))}
+            </div>
+            
+            {/* Zgody i regulamin */}
+            <div className="section-title">Zgody i regulaminy</div>
+            <div className="consent-box">
 
-                {/* WYKSZTALCENIE */}
-                <div className="section-title">
-                    <span className="material-symbols-outlined text-primary">school</span>
-                    Wykształcenie
-                    </div>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label htmlFor="studiesName">Nazwa uczeli wyższej <span className="required-inline-mark">*</span></label>
-                        <input id="studiesName" name="educationUniversity" value={formData.educationUniversity} onChange={handleChange} required/>
+                <label className="consent-item">
+                    <input
+                        type="checkbox"
+                        name="data"
+                        checked={formData.consents.data}
+                        onChange={(e) => handleChange(e, 'consents')}
+                    />
+                    <span className="consent-text">
+                        <span className="required-inline-mark">*</span>
+                        Potwierdzam, że wszystkie podane powyżej dane są zgodne z prawdą w momencie wypełnienia.</span>
+                    </label>
 
-                        <label htmlFor="studiesLocation">Lokalizacja <span className="required-inline-mark">*</span></label>
-                        <input id="studiesLocation" name="educationLocation" value={formData.educationLocation} onChange={handleChange} required/>
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="educationYear">Rok zakończenia <span className="required-inline-mark">*</span></label>
-                        <input id="educationYear" name="educationYear" type="text" inputMode="numeric"
-                               pattern="\d{4}" maxLength={4} value={formData.educationYear} onChange={handleChange}
-                               className={errors.educationYear ? 'input-error' : ''} required/>
+                <label className="consent-item">
+                    <input
+                        type="checkbox"
+                        name="rules"
+                        checked={formData.consents.rules}
+                        onChange={(e) => handleChange(e, 'consents')}
+                    />
 
-                        <label>Miejsce uzyskania świadectwa dojrzałości <span className="required-inline-mark">*</span></label>
-                        <select
-                            className="radio-group"
-                            name="maturityCountry"
-                            value={formData.maturityCountry}
-                            onChange={handleChange}
-                            required
-                        >
-                            <option value="Polska">Polska</option>
-                            <option value="Poza Polską">Poza Polską</option>
-                        </select>
-                    </div>
-                </div>
-                <small className="hint-text">* dane pobierane tylko dla celów statystycznych</small>
-
-                {/* KONTAKT AWARYJNY */}
-                <div className="section-title">
-                    <span className="material-symbols-outlined text-primary">phone</span>
-                    Kontakt awaryjny
-                </div>
-
-                <label className="checkbox-container">
-                    <input type="checkbox" checked={hasEmergencyContact} onChange={(e) => setHasEmergencyContact(e.target.checked)} />
-                    Chcę dodać kontakt awaryjny
-                </label>
-
-                <div className="form-row">
-                    {hasEmergencyContact && (
-                        <><div className="form-group">
-                            <label htmlFor="emergencyName">Imię kontaktu</label>
-                            <input id="emergencyName" name="emergencyName" autoComplete="name" value={formData.emergencyName} onChange={handleChange} />
-
-                            <label htmlFor="emergencyPhone">Telefon kontaktu awaryjnego</label>
-                            <input id="emergencyPhone" name="emergencyPhone" type="tel" inputMode="tel" autoComplete="tel" value={formData.emergencyPhone} onChange={handleChange} />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="emergencyLastName">Nazwisko kontaktu</label>
-                            <input id="emergencyLastName" name="emergencyLastName" autoComplete="family-name" value={formData.emergencyLastName} onChange={handleChange} />
-                        </div></>
-                    )}
-                </div>
-
-                {/* DOKUMENTY */}
-                <div className="section-title">
-                <span className="material-symbols-outlined text-primary">upload_file</span>
-                    Dokumenty
-                </div>
-
-                <div className="form-row" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-                    {documents.map(doc => (
-                        <DocumentUploadCard
-                            key={doc.id}
-                            id={doc.id}
-                            title={doc.name + (doc.required ? " *" : "")}
-                            formats="PDF, DOC"
-                            maxSize="5MB"
-                            icon="description"
-                            onFileSelect={handleFileSelect}
-                            onFileRemove={handleFileRemove}
-                            required={doc.required}
-                            previouslyUploaded={!!existingDocuments[doc.id]}
-                        />
-                    ))}
-                </div>
-                
-                {/* Zgody i regulamin */}
-                <div className="section-title">Zgody i regulaminy</div>
-                <div className="consent-box">
-
-                    <label className="consent-item">
-                        <input
-                            type="checkbox"
-                            name="data"
-                            checked={formData.consents.data}
-                            onChange={(e) => handleChange(e, 'consents')}
-                        />
+                    <div className="consent-content">
                         <span className="consent-text">
                             <span className="required-inline-mark">*</span>
-                            Potwierdzam, że wszystkie podane powyżej dane są zgodne z prawdą w momencie wypełnienia.</span>
-                        </label>
+                            Potwierdzam, że zapoznałem się z treścia i zobowiązuję się przestrzegać regulaminu studiów AGH.
+                        </span>
 
-                    <label className="consent-item">
-                        <input
-                            type="checkbox"
-                            name="rules"
-                            checked={formData.consents.rules}
-                            onChange={(e) => handleChange(e, 'consents')}
-                        />
+                        <a
+                            className="inline-link consent-link"
+                            href="/assets/dokumenty/regulamin-studiow-podyplomowych-agh.pdf"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Pełna treść dokumentu.
+                            <span className="material-symbols-outlined">open_in_new</span>
+                        </a>
+                    </div>
+                </label>
 
-                        <div className="consent-content">
-                            <span className="consent-text">
-                                <span className="required-inline-mark">*</span>
-                                Potwierdzam, że zapoznałem się z treścia i zobowiązuję się przestrzegać regulaminu studiów AGH.
-                            </span>
+                <label className="consent-item">
+                    <input
+                        type="checkbox"
+                        name="rodo"
+                        checked={formData.consents.rodo}
+                        onChange={(e) => handleChange(e, 'consents')}
+                    />
 
-                            <a
-                                className="inline-link consent-link"
-                                href="/assets/dokumenty/regulamin-studiow-podyplomowych-agh.pdf"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                Pełna treść dokumentu.
-                                <span className="material-symbols-outlined">open_in_new</span>
-                            </a>
-                        </div>
-                    </label>
+                    <div className="consent-content">
+                        <span className="consent-text">
+                            <span className="required-inline-mark">*</span>
+                            Zgodnie z Rozporządzeniem Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016 r. w sprawie ochrony osób fizycznych w związku z przetwarzaniem danych osobowych i w sprawie swobodnego przepływu takich danych oraz uchylenia dyrektywy 95/46/WE (ogólne rozporządzenie o ochronie danych) [Dz. U. UE.L.2016.119.1 z dnia 4 maja 2016 r.], zwanego dalej RODO, wyrażam zgodę na przetwarzanie moich danych osobowych w ramach procesu rekrutacji na powyższe studia i dokumentowanie ich przebiegu.
+                        </span>
 
-                    <label className="consent-item">
-                        <input
-                            type="checkbox"
-                            name="rodo"
-                            checked={formData.consents.rodo}
-                            onChange={(e) => handleChange(e, 'consents')}
-                        />
+                        <a
+                            className="inline-link consent-link"
+                            href="/assets/dokumenty/zgoda_na_przetwarzanie_danych_osobowych.pdf"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Pełna treść dokumentu.
+                            <span className="material-symbols-outlined">open_in_new</span>
+                        </a>
+                    </div>
+                </label>
 
-                        <div className="consent-content">
-                            <span className="consent-text">
-                                <span className="required-inline-mark">*</span>
-                                Zgodnie z Rozporządzeniem Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016 r. w sprawie ochrony osób fizycznych w związku z przetwarzaniem danych osobowych i w sprawie swobodnego przepływu takich danych oraz uchylenia dyrektywy 95/46/WE (ogólne rozporządzenie o ochronie danych) [Dz. U. UE.L.2016.119.1 z dnia 4 maja 2016 r.], zwanego dalej RODO, wyrażam zgodę na przetwarzanie moich danych osobowych w ramach procesu rekrutacji na powyższe studia i dokumentowanie ich przebiegu.
-                            </span>
-
-                            <a
-                                className="inline-link consent-link"
-                                href="/assets/dokumenty/zgoda_na_przetwarzanie_danych_osobowych.pdf"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                Pełna treść dokumentu.
-                                <span className="material-symbols-outlined">open_in_new</span>
-                            </a>
-                        </div>
-                    </label>
-
-                </div>
+            </div>
             
             {/* Komunikat o błędach zbiorczy */}
             {Object.keys(errors).length > 0 && (

@@ -183,11 +183,11 @@ export default function MyApplications({}) {
                                 <ApplicationCard 
                                     key={i}
                                     keyId={i}
-                                    id={app.id} 
+                                    id={app.id}
                                     documentName={app.name}
                                     studies_edition={app.studies_edition}
                                     statuses={app.status}
-                                    unfinished={true} 
+                                    unfinished={true}
                                 />
                             ))
                         )
@@ -205,7 +205,7 @@ export default function MyApplications({}) {
                                 <ApplicationCard 
                                     key={i + unfinishedApplications.length}
                                     keyId={i + unfinishedApplications.length}
-                                    id={app.id} 
+                                    id={app.id}
                                     documentName={app.name}
                                     type={app.type}
                                     studies_edition={app.studies_edition}

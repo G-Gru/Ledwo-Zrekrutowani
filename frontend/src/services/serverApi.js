@@ -1183,4 +1183,23 @@ export class serverApi {
         };
     }
 
+    static async getUserAddresses() {
+        // http://localhost:8000/api/enrollments/addresses/
+
+        let token = getAccessToken()
+        let addressesResponse = await this.apiRequest('/api/enrollments/addresses/', 'GET', null, token)
+        return addressesResponse
+    }
+
+    static async deleteUserAddress( index ) {
+        let token = getAccessToken()
+        let addressesResponse = await this.apiRequest(`/api/enrollments/addresses/${index}/`, 'DELETE', null, token)
+        console.log(addressesResponse)
+        return addressesResponse
+    }
+    static async addUserAddress( addressData ) {
+        let token = getAccessToken()
+        let addressesResponse = await this.apiRequest(`/api/enrollments/addresses/`, 'POST', addressData, token)
+        return addressesResponse
+    }
 }
