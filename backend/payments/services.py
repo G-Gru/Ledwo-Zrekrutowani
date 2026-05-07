@@ -10,12 +10,21 @@ from payments.models import Fee, Payment, PaymentHistory
 from enrollments.services import check_and_promote_to_student
 
 
-def create_fee_for_enrollment(enrollment, edition):
+def create_application_fee(enrollment, edition):
     fee = Fee.objects.create(
         enrollment=enrollment,
         title=f"Opłata rekrutacyjna za {edition.studies.name}",
         amount=Decimal('100.00'),
         due_date=edition.recruitment_end_date,
+    )
+    send_fee_issued_email(fee)
+
+def create_tuition_fee(enrollment, edition):
+    fee = Fee.objects.create(
+        enrollment=enrollment,
+        title=f"Opłata za {edition.studies.name}",
+        amount=enrollment.studies_edition.price,
+        due_date=datetime.date.today() + datetime.timedelta(days=30),
     )
     send_fee_issued_email(fee)
 
