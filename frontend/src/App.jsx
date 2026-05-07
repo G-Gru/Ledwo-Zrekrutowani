@@ -24,6 +24,7 @@ import ApplicationReviewDetails from './pages/admin-pages/ApplicationReviewDetai
 import CoordinatorRecruitmentStats from './pages/admin-pages/CoordinatorRecruitmentStats';
 import { getUser, isLoggedIn } from './services/authService';
 import NavigationPage from './pages/NavigationPage';
+import FAQ from './pages/FAQ';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -169,6 +170,11 @@ function App() {
               <DataExport />
             </ProtectedRoute>
           )}
+        />
+
+        <Route
+          path='/faq'
+          element={<FAQ/>}
         />
 
       </Routes>

@@ -53,7 +53,7 @@
     font-size: smaller;
 }
 .single-application-card:hover {
-    border-color: black;
+    border: 2px black solid;
 }
 
 .line-item-title {
@@ -63,9 +63,8 @@
 }
 
 .single-application-card.active {
-    border-left: 4px solid var(--primary);
     background: var(--surface-tint);
-    border: 2px var(--primary) dashed;
+    border: 2px var(--primary) solid;
 }
 
 .status-badges-container {
@@ -95,6 +94,14 @@
     display: inline-block;
 }
 
+.application-warning {
+    color: #cc0000;
+    display: flex;
+    flex-direction: row;
+    font-size: 0.6rem;
+    font-weight: 600;
+    position:inherit;
+}
 .status-red { background-color: #ffcccc; color: #cc0000; border: 1px solid #cc0000; }
 .status-yellow { background-color: #fff4cc; color: #b38600; border: 1px solid #b38600; }
 .status-blue { background-color: #cce0ff; color: #005ce6; border: 1px solid #005ce6; }
@@ -174,4 +181,9 @@
     cursor: pointer;
     font-size: 0.75em;
     text-decoration: underline;
+}
+
+.docs-inline-link.faq {
+    text-align: left;
+    font-size: medium;
 }

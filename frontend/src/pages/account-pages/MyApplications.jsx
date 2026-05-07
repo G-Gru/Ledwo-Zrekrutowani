@@ -78,10 +78,18 @@ export default function MyApplications({}) {
                     {/* Statusy */}
                     <div className="status-badges-container">
                         { !unfinished ? 
-                            statuses.map((status, idx) => (
-                                <div key={idx} className={`application-status ${getStatusColorClass(status)}`}>
-                                    {getStatusPolishTranslation(status)}
-                                </div>
+                            statuses.map((status, idx) => ( <>
+                                { getStatusColorClass(status) === 'status-red' ? 
+                                    <div key={idx} style={{ justifyContent:'center' }}className={`application-warning`}>
+                                        <span className="material-symbols-outlined status-icon">
+                                            warning
+                                        </span>
+                                        {getStatusPolishTranslation(status)}
+                                    </div> :
+                                    <div key={idx} style={{ justifyContent:'center' }}className={`application-status ${getStatusColorClass(status)}`}>
+                                        {getStatusPolishTranslation(status)}
+                                    </div>
+                                } </>
                             ))
                         :  <div className={`application-status ${getStatusColorClass("draft")}`}> Wniosek niewypełniony </div>
                         }
@@ -224,10 +232,9 @@ export default function MyApplications({}) {
 
                     <div className="right-panel help-panel">
                         <h3 className="help-title">Potrzebujesz pomocy?</h3>
-                        <a href="#faq" className="help-link">
-                            <span>FAQ</span>
-                            <span className="material-symbols-outlined icon-small">open_in_new</span>
-                        </a>
+                        <div onClick={() => navigate('/faq')} className="docs-inline-link faq">
+                            FAQ <span className="material-symbols-outlined icon-small">open_in_new</span>
+                        </div>
                     </div>
                 </div>
             </div>
