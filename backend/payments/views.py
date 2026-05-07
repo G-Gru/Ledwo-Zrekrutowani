@@ -7,8 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from payments import services
-from payments.models import Fees, Payments
-from payments.serializers import FeesWithEditionSerializer, AdminFeeSerializer, AdminPaymentSerializer
+from payments.models import Fee, Payment
+from payments.serializers import FeeWithEditionSerializer, AdminFeeSerializer, AdminPaymentSerializer
 from studies.models import StudiesEdition, StudiesEditionStaff
 from users.permissions import IsStudent, IsEmployee
 
@@ -40,11 +40,11 @@ def _scope_payments_queryset_for_user(payments_qs, user):
 
 
 class PaymentHistoryListAPIView(generics.ListAPIView):
-    serializer_class = FeesWithEditionSerializer
+    serializer_class = FeeWithEditionSerializer
     permission_classes = [IsAuthenticated, IsStudent]
 
     def get_queryset(self):
-        return (Fees.objects
+        return (Fee.objects
                 .filter(enrollment__user=self.request.user, paid_date__isnull=False)
                 .select_related('enrollment__studies_edition__studies')
                 .prefetch_related('payments')
@@ -52,11 +52,11 @@ class PaymentHistoryListAPIView(generics.ListAPIView):
 
 
 class PaymentUpcomingListAPIView(generics.ListAPIView):
-    serializer_class = FeesWithEditionSerializer
+    serializer_class = FeeWithEditionSerializer
     permission_classes = [IsAuthenticated, IsStudent]
 
     def get_queryset(self):
-        return (Fees.objects
+        return (Fee.objects
                 .filter(enrollment__user=self.request.user, paid_date__isnull=True)
                 .select_related('enrollment__studies_edition__studies')
                 .prefetch_related('payments')
@@ -67,7 +67,7 @@ class PayFeeAPIView(views.APIView):
     permission_classes = [IsAuthenticated, IsStudent]
 
     def post(self, request, fee_pk):
-        fee = get_object_or_404(Fees, pk=fee_pk, enrollment__user=request.user)
+        fee = get_object_or_404(Fee, pk=fee_pk, enrollment__user=request.user)
         if fee.paid_date is not None:
             return Response({"detail": "Ta opłata została już uregulowana."}, status=status.HTTP_400_BAD_REQUEST)
         proof_file = request.FILES.get('file')
@@ -75,12 +75,12 @@ class PayFeeAPIView(views.APIView):
         return Response({"detail": "Płatność zrealizowana."}, status=status.HTTP_200_OK)
 
 
-class AdminFeesListAPIView(generics.ListAPIView):
+class AdminFeeListAPIView(generics.ListAPIView):
     permission_classes = [IsEmployee]
     serializer_class = AdminFeeSerializer
 
     def get_queryset(self):
-        base_qs = Fees.objects.select_related(
+        base_qs = Fee.objects.select_related(
             'enrollment__user',
             'enrollment__form',
             'enrollment__studies_edition__studies'
@@ -89,12 +89,12 @@ class AdminFeesListAPIView(generics.ListAPIView):
         return _scope_fees_queryset_for_user(base_qs, self.request.user).order_by('-issued_date')
 
 
-class AdminPaymentsListAPIView(generics.ListAPIView):
+class AdminPaymentListAPIView(generics.ListAPIView):
     permission_classes = [IsEmployee]
     serializer_class = AdminPaymentSerializer
 
     def get_queryset(self):
-        base_qs = Payments.objects.select_related(
+        base_qs = Payment.objects.select_related(
             'fee__enrollment__user',
             'fee__enrollment__form',
             'fee__enrollment__studies_edition',
@@ -109,8 +109,8 @@ class AdminFinanceDashboardAPIView(views.APIView):
     def get(self, request):
         today = datetime.date.today()
 
-        fees_qs = _scope_fees_queryset_for_user(Fees.objects.all(), request.user)
-        payments_qs = _scope_payments_queryset_for_user(Payments.objects.all(), request.user)
+        fees_qs = _scope_fees_queryset_for_user(Fee.objects.all(), request.user)
+        payments_qs = _scope_payments_queryset_for_user(Payment.objects.all(), request.user)
 
         total_collected = fees_qs.filter(paid_date__isnull=False).aggregate(
             s=Sum('amount'))['s'] or 0
@@ -166,7 +166,7 @@ class AdminPaymentApproveAPIView(views.APIView):
     permission_classes = [IsEmployee]
 
     def post(self, request, payment_pk):
-        payments_qs = _scope_payments_queryset_for_user(Payments.objects.all(), request.user)
+        payments_qs = _scope_payments_queryset_for_user(Payment.objects.all(), request.user)
         payment = get_object_or_404(payments_qs, pk=payment_pk)
         if payment.status != "PENDING":
             return Response({"detail": "Ta płatność nie oczekuje na zatwierdzenie."}, status=status.HTTP_400_BAD_REQUEST)

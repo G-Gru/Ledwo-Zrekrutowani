@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 
 from enrollments.models import Enrollment, Address, FormData, SubmittedDocument, DocumentHistory
-from payments.models import Fees, Payments, PaymentsHistory
+from payments.models import Fee, Payment, PaymentHistory
 from studies.models import Studies, StudiesEdition, StudiesEditionStaff, StudiesDocument
 from users.models import User, Employee, WorkPhoneNumber
 
@@ -15,9 +15,9 @@ class Command(BaseCommand):
         today = date.today()
 
         # ── Czyszczenie bazy ────────────────────────────────────────────────
-        PaymentsHistory.objects.all().delete()
-        Payments.objects.all().delete()
-        Fees.objects.all().delete()
+        PaymentHistory.objects.all().delete()
+        Payment.objects.all().delete()
+        Fee.objects.all().delete()
         DocumentHistory.objects.all().delete()
         SubmittedDocument.objects.all().delete()
         FormData.objects.all().delete()
@@ -310,31 +310,31 @@ class Command(BaseCommand):
             return enr
 
         def paid_fee(enr, amount, due_days, paid_days, ref):
-            fee = Fees.objects.create(
+            fee = Fee.objects.create(
                 enrollment=enr,
-                title=f"Opłata za {enr.studies_edition.studies.name}",
+                title=f"Opłata rekrutacyjna za {enr.studies_edition.studies.name}",
                 amount=amount,
                 due_date=today + timedelta(days=due_days),
                 paid_date=today - timedelta(days=paid_days),
             )
-            pmt = Payments.objects.create(
+            pmt = Payment.objects.create(
                 fee=fee, payment_method="PRZELEW",
                 reference_number=ref, status="COMPLETED",
             )
-            PaymentsHistory.objects.create(payment=pmt, previous_status=None, new_status="COMPLETED")
+            PaymentHistory.objects.create(payment=pmt, previous_status=None, new_status="COMPLETED")
 
         def pending_fee(enr, amount, due_days, ref):
-            fee = Fees.objects.create(
+            fee = Fee.objects.create(
                 enrollment=enr,
-                title=f"Opłata za {enr.studies_edition.studies.name}",
+                title=f"Opłata rekrutacyjna za {enr.studies_edition.studies.name}",
                 amount=amount,
                 due_date=today + timedelta(days=due_days),
             )
-            pmt = Payments.objects.create(
+            pmt = Payment.objects.create(
                 fee=fee, payment_method="PRZELEW",
                 reference_number=ref, status="PENDING",
             )
-            PaymentsHistory.objects.create(payment=pmt, previous_status=None, new_status="PENDING")
+            PaymentHistory.objects.create(payment=pmt, previous_status=None, new_status="PENDING")
 
         # ── Enrollments ───────────────────────────────────────────────────────
         # Anna Kowalska — STUDENT, Bazy Danych ACTIVE
@@ -345,7 +345,7 @@ class Command(BaseCommand):
             pesel="92031412345", phone="501234567",
             university="Politechnika Warszawska", edu_year=2019, edu_city="Warszawa",
         ))
-        paid_fee(e, 3800, 14, 7, 1001)
+        paid_fee(e, 100, 14, 7, 1001)
 
         # Piotr Wiśniewski — STUDENT, Systemy ERP ACTIVE
         e = make_enrollment(students[1], editions[2], Enrollment.Status.STUDENT, 8, dict(
@@ -355,7 +355,7 @@ class Command(BaseCommand):
             pesel="88072212345", phone="502345678",
             university="AGH", edu_year=2015, edu_city="Kraków",
         ))
-        paid_fee(e, 4200, 10, 6, 1002)
+        paid_fee(e, 100, 10, 6, 1002)
 
         # Katarzyna Wójcik — CANDIDATE, Data Science ACTIVE
         e = make_enrollment(students[2], editions[5], Enrollment.Status.CANDIDATE, 3, dict(
@@ -365,7 +365,7 @@ class Command(BaseCommand):
             pesel="95110812345", phone="503456789",
             university="Politechnika Wrocławska", edu_year=2022, edu_city="Wrocław",
         ))
-        pending_fee(e, 4800, 20, 1003)
+        pending_fee(e, 100, 20, 1003)
 
         # Michał Kowalczyk — STUDENT, Zarządzanie Projektami IT ACTIVE
         e = make_enrollment(students[3], editions[3], Enrollment.Status.STUDENT, 12, dict(
@@ -375,7 +375,7 @@ class Command(BaseCommand):
             pesel="90050312345", phone="504567890",
             university="Uniwersytet im. Adama Mickiewicza", edu_year=2017, edu_city="Poznań",
         ))
-        paid_fee(e, 3200, 20, 10, 1004)
+        paid_fee(e, 100, 20, 10, 1004)
 
         # Agnieszka Kamińska — CANDIDATE, Bazy Danych ACTIVE
         e = make_enrollment(students[4], editions[1], Enrollment.Status.CANDIDATE, 5, dict(
@@ -385,7 +385,7 @@ class Command(BaseCommand):
             pesel="97021912346", phone="505678901",
             university="Politechnika Łódzka", edu_year=2021, edu_city="Łódź",
         ))
-        pending_fee(e, 3800, 15, 1005)
+        pending_fee(e, 100, 15, 1005)
 
         # Magdalena Zielińska — STUDENT, Systemy ERP ACTIVE
         e = make_enrollment(students[6], editions[2], Enrollment.Status.STUDENT, 9, dict(
@@ -395,7 +395,7 @@ class Command(BaseCommand):
             pesel="91062512345", phone="507890123",
             university="Politechnika Śląska", edu_year=2016, edu_city="Gliwice",
         ))
-        paid_fee(e, 4200, 8, 8, 1007)
+        paid_fee(e, 100, 8, 8, 1007)
 
         # Krzysztof Szymański — EXPELLED, Bazy Danych CLOSED 2024/2025
         make_enrollment(students[7], editions[0], Enrollment.Status.EXPELLED, 200, dict(
@@ -414,7 +414,7 @@ class Command(BaseCommand):
             pesel="89041712345", phone="509012345",
             university="Politechnika Warszawska", edu_year=2014, edu_city="Warszawa",
         ))
-        paid_fee(e, 4800, 18, 9, 1008)
+        paid_fee(e, 100, 18, 9, 1008)
 
         # Marcin Dąbrowski — CANDIDATE, Zarządzanie Projektami IT ACTIVE
         e = make_enrollment(students[9], editions[3], Enrollment.Status.CANDIDATE, 2, dict(
@@ -424,4 +424,4 @@ class Command(BaseCommand):
             pesel="85081112345", phone="510123456",
             university="Uniwersytet Jagielloński", edu_year=2010, edu_city="Kraków",
         ))
-        pending_fee(e, 3200, 25, 1009)
+        pending_fee(e, 100, 25, 1009)

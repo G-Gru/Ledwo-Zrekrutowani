@@ -1,19 +1,20 @@
 import datetime
+from decimal import Decimal
 
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import transaction
 
 from files.models import File
-from payments.models import Fees, Payments, PaymentsHistory
+from payments.models import Fee, Payment, PaymentHistory
 from enrollments.services import check_and_promote_to_student
 
 
 def create_fee_for_enrollment(enrollment, edition):
-    fee = Fees.objects.create(
+    fee = Fee.objects.create(
         enrollment=enrollment,
-        title=f"Opłata za {edition.studies.name}",
-        amount=edition.price,
+        title=f"Opłata rekrutacyjna za {edition.studies.name}",
+        amount=Decimal('100.00'),
         due_date=edition.recruitment_end_date,
     )
     send_fee_issued_email(fee)
@@ -28,14 +29,14 @@ def pay_fee(fee, proof_file=None):
         else:
             payment_status = "COMPLETED"
 
-        payment = Payments.objects.create(
+        payment = Payment.objects.create(
             fee=fee,
             payment_method="TRANSFER" if proof_file else "ONLINE",
             reference_number=67,
             status=payment_status,
             file=file_obj,
         )
-        PaymentsHistory.objects.create(
+        PaymentHistory.objects.create(
             payment=payment,
             previous_status=None,
             new_status=payment_status,
@@ -52,7 +53,7 @@ def pay_fee(fee, proof_file=None):
 
 def approve_payment(payment):
     with transaction.atomic():
-        PaymentsHistory.objects.create(
+        PaymentHistory.objects.create(
             payment=payment,
             previous_status=payment.status,
             new_status="COMPLETED",

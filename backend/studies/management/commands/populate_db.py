@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 
 from enrollments.models import Enrollment, Address, FormData
-from payments.models import Fees, Payments, PaymentsHistory
+from payments.models import Fee, Payment, PaymentHistory
 from studies.models import Studies, StudiesEdition, StudiesEditionStaff, StudiesDocument
 from studies.services import DELIVERY_DOCUMENT_NAME
 from users.models import User, Employee
@@ -163,7 +163,7 @@ class Command(BaseCommand):
             maturity_country="Polska",
         )
 
-        paid_fee = Fees.objects.create(
+        paid_fee = Fee.objects.create(
             enrollment=enrollment2,
             title=f"Opłata za {active_edition.studies.name}",
             amount=active_edition.price,
@@ -171,14 +171,14 @@ class Command(BaseCommand):
             paid_date=date.today() - timedelta(days=3),
         )
 
-        payment = Payments.objects.create(
+        payment = Payment.objects.create(
             fee=paid_fee,
             payment_method="MOCK",
             reference_number=67,
             status="COMPLETED",
         )
 
-        PaymentsHistory.objects.create(
+        PaymentHistory.objects.create(
             payment=payment,
             previous_status=None,
             new_status="COMPLETED",

@@ -8,8 +8,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from payments.models import Fees
-from payments.serializers import FeesSerializer
+from payments.models import Fee
+from payments.serializers import FeeSerializer
 from studies.models import StudiesEdition, StudiesEditionStaff, StudiesDocument
 from users.permissions import IsObjectOwner, IsStudent, CanViewDocument, IsEmployee
 from . import services
@@ -139,12 +139,12 @@ class EnrollmentRecruitmentEndDateAPIView(generics.RetrieveAPIView):
             user=self.request.user
         ).select_related('studies_edition')
 
-class FeesListAPIView(generics.ListAPIView):
-    serializer_class = FeesSerializer
+class FeeListAPIView(generics.ListAPIView):
+    serializer_class = FeeSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Fees.objects.filter(
+        return Fee.objects.filter(
             enrollment_id=self.kwargs['enrollment_pk'],
             enrollment__user=self.request.user
         ).prefetch_related('payments')
@@ -267,7 +267,7 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['get'], url_path='fees')
     def get_fees(self, request, pk=None):
         enrollment = self.get_object()
-        serializer = FeesSerializer(enrollment.fees.all(), many=True)
+        serializer = FeeSerializer(enrollment.fees.all(), many=True)
         return Response(serializer.data)
 
 

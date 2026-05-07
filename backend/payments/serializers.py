@@ -1,29 +1,29 @@
 from rest_framework import serializers
 
-from payments.models import Fees, Payments
+from payments.models import Fee, Payment
 
 
-class PaymentsSerializer(serializers.ModelSerializer):
+class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Payments
+        model = Payment
         fields = ('id', 'payment_method', 'reference_number', 'status')
 
 
-class FeesSerializer(serializers.ModelSerializer):
-    payments = PaymentsSerializer(many=True, read_only=True)
+class FeeSerializer(serializers.ModelSerializer):
+    payments = PaymentSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Fees
+        model = Fee
         fields = ('id', 'title', 'amount', 'due_date', 'issued_date', 'paid_date', 'payments')
 
 
-class FeesWithEditionSerializer(serializers.ModelSerializer):
-    payments = PaymentsSerializer(many=True, read_only=True)
+class FeeWithEditionSerializer(serializers.ModelSerializer):
+    payments = PaymentSerializer(many=True, read_only=True)
     studies_name = serializers.CharField(source='enrollment.studies_edition.studies.name', read_only=True)
     enrollment_id = serializers.IntegerField(source='enrollment.id', read_only=True)
 
     class Meta:
-        model = Fees
+        model = Fee
         fields = ('id', 'title', 'amount', 'due_date', 'issued_date', 'paid_date', 'enrollment_id', 'studies_name', 'payments')
 
 
@@ -35,7 +35,7 @@ class AdminFeeSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
 
     class Meta:
-        model = Fees
+        model = Fee
         fields = (
             'id',
             'title',
@@ -66,7 +66,7 @@ class AdminPaymentSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
 
     class Meta:
-        model = Payments
+        model = Payment
         fields = ('id', 'fee', 'fee_title', 'amount', 'payment_method', 'reference_number', 'status', 'student_name')
 
     def get_student_name(self, obj):

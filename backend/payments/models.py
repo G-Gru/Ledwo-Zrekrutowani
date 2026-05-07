@@ -4,7 +4,7 @@ from enrollments.models import Enrollment
 from files.models import File
 
 
-class Fees(models.Model):
+class Fee(models.Model):
     enrollment = models.ForeignKey(Enrollment, on_delete=models.RESTRICT, related_name='fees')
     title = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -13,16 +13,16 @@ class Fees(models.Model):
     paid_date = models.DateField(null=True, blank=True)
 
 
-class Payments(models.Model):
-    fee = models.ForeignKey(Fees, on_delete=models.RESTRICT, related_name='payments')
+class Payment(models.Model):
+    fee = models.ForeignKey(Fee, on_delete=models.RESTRICT, related_name='payments')
     payment_method = models.CharField(max_length=50)
     reference_number = models.IntegerField()
     status = models.CharField(max_length=50)
     file = models.OneToOneField(File, on_delete=models.RESTRICT, related_name='payment', null=True, blank=True)
 
 
-class PaymentsHistory(models.Model):
-    payment = models.ForeignKey(Payments, on_delete=models.RESTRICT)
+class PaymentHistory(models.Model):
+    payment = models.ForeignKey(Payment, on_delete=models.RESTRICT)
     modified_date = models.DateField(auto_now_add=True)
     previous_status = models.CharField(max_length=50, null=True, blank=True)
     new_status = models.CharField(max_length=50)

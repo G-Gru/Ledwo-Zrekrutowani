@@ -3,7 +3,7 @@ from django.urls import path
 from enrollments.views import EnrollmentFormCreateAPIView, EnrollmentFormRetrieveUpdateAPIView, \
     AddressListCreateAPIView, AddressRetreiveDestroyAPIView, EnrollmentListAPIView, EnrollmentRetrieveAPIView, \
     ActiveEnrollmentListAPIView, EnrollmentRecruitmentEndDateAPIView, \
-    SubmittedDocumentsListCreateAPIView, FeesListAPIView
+    SubmittedDocumentsListCreateAPIView, FeeListAPIView
 
 urlpatterns = [
     path("editions/<int:edition_pk>/",
@@ -34,6 +34,6 @@ urlpatterns = [
          EnrollmentRecruitmentEndDateAPIView.as_view(),
          name="enrollment-recruitment-end-date"),
     path("<int:enrollment_pk>/fees/",
-         FeesListAPIView.as_view(),
+         FeeListAPIView.as_view(),
          name="fees-list"),
 ]
