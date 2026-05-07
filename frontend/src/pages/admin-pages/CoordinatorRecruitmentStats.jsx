@@ -33,86 +33,15 @@ export default function CoordinatorRecruitmentStats() {
       setLoading(true);
       setError('');
 
-      const listResponse = await serverApi.getAdminEnrollments(token);
-      if (listResponse.error) {
+      const response = await serverApi.getAdminRecruitmentStats(token);
+      if (response.error) {
         setRows([]);
-        setError(listResponse.errorMsg || 'Nie udało się pobrać statystyk rekrutacji.');
+        setError(response.errorMsg || 'Nie udało się pobrać statystyk rekrutacji.');
         setLoading(false);
         return;
       }
 
-      const enrollments = listResponse.enrollments || [];
-      const detailResponses = await Promise.all(
-        enrollments.map((row) => serverApi.getAdminEnrollmentDetails(token, row.id)),
-      );
-
-      const details = detailResponses
-        .filter((item) => !item.error && item.enrollment)
-        .map((item) => item.enrollment);
-
-      const byEditionMap = new Map();
-
-      details.forEach((item) => {
-        const studiesName = item.studies_name || '-';
-        const editionName = item.edition_name || 'Edycja';
-        const mapKey = `${studiesName}::${editionName}`;
-
-        if (!byEditionMap.has(mapKey)) {
-          byEditionMap.set(mapKey, {
-            edition_id: mapKey,
-            studies_name: studiesName,
-            academic_year: editionName,
-            candidates_total: 0,
-            paid_entries_count: 0,
-            unpaid_entries_count: 0,
-            missing_documents_count: 0,
-            statuses: {
-              candidate: 0,
-              student: 0,
-              expelled: 0,
-            },
-            amounts: {
-              total_fees: 0,
-              paid_fees: 0,
-              unpaid_fees: 0,
-            },
-          });
-        }
-
-        const row = byEditionMap.get(mapKey);
-        row.candidates_total += 1;
-
-        if (item.is_fully_paid) {
-          row.paid_entries_count += 1;
-        } else {
-          row.unpaid_entries_count += 1;
-        }
-
-        if (item.missing_documents) {
-          row.missing_documents_count += 1;
-        }
-
-        if (item.status === 'STUDENT') {
-          row.statuses.student += 1;
-        } else if (item.status === 'EXPELLED') {
-          row.statuses.expelled += 1;
-        } else {
-          row.statuses.candidate += 1;
-        }
-
-        (item.fees || []).forEach((fee) => {
-          const amountNum = Number(String(fee.amount || '').replace(/[^\d,.]/g, '').replace(',', '.')) || 0;
-          row.amounts.total_fees += amountNum;
-          if (fee.paid_date) {
-            row.amounts.paid_fees += amountNum;
-          } else {
-            row.amounts.unpaid_fees += amountNum;
-          }
-        });
-      });
-
-      setRows(Array.from(byEditionMap.values()));
-
+      setRows(response.stats || []);
       setLoading(false);
     }
 

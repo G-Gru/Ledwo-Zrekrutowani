@@ -63,28 +63,20 @@ export default function DataExport() {
       setLoading(true);
       setError('');
 
-      const listResponse = await serverApi.getAdminEnrollments(token);
-      if (listResponse.error) {
+      const response = await serverApi.getAdminUsosExport(token);
+      if (response.error) {
         setRows(SAMPLE_EXPORT_ROWS);
         setError('Tryb podglądu: backend niedostępny, wyświetlane są przykładowe dane.');
         setLoading(false);
         return;
       }
 
-      const summaryRows = listResponse.enrollments || [];
-      const detailResponses = await Promise.all(
-        summaryRows.map((row) => serverApi.getAdminEnrollmentDetails(token, row.id))
-      );
-
-      const detailedRows = detailResponses
-        .filter((response) => !response.error && response.enrollment)
-        .map((response) => response.enrollment);
-
-      if (!detailedRows.length) {
+      const exportRows = response.rows || [];
+      if (!exportRows.length) {
         setRows(SAMPLE_EXPORT_ROWS);
         setError('Tryb podglądu: brak danych z backendu, wyświetlane są przykładowe dane.');
       } else {
-        setRows(detailedRows);
+        setRows(exportRows);
       }
 
       setLoading(false);
@@ -138,8 +130,8 @@ export default function DataExport() {
     const headers = ['Imię i nazwisko', 'PESEL', 'Email', 'Kierunek', 'Nr indeksu', 'Status'];
     const body = filteredRows.map((row) => [
       mapCsvCell(row.student_name || '-'),
-      mapCsvCell(row.personal?.pesel || ''),
-      mapCsvCell(row.contact?.email || ''),
+      mapCsvCell(row.pesel || ''),
+      mapCsvCell(row.email || ''),
       mapCsvCell(row.studies_name || ''),
       mapCsvCell('-'),
       mapCsvCell(mapExportStatus(row)),
@@ -212,8 +204,8 @@ export default function DataExport() {
                     filteredRows.map((row) => (
                       <tr key={row.id}>
                         <td>{row.student_name || '-'}</td>
-                        <td>{row.personal?.pesel || '-'}</td>
-                        <td>{row.contact?.email || '-'}</td>
+                        <td>{row.pesel || '-'}</td>
+                        <td>{row.email || '-'}</td>
                         <td>{row.studies_name || '-'}</td>
                         <td>-</td>
                         <td>{mapExportStatus(row)}</td>

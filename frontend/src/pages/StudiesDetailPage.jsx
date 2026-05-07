@@ -159,7 +159,7 @@ export default function StudiesDetailPage() {
             <p>{edition.price ? `${edition.price} PLN` : '-'}</p>
           </div>
           <div className="detail-box">
-            <h4>Semestrów</h4>
+            <h4>Liczba semestrów</h4>
             <p>{edition.terms_count ?? '-'} </p>
           </div>
           <div className="detail-box">
