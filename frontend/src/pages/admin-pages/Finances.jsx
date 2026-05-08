@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { getAccessToken } from '../../services/authService';
+import { serverApi } from '../../services/serverApi';
 import AccountPageLeftMenu from '../../components/AccountPageLeftMenu';
 import '../../styles/AdminFinances.css';
 
 const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 function getToken() {
-  return localStorage.getItem('user-access-token') || localStorage.getItem('token') || '';
+  return getAccessToken();
 }
 
 function formatCurrency(val) {
@@ -40,11 +42,9 @@ const STATUS_LABELS = {
 
 async function apiFetch(path) {
   const token = getToken();
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  const res = await serverApi.apiRequest(path, 'GET', null, token);
+  if (res.error) throw new Error(res.errorMsg || 'Błąd API');
+  return res.data;
 }
 
 /* ─── CSV export helper ─────────────────────────────── */
@@ -120,10 +120,7 @@ export default function Finances() {
     setApprovingId(transactionId);
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/api/admin/finances/transactions/${transactionId}/approve/`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      });
+      const res = await serverApi.apiRequest(`${API_BASE}/api/admin/finances/transactions/${transactionId}/approve/`, 'POST', null, token);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       /* refresh data */
       const [feesData, trxData, dashData] = await Promise.all([

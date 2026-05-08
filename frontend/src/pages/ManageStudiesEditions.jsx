@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { getAccessToken } from '../services/authService';
+import { serverApi } from '../services/serverApi';
 import AccountPageLeftMenu from '../components/AccountPageLeftMenu';
 import '../styles/Style.css';
 import { toDateTimeLocalInWarsaw } from '../utils/dateTime';
@@ -142,7 +144,7 @@ export default function ManageStudiesEditions() {
   const [canViewEditionStaff, setCanViewEditionStaff] = useState(true);
   const [canCreateEditionStaff, setCanCreateEditionStaff] = useState(true);
 
-  const token = localStorage.getItem('user-access-token') || localStorage.getItem('token');
+  const token = getAccessToken();
 
   const toDateTimeLocal = (value) => {
     return toDateTimeLocalInWarsaw(value);
@@ -163,15 +165,8 @@ export default function ManageStudiesEditions() {
 
   const fetchStudies = async () => {
     try {
-      const res = await fetch(getApiUrl('/admin/studies/'), {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const data = await res.json();
+      const { data: data, error, errorMsg } = await serverApi.apiRequest('/api/admin/studies/', 'GET', null, token);
+      if (error) throw new Error(errorMsg);
       setStudies(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Fetch studies error:', err);
@@ -181,11 +176,7 @@ export default function ManageStudiesEditions() {
 
   const fetchEditions = async () => {
     try {
-      const res = await fetch(getApiUrl('/admin/studies/editions/'), {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const res = await serverApi.apiRequest('/api/admin/studies/editions/', 'GET', null, token);
 
       if (res.status === 403) {
         setCanViewEditions(false);
@@ -287,11 +278,7 @@ export default function ManageStudiesEditions() {
     fetchEditionStaff(edition.id);
 
     try {
-      const res = await fetch(getApiUrl(`/admin/studies/editions/${edition.id}/`), {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${edition.id}/`, 'GET', null, token);
 
       if (res.status === 403) {
         setCanModifyEdition(false);
@@ -316,12 +303,7 @@ export default function ManageStudiesEditions() {
     if (!window.confirm(`Czy na pewno usunąć ofertę "${edition.name}"?`)) return;
 
     try {
-      const res = await fetch(getApiUrl(`/admin/studies/editions/${edition.id}/`), {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${edition.id}/`, 'DELETE', null, token);
 
       if (res.status === 403) {
         setCanModifyEdition(false);
@@ -361,15 +343,7 @@ export default function ManageStudiesEditions() {
         role: staffFormData.role
       };
 
-      const res = await fetch(getApiUrl(`/admin/studies/editions/${selectedEdition.id}/staff/`), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${selectedEdition.id}/staff/`, 'POST', payload, token);
       if (res.status === 403) {
         setCanCreateEditionStaff(false);
         setStaffPermissionMessage('Twoja rola nie ma uprawnien do dodawania personelu.');
@@ -398,12 +372,7 @@ export default function ManageStudiesEditions() {
     if (!window.confirm(`Czy na pewno usunąć ${fullName || 'tego pracownika'} z edycji?`)) return;
 
     try {
-      const res = await fetch(getApiUrl(`/admin/studies/editions/${selectedEdition.id}/staff/${staffItem.id}/`), {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${selectedEdition.id}/staff/${staffItem.id}/`, 'DELETE', null, token);
 
       if (res.status === 403) {
         setCanCreateEditionStaff(false);
@@ -427,8 +396,8 @@ export default function ManageStudiesEditions() {
     try {
       const method = selectedEdition ? 'PUT' : 'POST';
       const url = selectedEdition
-        ? getApiUrl(`/admin/studies/editions/${selectedEdition.id}/`)
-        : getApiUrl('/admin/studies/editions/');
+        ? `/api/admin/studies/editions/${selectedEdition.id}/`
+        : '/api/admin/studies/editions/';
 
       const payload = selectedEdition
         ? {
@@ -455,14 +424,7 @@ export default function ManageStudiesEditions() {
             academic_year: editionFormData.academic_year,
           };
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
+      const res = await serverApi.apiRequest(url, method, payload, token);
 
       if (res.status === 403) {
         if (selectedEdition) {

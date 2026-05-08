@@ -7,11 +7,11 @@ import {
 } from '../mocks/adminEnrollmentMocks';
 import { formatDateInWarsaw } from '../utils/dateTime';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 export class serverApi {
     // Pomocnicza metoda do zapytań
-    static async apiRequest(endpoint, method = 'GET', body = null, token = null, useJsonStringData = true, isBlob = false) {
+    static async apiRequest(endpoint, method = 'GET', body = null, token = null, useJsonStringData = true, isBlob = false, wrappedResponse = false) {
 
         // Token refresh logic
         if (token && isTokenExpired(token)) {
@@ -31,11 +31,19 @@ export class serverApi {
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            const url = endpoint.startsWith('http://') || endpoint.startsWith('https://') 
+                ? endpoint 
+                : `${API_BASE_URL}${endpoint}`;
+                
+            const response = await fetch(url, {
                 method,
                 headers,
                 body: body ? (useJsonStringData ? JSON.stringify(body) : body) : null,
             });
+
+            if (!wrappedResponse) {
+                return response;
+            }
 
             if (!response.ok) {
                 let errorDetail = "";
