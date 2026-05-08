@@ -53,7 +53,7 @@ export default function ManageStudiesOffers() {
 
   const fetchStudies = async () => {
     try {
-      const res = await serverApi.apiRequest('/api/admin/studies/', 'GET', null, token);
+      const res = await serverApi.apiRequest('/api/admin/studies/', 'GET', null, token, true, false, false);
 
       if (res.status === 403) {
         setCanViewStudies(false);
@@ -95,7 +95,7 @@ export default function ManageStudiesOffers() {
     if (!window.confirm(`Czy na pewno usunąć kierunek "${study.name}"?`)) return;
 
     try {
-      const res = await serverApi.apiRequest(`/api/admin/studies/${study.id}/`, 'DELETE', null, token);
+      const res = await serverApi.apiRequest(`/api/admin/studies/${study.id}/`, 'DELETE', null, token, true, false, false);
 
       if (res.status === 403) {
         setStudiesPermissionMessage('Brak uprawnień administratora do usuwania kierunków.');
@@ -121,7 +121,7 @@ export default function ManageStudiesOffers() {
     fetchEditionStaff(edition.id);
 
     try {
-      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${edition.id}/`, 'GET', null, token);
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${edition.id}/`, 'GET', null, token, true, false, false);
 
       if (res.status === 403) {
         setCanModifyEdition(false);
@@ -146,7 +146,7 @@ export default function ManageStudiesOffers() {
     if (!window.confirm(`Czy na pewno usunąć ofertę “${edition.name}”?`)) return;
 
     try {
-      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${edition.id}/`, 'DELETE', null, token);
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${edition.id}/`, 'DELETE', null, token, true, false, false);
 
       if (res.status === 403) {
         setCanModifyEdition(false);
@@ -191,7 +191,7 @@ export default function ManageStudiesOffers() {
         role: staffFormData.role
       };
 
-      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${selectedEdition.id}/staff/`, 'POST', payload, token);
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${selectedEdition.id}/staff/`, 'POST', payload, token, true, false, false);
 
       if (res.status === 403) {
         setCanCreateEditionStaff(false);
@@ -221,7 +221,7 @@ export default function ManageStudiesOffers() {
     if (!window.confirm(`Czy na pewno usunąć ${fullName || 'tego pracownika'} z edycji?`)) return;
 
     try {
-      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${selectedEdition.id}/staff/${staffItem.id}/`, 'DELETE', null, token);
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${selectedEdition.id}/staff/${staffItem.id}/`, 'DELETE', null, token, true, false, false);
 
       if (res.status === 403) {
         setCanCreateEditionStaff(false);
@@ -255,7 +255,7 @@ export default function ManageStudiesOffers() {
         organizational_unit: studyFormData.organizational_unit,
       };
 
-      const res = await serverApi.apiRequest(url, method, payload, token);
+      const res = await serverApi.apiRequest(url, method, payload, token, true, false, false);
 
       if (res.status === 403) {
         setStudiesPermissionMessage('Brak uprawnień administratora do zapisu kierunków.');
@@ -313,7 +313,7 @@ export default function ManageStudiesOffers() {
             academic_year: editionFormData.academic_year,
           };
 
-      const res = await serverApi.apiRequest(url, method, payload, token);
+      const res = await serverApi.apiRequest(url, method, payload, token, true, false, false);
 
       if (res.status === 403) {
         if (selectedEdition) {

@@ -165,7 +165,7 @@ export default function ManageStudiesEditions() {
 
   const fetchStudies = async () => {
     try {
-      const { data: data, error, errorMsg } = await serverApi.apiRequest('/api/admin/studies/', 'GET', null, token);
+      const { data: data, error, errorMsg } = await serverApi.apiRequest('/api/admin/studies/', 'GET', null, token, true, false, false);
       if (error) throw new Error(errorMsg);
       setStudies(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -176,7 +176,7 @@ export default function ManageStudiesEditions() {
 
   const fetchEditions = async () => {
     try {
-      const res = await serverApi.apiRequest('/api/admin/studies/editions/', 'GET', null, token);
+      const res = await serverApi.apiRequest('/api/admin/studies/editions/', 'GET', null, token, true, false, false);
 
       if (res.status === 403) {
         setCanViewEditions(false);
@@ -235,11 +235,7 @@ export default function ManageStudiesEditions() {
 
   const fetchAllUsers = async () => {
     try {
-      const res = await fetch(getApiUrl('/admin/users/employees/'), {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const res = await serverApi.apiRequest('/api/admin/users/', 'GET', null, token, true, false, false);
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -278,7 +274,7 @@ export default function ManageStudiesEditions() {
     fetchEditionStaff(edition.id);
 
     try {
-      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${edition.id}/`, 'GET', null, token);
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${edition.id}/`, 'GET', null, token, true, false, false);
 
       if (res.status === 403) {
         setCanModifyEdition(false);
@@ -303,7 +299,7 @@ export default function ManageStudiesEditions() {
     if (!window.confirm(`Czy na pewno usunąć ofertę "${edition.name}"?`)) return;
 
     try {
-      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${edition.id}/`, 'DELETE', null, token);
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${edition.id}/`, 'DELETE', null, token, true, false, false);
 
       if (res.status === 403) {
         setCanModifyEdition(false);
@@ -343,7 +339,7 @@ export default function ManageStudiesEditions() {
         role: staffFormData.role
       };
 
-      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${selectedEdition.id}/staff/`, 'POST', payload, token);
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${selectedEdition.id}/staff/`, 'POST', payload, token, true, false, false);
       if (res.status === 403) {
         setCanCreateEditionStaff(false);
         setStaffPermissionMessage('Twoja rola nie ma uprawnien do dodawania personelu.');
@@ -372,7 +368,7 @@ export default function ManageStudiesEditions() {
     if (!window.confirm(`Czy na pewno usunąć ${fullName || 'tego pracownika'} z edycji?`)) return;
 
     try {
-      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${selectedEdition.id}/staff/${staffItem.id}/`, 'DELETE', null, token);
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${selectedEdition.id}/staff/${staffItem.id}/`, 'DELETE', null, token, true, false, false);
 
       if (res.status === 403) {
         setCanCreateEditionStaff(false);
@@ -424,7 +420,7 @@ export default function ManageStudiesEditions() {
             academic_year: editionFormData.academic_year,
           };
 
-      const res = await serverApi.apiRequest(url, method, payload, token);
+      const res = await serverApi.apiRequest(url, method, payload, token, true, false, false);
 
       if (res.status === 403) {
         if (selectedEdition) {

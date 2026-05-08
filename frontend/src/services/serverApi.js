@@ -11,7 +11,7 @@ const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 export class serverApi {
     // Pomocnicza metoda do zapytań
-    static async apiRequest(endpoint, method = 'GET', body = null, token = null, useJsonStringData = true, isBlob = false, wrappedResponse = false) {
+    static async apiRequest(endpoint, method = 'GET', body = null, token = null, useJsonStringData = true, isBlob = false, wrappedResponse = true) {
 
         // Token refresh logic
         if (token && isTokenExpired(token)) {
