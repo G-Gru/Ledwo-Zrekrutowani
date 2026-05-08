@@ -1,5 +1,5 @@
 
-import { getAccessToken, getUser } from './authService';
+import { getAccessToken, getUser, isTokenExpired, refreshAccessToken } from './authService';
 import {
     getMockAdminEnrollmentDetails,
     getMockAdminEnrollmentList,
@@ -12,6 +12,14 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 export class serverApi {
     // Pomocnicza metoda do zapytań
     static async apiRequest(endpoint, method = 'GET', body = null, token = null, useJsonStringData = true, isBlob = false) {
+
+        // Token refresh logic
+        if (token && isTokenExpired(token)) {
+            token = await refreshAccessToken();
+            if (!token) {
+                return { data: null, error: true, errorMsg: "Session expired", errorDetail: "" };
+            }
+        }
         console.log(`Calling server API at endpoint: ${method} ${endpoint}`)
 
         const headers = {};

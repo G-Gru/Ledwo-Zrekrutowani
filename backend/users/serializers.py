@@ -46,6 +46,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ('email', 'first_name', 'last_name', 'password', 'phone')
 
     def validate_email(self, value):
+        value = value.lower()
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("Istnieje już użytkownik z tym adresem email.")
         return value
@@ -61,6 +62,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(error_messages={"invalid": "Niepoprawny format email.", "blank": "Pole email jest wymagane."})
     password = serializers.CharField(write_only=True, error_messages={"blank": "Hasło jest wymagane."})
+
+    def validate_email(self, value):
+        return value.lower()
 
     def validate(self, data):
         user = authenticate(

@@ -40,10 +40,6 @@ export const isTokenExpired = (token) => {
 export const getAccessToken = () => {
   const token = localStorage.getItem('user-access-token');
   if (!token) return null;
-  if (isTokenExpired(token)) {
-    logout();
-    return null;
-  }
   return token;
 };
 
@@ -114,5 +110,38 @@ export const register = async (userData) => {
     return response;
   } catch (error) {
     throw new Error(error.message || "Rejestracja nie powiodła się");
+  }
+};
+
+// Token refresh logic
+export const refreshAccessToken = async () => {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) {
+    logout();
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh: refreshToken }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Refresh failed");
+    }
+
+    const data = await response.json();
+    
+    localStorage.setItem('user-access-token', data.access);
+    if (data.refresh) {
+      localStorage.setItem('user-refresh-token', data.refresh);
+    }
+    
+    return data.access;
+  } catch (error) {
+    logout();
+    return null;
   }
 };
