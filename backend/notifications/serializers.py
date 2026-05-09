@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
 class SendNotificationSerializer(serializers.Serializer):
-    user_ids = serializers.ListField(
-        child=serializers.IntegerField(),
+    emails = serializers.ListField(
+        child=serializers.EmailField(),
         allow_empty=False,
     )
     notification_subject = serializers.CharField()

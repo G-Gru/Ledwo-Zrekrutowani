@@ -91,6 +91,7 @@ export class serverApi {
     static #buildEmptyAdminEnrollmentDetails(summary = {}) {
         return {
             id: summary.id || null,
+            user_id: summary.user_id || null,
             student_name: summary.student_name || 'Nieznany kandydat',
             status: summary.status || '-',
             status_note: summary.status_note || '',
@@ -143,6 +144,7 @@ export class serverApi {
 
         const normalized = this.#buildEmptyAdminEnrollmentDetails({
             id: detailData.id,
+            user_id: detailData.user_id || detailData.user?.id || null,
             student_name: detailData.student_name,
             status: detailData.status,
             status_note: detailData.status_note,
@@ -1018,7 +1020,9 @@ export class serverApi {
         for (const endpoint of endpoints) {
             const res = await this.apiRequest(endpoint, 'GET', null, token);
             if (!res.error) {
-                return {enrollments: res.data || [], error: false, errorMsg: '', isMock: false};
+                // Handle pagination - API might return paginated response with "results" field
+                const enrollmentsList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+                return {enrollments: enrollmentsList, error: false, errorMsg: '', isMock: false};
             }
         }
 
@@ -1217,5 +1221,34 @@ export class serverApi {
         let token = getAccessToken()
         let addressesResponse = await this.apiRequest(`/api/enrollments/addresses/`, 'POST', addressData, token)
         return addressesResponse
+    }
+
+    static async sendNotification(notificationData, token = null) {
+        if (!token) {
+            token = getAccessToken();
+        }
+
+        const result = await this.apiRequest(
+            `/api/admin/notifications/new/`,
+            'POST',
+            notificationData,
+            token
+        );
+
+        if (result.error) {
+            return {
+                data: null,
+                error: true,
+                errorMsg: result.errorMsg || 'Failed to send notification',
+                errorDetail: result.errorDetail || null
+            };
+        }
+
+        return {
+            data: result.data,
+            error: false,
+            errorMsg: '',
+            errorDetail: ''
+        };
     }
 }

@@ -20,14 +20,14 @@ class SendNotificationView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user_ids = serializer.validated_data["user_ids"]
+        emails = serializer.validated_data["emails"]
         notification_subject = serializer.validated_data["notification_subject"]
         notification_body = serializer.validated_data["notification_body"]
         use_own_name_as_sender = serializer.validated_data["use_own_name_as_sender"]
 
-        users = list(User.objects.filter(id__in=user_ids))
-        found_ids = {user.id for user in users}
-        failed_ids = [user_id for user_id in user_ids if user_id not in found_ids]
+        users = list(User.objects.filter(email__in=emails))
+        found_emails = {user.email for user in users}
+        failed_emails = [email for email in emails if email not in found_emails]
 
         footer_sender = None
         if use_own_name_as_sender:
@@ -45,18 +45,18 @@ class SendNotificationView(generics.CreateAPIView):
                 sent_count += 1
             except NotificationSendFailedException:
                 logger.warning(f"Failed to send notification for {user} - {notification_subject}")
-                failed_ids.append(user.id)
+                failed_emails.append(user.email)
 
         response_status = (
             status.HTTP_200_OK
-            if not failed_ids
+            if not failed_emails
             else status.HTTP_207_MULTI_STATUS
         )
 
         return Response(
             {
                 "sent_count": sent_count,
-                "failed_ids": failed_ids,
+                "failed_emails": failed_emails,
             },
             status=response_status,
         )

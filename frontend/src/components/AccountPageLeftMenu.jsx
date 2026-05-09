@@ -58,6 +58,7 @@ export default function AccountPageLeftMenu() {
               <NavLink to='/admin/candidates' icon='group' label='Kandydaci' indent />
               <NavLink to='/admin/applications' icon='fact_check' label='Przegląd zgłoszeń' indent />
               <NavLink to='/admin/export' icon='ios_share' label='Eksport danych' indent />
+              <NavLink to='/admin/notifications' icon='mail' label='Wysyłanie maili' indent />
             </div>
           </>
         )}

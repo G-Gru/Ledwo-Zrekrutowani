@@ -16,6 +16,7 @@ import Profile from './pages/account-pages/MyProfile';
 import Documents from './pages/account-pages/MyDocuments';
 
 import DataExport from './pages/admin-pages/DataExport';
+import AdminNotifications from './pages/admin-pages/AdminNotifications';
 import Finanses from './pages/admin-pages/Finances';
 import Candidates from './pages/admin-pages/Candidates';
 import CandidateDetails from './pages/admin-pages/CandidateDetails';
@@ -168,6 +169,14 @@ function App() {
           element={(
             <ProtectedRoute allowedRoles={['ADMIN', 'STUDIES_DIRECTOR', 'ADMINISTRATIVE_COORDINATOR']}>
               <DataExport />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path='/admin/notifications'
+          element={(
+            <ProtectedRoute allowedRoles={['ADMIN', 'STUDIES_DIRECTOR', 'ADMINISTRATIVE_COORDINATOR']}>
+              <AdminNotifications />
             </ProtectedRoute>
           )}
         />
