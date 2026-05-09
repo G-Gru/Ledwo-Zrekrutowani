@@ -67,6 +67,12 @@
   overflow-x: auto;
 }
 
+.admin-export-template-note {
+  margin: 12px 0 0;
+  text-align: left;
+  color: var(--text-muted);
+}
+
 .admin-export-actions {
   display: flex;
   gap: 12px;
