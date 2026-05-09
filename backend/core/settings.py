@@ -159,6 +159,10 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+]
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 AUTH_USER_MODEL = "users.User"
