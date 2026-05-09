@@ -1,6 +1,3 @@
-from datetime import date
-
-from django.urls import reverse
 from rest_framework import serializers
 
 from files.models import File

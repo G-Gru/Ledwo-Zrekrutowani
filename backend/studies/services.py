@@ -1,5 +1,4 @@
 from django.db import transaction
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 
 from studies.models import StudiesEdition, STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES, STUDIES_EDITION_ENROLLABLE_STATUSES, \

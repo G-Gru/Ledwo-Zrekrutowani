@@ -1,13 +1,11 @@
-from django.core.mail import send_mail
-from django.conf import settings
 from django.db.models import Count
-from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from notifications.services import send_notif_to
 from payments.models import Fee
 from payments.serializers import FeeSerializer
 from studies.models import StudiesEdition, StudiesEditionStaff, StudiesDocument
@@ -217,30 +215,13 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
                 {"error": "Ten kandydat uregulował wszystkie opłaty."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
+        user = enrollment.user
         subject = f"Przypomnienie o płatności - {edition_name}"
-        message = (
-            f"Dzień dobry {enrollment.user.first_name},\n\n"
-            f"Przypominamy o konieczności uregulowania opłat za studia: {edition_name}.\n"
-            "Prosimy o jak najszybsze dokonanie wpłaty.\n\n"
-            "Pozdrawiamy,\n"
-            "Zespół Ledwo Zrekrutowani"
-        )
-        
-        try:
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [enrollment.user.email],
-                fail_silently=False,
-            )
-        except Exception as e:
-            return Response(
-                {"error": f"Nie udało się wysłać e-maila: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
+        body = (f"Przypominamy o konieczności uregulowania opłat za studia: {edition_name}.\n" +
+                "Prosimy o jak najszybsze dokonanie wpłaty.")
+        send_notif_to(user, subject, body)
+
         return Response({
             "message": f"Przypomnienie o płatności zostało wysłane do: {enrollment.user.email}"
         }, status=status.HTTP_200_OK)

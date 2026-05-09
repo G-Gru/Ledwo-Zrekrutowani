@@ -6,15 +6,16 @@ from uuid import uuid4
 from django.core.files import File as DjangoFile
 from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404
+from docxtpl import DocxTemplate
 
 from core import settings
 from enrollments.exceptions import UserAlreadyEnrolledException, NoPlacesAvailableException, MissingDocumentsException
-from enrollments.models import Enrollment, FormData, ENROLLMENT_TAKING_UP_PLACE_STATUSES, SubmittedDocument, SUBMITTED_DOCUMENT_CONFIRMED_STATUSES
+from enrollments.models import Enrollment, FormData, ENROLLMENT_TAKING_UP_PLACE_STATUSES, SubmittedDocument, \
+    SUBMITTED_DOCUMENT_CONFIRMED_STATUSES
 from files.models import File
 from studies.models import StudiesEdition, StudiesDocument
 from studies.services import get_enrollable_editions_queryset, DELIVERY_DOCUMENT_NAME
 
-from docxtpl import DocxTemplate
 
 def get_enrollable_edition(edition_pk):
     return get_object_or_404(

@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "enrollments",
     "payments",
     "files",
+    "notifications",
 
     "corsheaders",
 ]

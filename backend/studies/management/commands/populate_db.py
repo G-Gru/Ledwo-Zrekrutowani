@@ -5,7 +5,6 @@ from django.core.management.base import BaseCommand
 from enrollments.models import Enrollment, Address, FormData
 from payments.models import Fee, Payment, PaymentHistory
 from studies.models import Studies, StudiesEdition, StudiesEditionStaff, StudiesDocument
-from studies.services import DELIVERY_DOCUMENT_NAME
 from users.models import User, Employee
 
 

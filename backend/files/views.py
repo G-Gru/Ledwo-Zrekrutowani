@@ -1,11 +1,11 @@
+from urllib.parse import quote
+
 from django.http import FileResponse
-from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
 from files.models import File
 from users.permissions import CanViewDocument
-from urllib.parse import quote
 
 
 class FileDownloadApiView(generics.RetrieveAPIView):

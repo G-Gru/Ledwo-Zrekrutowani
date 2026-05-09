@@ -19,6 +19,9 @@ class User(AbstractUser):
     def is_student_user(self):
         return not self.is_employee
 
+    def to_fullname(self):
+        return f"{self.first_name} {self.last_name}"
+
     def __str__(self):
         return self.email
 

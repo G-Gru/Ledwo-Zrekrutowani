@@ -1,14 +1,16 @@
 import datetime
+import logging
 from decimal import Decimal
 
-from django.conf import settings
-from django.core.mail import send_mail
 from django.db import transaction
 
-from files.models import File
-from payments.models import Fee, Payment, PaymentHistory
 from enrollments.services import check_and_promote_to_student
+from files.models import File
+from notifications.exceptions import NotificationSendFailedException
+from notifications.services import send_notif_to
+from payments.models import Fee, Payment, PaymentHistory
 
+logger = logging.getLogger(__name__)
 
 def create_application_fee(enrollment, edition):
     fee = Fee.objects.create(
@@ -17,7 +19,7 @@ def create_application_fee(enrollment, edition):
         amount=Decimal('100.00'),
         due_date=edition.recruitment_end_date,
     )
-    send_fee_issued_email(fee)
+    send_fee_issued_notif(fee)
 
 def create_tuition_fee(enrollment, edition):
     fee = Fee.objects.create(
@@ -26,7 +28,7 @@ def create_tuition_fee(enrollment, edition):
         amount=enrollment.studies_edition.price,
         due_date=datetime.date.today() + datetime.timedelta(days=30),
     )
-    send_fee_issued_email(fee)
+    send_fee_issued_notif(fee)
 
 
 def pay_fee(fee, proof_file=None):
@@ -56,7 +58,7 @@ def pay_fee(fee, proof_file=None):
             fee.save()
 
     if payment_status == "COMPLETED":
-        send_payment_confirmation_email(fee)
+        send_payment_confirmation_notif(fee)
         check_and_promote_to_student(fee.enrollment)
 
 
@@ -74,47 +76,37 @@ def approve_payment(payment):
         fee.paid_date = datetime.date.today()
         fee.save(update_fields=['paid_date'])
 
-    send_payment_confirmation_email(payment.fee)
+    send_payment_confirmation_notif(payment.fee)
     check_and_promote_to_student(payment.fee.enrollment)
 
 
-def send_fee_issued_email(fee):
-    user = fee.enrollment.user
+def send_fee_issued_notif(fee):
     due_date_str = fee.due_date.strftime("%d.%m.%Y")
-    send_mail(
-        subject=f"Nowa opłata: {fee.title}",
-        message=(
-            f"Dzień dobry {user.first_name},\n\n"
-            f"Wystawiono nową opłatę:\n"
-            f"  Tytuł: {fee.title}\n"
-            f"  Kwota: {fee.amount} PLN\n"
-            f"  Termin płatności: {due_date_str}\n\n"
-            f"Prosimy o terminowe uregulowanie należności.\n\n"
-            f"Pozdrawiamy,\n"
-            f"Zespół Ledwo Zrekrutowani"
-        ),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        fail_silently=True,
-    )
+    user = fee.enrollment.user
+    subject = f"Nowa opłata - {fee.title}",
+    body = (f"Wystawiono nową opłatę:\n" +
+            f"\tTytuł: {fee.title}\n" +
+            f"\tKwota: {fee.amount} PLN\n" +
+            f"\tTermin płatności: {due_date_str}\n\n" +
+            f"Prosimy o terminowe uregulowanie należności.")
+
+    try:
+        send_notif_to(user, subject, body)
+    except NotificationSendFailedException as e:
+        logger.warning(f"Notification sending failed - fee issued: {user} {e}")
 
 
-def send_payment_confirmation_email(fee):
+def send_payment_confirmation_notif(fee):
     user = fee.enrollment.user
     paid_date_str = fee.paid_date.strftime("%d.%m.%Y")
-    send_mail(
-        subject=f"Potwierdzenie płatności: {fee.title}",
-        message=(
-            f"Dzień dobry {user.first_name},\n\n"
-            f"Potwierdzamy otrzymanie płatności:\n"
-            f"  Tytuł: {fee.title}\n"
-            f"  Kwota: {fee.amount} PLN\n"
-            f"  Data zapłaty: {paid_date_str}\n\n"
-            f"Dziękujemy za terminowe uregulowanie należności.\n\n"
-            f"Pozdrawiamy,\n"
-            f"Zespół Ledwo Zrekrutowani"
-        ),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        fail_silently=True,
-    )
+    subject = f"Potwierdzenie płatności - {fee.title}"
+    body = (f"Potwierdzamy otrzymanie płatności:\n" +
+            f"\tTytuł: {fee.title}\n"
+            f"\tKwota: {fee.amount} PLN\n"
+            f"\tData zapłaty: {paid_date_str}\n\n"
+            f"Dziękujemy za terminowe uregulowanie należności.")
+
+    try:
+        send_notif_to(user, subject, body)
+    except NotificationSendFailedException as e:
+        logger.warning(f"Notification sending failed - payment confirmation: {user} {e}")

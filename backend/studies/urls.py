@@ -1,6 +1,7 @@
 from django.urls import path
+
 from .views import StudiesEditionListAPIView, StudiesEditionRetrieveAPIView, StudiesEditionStaffListAPIView, \
-    StudiesDocumentsListCreateAdminAPIView, StudiesDocumentsListAPIView
+    StudiesDocumentsListAPIView
 
 urlpatterns = [
     path("editions/",
