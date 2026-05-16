@@ -11,7 +11,8 @@ from payments.serializers import FeeSerializer
 from studies.models import StudiesEdition, StudiesEditionStaff, StudiesDocument
 from users.permissions import IsObjectOwner, IsStudent, CanViewDocument, IsEmployee
 from . import services
-from .models import Enrollment, FormData, Address, SubmittedDocument, DocumentHistory
+from .models import Enrollment, FormData, Address, SubmittedDocument, DocumentHistory, ENROLLMENT_ACTIVE_STATUSES, \
+    ENROLLMENT_NON_ACTIVE_STATUSES
 from .serializers import AdminEnrollmentSerializer, AdminEnrollmentDetailSerializer, FormDataSerializer, \
     AddressSerializer, EnrollmentSerializer, ActiveEnrollmentSerializer, \
     EnrollmentRecruitmentEndDateSerializer, SubmittedDocumentsCreateSerializer, SubmittedDocumentsListSerializer
@@ -97,8 +98,9 @@ class ActiveEnrollmentListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return Enrollment.objects.filter(
-            user=self.request.user
-        ).exclude(status=Enrollment.Status.EXPELLED)
+            user=self.request.user,
+            status__in=ENROLLMENT_ACTIVE_STATUSES
+        )
 
 class EnrollmentRetrieveAPIView(generics.RetrieveAPIView):
     serializer_class = EnrollmentSerializer
@@ -283,7 +285,7 @@ class AdminDocumentAcceptAPIView(generics.GenericAPIView):
         except Exception:
             pass
 
-        services.check_and_promote_to_student(document.enrollment)
+        services.check_and_promote_candidate_to_student(document.enrollment)
 
         serializer = self.get_serializer(document)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -397,7 +399,7 @@ class AdminRecruitmentStatsAPIView(generics.GenericAPIView):
 
             if enrollment.status == Enrollment.Status.STUDENT:
                 row['statuses']['student'] += 1
-            elif enrollment.status == Enrollment.Status.EXPELLED:
+            elif enrollment.status in ENROLLMENT_NON_ACTIVE_STATUSES:
                 row['statuses']['expelled'] += 1
             else:
                 row['statuses']['candidate'] += 1

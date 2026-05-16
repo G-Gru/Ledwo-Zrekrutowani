@@ -15,7 +15,7 @@ class StudiesEdition(models.Model):
     class StatusChoices(models.TextChoices):
         HIDDEN = 'HIDDEN'
         ACTIVE = 'ACTIVE'
-        CLOSED = 'CLOSED' # todo
+        CLOSED = 'CLOSED'
 
     studies = models.ForeignKey(Studies, on_delete=models.RESTRICT)
     price = models.DecimalField(max_digits=10, decimal_places=2)

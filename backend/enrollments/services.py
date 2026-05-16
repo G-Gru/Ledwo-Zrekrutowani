@@ -80,10 +80,11 @@ def enroll(edition_id, enrollment_id):
         ).count()
 
         if total >= edition.max_participants:
-            raise NoPlacesAvailableException()
+            status = Enrollment.Status.RESERVE
+        else:
+            status = Enrollment.Status.CANDIDATE
 
-
-        enrollment.status = Enrollment.Status.CANDIDATE
+        enrollment.status = status
         enrollment.enrollment_date = datetime.datetime.now()
         enrollment.save()
         create_form_delivery_file(enrollment)
@@ -186,10 +187,13 @@ def generate_form_docx(form: FormData):
     return file_path
 
 
-def check_and_promote_to_student(enrollment):
+def check_and_promote_candidate_to_student(enrollment):
     if enrollment.status != Enrollment.Status.CANDIDATE:
         return
 
+    _check_and_promote_to_student(enrollment)
+
+def _check_and_promote_to_student(enrollment):
     if enrollment.fees.filter(paid_date__isnull=True).exists():
         return
 
