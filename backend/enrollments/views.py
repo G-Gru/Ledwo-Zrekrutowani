@@ -102,7 +102,7 @@ class ActiveEnrollmentListAPIView(generics.ListAPIView):
             status__in=ENROLLMENT_ACTIVE_STATUSES
         )
 
-class EnrollmentRetrieveAPIView(generics.RetrieveAPIView):
+class EnrollmentRetrieveDestroyAPIView(generics.RetrieveDestroyAPIView):
     serializer_class = EnrollmentSerializer
     permission_classes = [IsAuthenticated, IsStudent, IsObjectOwner]
     lookup_url_kwarg = 'enrollment_pk'
@@ -111,6 +111,9 @@ class EnrollmentRetrieveAPIView(generics.RetrieveAPIView):
         return Enrollment.objects.filter(
             user=self.request.user
         )
+
+    def perform_destroy(self, instance):
+        services.resign(instance)
 
 class SubmittedDocumentsListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsStudent, CanViewDocument]

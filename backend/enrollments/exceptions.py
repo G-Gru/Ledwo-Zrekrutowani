@@ -13,3 +13,7 @@ class NoPlacesAvailableException(APIException):
 class MissingDocumentsException(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = 'Missing enrollment documents'
+
+class UserNotRecruitingException(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = 'User is not recruiting'

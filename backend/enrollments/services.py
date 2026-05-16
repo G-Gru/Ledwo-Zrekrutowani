@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 from pathlib import Path
 from uuid import uuid4
@@ -6,16 +7,21 @@ from uuid import uuid4
 from django.core.files import File as DjangoFile
 from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from docxtpl import DocxTemplate
 
 from core import settings
-from enrollments.exceptions import UserAlreadyEnrolledException, NoPlacesAvailableException, MissingDocumentsException
+from enrollments.exceptions import UserAlreadyEnrolledException, NoPlacesAvailableException, MissingDocumentsException, \
+    UserNotRecruitingException
 from enrollments.models import Enrollment, FormData, ENROLLMENT_TAKING_UP_PLACE_STATUSES, SubmittedDocument, \
-    SUBMITTED_DOCUMENT_CONFIRMED_STATUSES
+    SUBMITTED_DOCUMENT_CONFIRMED_STATUSES, ENROLLMENT_ACTIVE_STATUSES
 from files.models import File
+from notifications.exceptions import NotificationSendFailedException
+from notifications.services import send_notif_to
 from studies.models import StudiesEdition, StudiesDocument
 from studies.services import get_enrollable_editions_queryset, DELIVERY_DOCUMENT_NAME
 
+logger = logging.getLogger(__name__)
 
 def get_enrollable_edition(edition_pk):
     return get_object_or_404(
@@ -193,9 +199,9 @@ def check_and_promote_candidate_to_student(enrollment):
 
     _check_and_promote_to_student(enrollment)
 
-def _check_and_promote_to_student(enrollment):
+def _check_student_promotion_available(enrollment):
     if enrollment.fees.filter(paid_date__isnull=True).exists():
-        return
+        return False
 
     required_docs = StudiesDocument.objects.filter(
         studies_edition=enrollment.studies_edition,
@@ -206,7 +212,60 @@ def _check_and_promote_to_student(enrollment):
         submitted_documents__status__in=SUBMITTED_DOCUMENT_CONFIRMED_STATUSES
     )
     if unconfirmed.exists():
+        return False
+
+    return True
+
+def _check_and_promote_to_student(enrollment):
+    if not _check_student_promotion_available(enrollment):
         return
 
     enrollment.status = Enrollment.Status.STUDENT
     enrollment.save(update_fields=['status'])
+
+def resign(enrollment: Enrollment):
+    with transaction.atomic():
+        current_status = enrollment.status
+        if current_status not in ENROLLMENT_ACTIVE_STATUSES:
+            raise UserNotRecruitingException()
+
+        studies_edition = enrollment.studies_edition
+        is_post_recruitment = timezone.now() > studies_edition.recruitment_end_date
+
+        status = Enrollment.Status.EXPELLED if is_post_recruitment else Enrollment.Status.REJECTED
+        enrollment.status = status
+        enrollment.save(update_fields=['status'])
+
+        if is_post_recruitment:
+            return
+
+        if current_status in ENROLLMENT_TAKING_UP_PLACE_STATUSES:
+            _promote_single_reservist(studies_edition)
+
+def _promote_single_reservist(studies_edition):
+    enrollment = (Enrollment.objects
+                  .filter(studies_edition=studies_edition, status=Enrollment.Status.RESERVE)
+                  .order_by('enrollment_date')
+                  .first())
+
+    if enrollment is None:
+        return
+
+    if _check_student_promotion_available(enrollment):
+        status = Enrollment.Status.STUDENT
+    else:
+        status = Enrollment.Status.CANDIDATE
+
+    enrollment.status = status
+    enrollment.save(update_fields=['status'])
+
+    studies = studies_edition.studies
+    user = enrollment.user
+    subject = f"Aktualizacja statusu rekrutacji"
+    body = (f"Twój status zgłoszenia na kierunek\n"
+            f"{studies.name}\n"
+            f"Zmienił się na {status}")
+    try:
+        send_notif_to(user, subject, body)
+    except NotificationSendFailedException:
+        logger.warning(f"Failed to send promotion notification for {user} - {subject}")
