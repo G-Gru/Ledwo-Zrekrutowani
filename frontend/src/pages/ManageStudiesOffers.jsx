@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { getAccessToken } from '../services/authService';
+import { serverApi } from '../services/serverApi';
 import AccountPageLeftMenu from '../components/AccountPageLeftMenu';
 import '../styles/Style.css';
 
@@ -40,7 +42,7 @@ export default function ManageStudiesOffers() {
 
   const [canViewStudies, setCanViewStudies] = useState(true);
 
-  const token = localStorage.getItem('user-access-token') || localStorage.getItem('token');
+  const token = getAccessToken();
 
   const mapStudyToForm = (study) => ({
     name: study?.name || '',
@@ -51,11 +53,7 @@ export default function ManageStudiesOffers() {
 
   const fetchStudies = async () => {
     try {
-      const res = await fetch(getApiUrl('/admin/studies/'), {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const res = await serverApi.apiRequest('/api/admin/studies/', 'GET', null, token, true, false, false);
 
       if (res.status === 403) {
         setCanViewStudies(false);
@@ -97,12 +95,7 @@ export default function ManageStudiesOffers() {
     if (!window.confirm(`Czy na pewno usunąć kierunek "${study.name}"?`)) return;
 
     try {
-      const res = await fetch(getApiUrl(`/admin/studies/${study.id}/`), {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const res = await serverApi.apiRequest(`/api/admin/studies/${study.id}/`, 'DELETE', null, token, true, false, false);
 
       if (res.status === 403) {
         setStudiesPermissionMessage('Brak uprawnień administratora do usuwania kierunków.');
@@ -128,11 +121,7 @@ export default function ManageStudiesOffers() {
     fetchEditionStaff(edition.id);
 
     try {
-      const res = await fetch(getApiUrl(`/admin/studies/editions/${edition.id}/`), {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${edition.id}/`, 'GET', null, token, true, false, false);
 
       if (res.status === 403) {
         setCanModifyEdition(false);
@@ -157,12 +146,7 @@ export default function ManageStudiesOffers() {
     if (!window.confirm(`Czy na pewno usunąć ofertę “${edition.name}”?`)) return;
 
     try {
-      const res = await fetch(getApiUrl(`/admin/studies/editions/${edition.id}/`), {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${edition.id}/`, 'DELETE', null, token, true, false, false);
 
       if (res.status === 403) {
         setCanModifyEdition(false);
@@ -207,14 +191,7 @@ export default function ManageStudiesOffers() {
         role: staffFormData.role
       };
 
-      const res = await fetch(getApiUrl(`/admin/studies/editions/${selectedEdition.id}/staff/`), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${selectedEdition.id}/staff/`, 'POST', payload, token, true, false, false);
 
       if (res.status === 403) {
         setCanCreateEditionStaff(false);
@@ -244,12 +221,7 @@ export default function ManageStudiesOffers() {
     if (!window.confirm(`Czy na pewno usunąć ${fullName || 'tego pracownika'} z edycji?`)) return;
 
     try {
-      const res = await fetch(getApiUrl(`/admin/studies/editions/${selectedEdition.id}/staff/${staffItem.id}/`), {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${selectedEdition.id}/staff/${staffItem.id}/`, 'DELETE', null, token, true, false, false);
 
       if (res.status === 403) {
         setCanCreateEditionStaff(false);
@@ -273,8 +245,8 @@ export default function ManageStudiesOffers() {
     try {
       const method = selectedStudy ? 'PUT' : 'POST';
       const url = selectedStudy
-        ? getApiUrl(`/admin/studies/${selectedStudy.id}/`)
-        : getApiUrl('/admin/studies/');
+        ? `/api/admin/studies/${selectedStudy.id}/`
+        : '/api/admin/studies/';
 
       const payload = {
         name: studyFormData.name,
@@ -283,14 +255,7 @@ export default function ManageStudiesOffers() {
         organizational_unit: studyFormData.organizational_unit,
       };
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
+      const res = await serverApi.apiRequest(url, method, payload, token, true, false, false);
 
       if (res.status === 403) {
         setStudiesPermissionMessage('Brak uprawnień administratora do zapisu kierunków.');
@@ -320,8 +285,8 @@ export default function ManageStudiesOffers() {
     try {
       const method = selectedEdition ? 'PUT' : 'POST';
       const url = selectedEdition
-        ? getApiUrl(`/admin/studies/editions/${selectedEdition.id}/`)
-        : getApiUrl('/admin/studies/editions/');
+        ? `/api/admin/studies/editions/${selectedEdition.id}/`
+        : '/api/admin/studies/editions/';
 
       const payload = selectedEdition
         ? {
@@ -348,14 +313,7 @@ export default function ManageStudiesOffers() {
             academic_year: editionFormData.academic_year,
           };
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
+      const res = await serverApi.apiRequest(url, method, payload, token, true, false, false);
 
       if (res.status === 403) {
         if (selectedEdition) {
