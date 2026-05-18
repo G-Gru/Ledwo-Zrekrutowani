@@ -1,0 +1,136 @@
+/* Style Akordeonu (Zwijane Panele) */
+.accordion-panel {
+    width: 100%;
+    margin-bottom: 25px;
+    padding: 0 !important; /* Nadpisujemy padding bg-panel, by header był "od krawędzi" */
+    overflow: hidden;
+}
+
+.accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    background-color: var(--surface-container-lowest);
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.accordion-header:hover {
+    background-color: var(--surface-container-low);
+}
+
+.accordion-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.chevron {
+    transition: transform 0.3s ease;
+    color: var(--secondary);
+}
+
+.chevron.open {
+    transform: rotate(180deg);
+}
+
+.accordion-content {
+    padding: 0 30px 30px 30px;
+    border-top: 1px solid var(--surface-container-low);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Tabele w dokumentach */
+.documents-table {
+    margin-top: 15px;
+}
+
+.documents-table th {
+    padding-top: 20px;
+}
+
+/* Wiersz z nazwą wniosku oddzielający grupy dokumentów */
+.group-header-row td {
+    background-color: var(--surface-container-low);
+    color: var(--on-secondary-container);
+    font-size: 0.85rem;
+    padding: 10px 15px !important;
+    border-bottom: 2px solid var(--surface-border) !important;
+}
+
+.group-header-row .icon-small {
+    font-size: 18px;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+/* Wiersz wymagający akcji - lekko wyróżnione tło */
+.action-required-row td {
+    background-color: rgba(186, 26, 26, 0.03); /* Bardzo jasny czerwony */
+}
+
+.doc-title-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Guzik pobierania */
+.icon-action-btn {
+    background: var(--surface-container);
+    color: var(--secondary);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+    margin: 0;
+}
+
+.icon-action-btn:hover:not(:disabled) {
+    background: var(--primary-container);
+    color: var(--on-primary-container);
+    transform: translateY(-2px);
+}
+
+.icon-action-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Dodatkowe kolory statusów */
+.badge.success { background-color: rgba(46, 125, 50, 0.1); color: #2e7d32; }
+.badge.neutral { background-color: var(--surface-container); color: var(--secondary); }
+
+.pulse-icon {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.empty-state {
+    padding: 30px;
+    text-align: center;
+    color: var(--secondary);
+    font-style: italic;
+    font-size: 0.9rem;
+}

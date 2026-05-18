@@ -1,0 +1,239 @@
+.payments-main-container {
+    flex: 1; /* Zajmuje całą resztę miejsca obok menu */
+    padding: 40px 60px;
+    background-color: var(--background);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    overflow-y: auto;
+}
+
+.payments-grid-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+    width: 100%;
+    margin-bottom: 50px;
+}
+
+.summary-wide-card {
+    background-color: var(--surface-container-lowest);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 30px !important;
+    position: relative;
+    max-width: 33%;
+}
+
+.main-balance {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 15px 0;
+    color: var(--on-surface);
+}
+
+.label-tiny {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--on-secondary-container);
+    letter-spacing: 1.5px;
+}
+
+.deadline-text {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.75rem;
+    color: var(--secondary);
+}
+
+.btn-primary-large {
+    background-color: var(--primary-container);
+    width: 100%;
+    padding: 18px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    margin: 20px 0 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-radius: 8px;
+}
+
+.active-table-card {
+    padding: 30px !important;
+    box-sizing: border-box;
+}
+
+.panel-h3 {
+    margin-bottom: 25px;
+    font-size: 1.4rem;
+    text-align: center;
+}
+
+.upcoming-payments-table {
+    width: 100%;
+    font-size: 0.6rem;
+}
+
+.upcoming-payments-table th {
+    text-align: center;
+    font-size: 0.5rem;
+    color: var(--secondary);
+    /* padding: 12px; */
+    border-bottom: 2px solid var(--surface-container);
+}
+
+.upcoming-payments-table td {
+    /* padding: 20px 12px; */
+    border-bottom: 1px solid var(--surface-container-low);
+}
+
+.badge {
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-size: 0.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.badge.pending { background: rgba(112, 93, 0, 0.1); color: var(--primary); }
+.badge.overdue { background: var(--error-container); color: var(--error); }
+
+.table-action-btn {
+    background: transparent;
+    border: 2px solid var(--primary-container);
+    color: var(--primary);
+    padding: 3px 10px;
+    font-size: 0.5rem;
+}
+
+.history-section-wide {
+    width: 100%;
+}
+
+.history-top-bar {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+
+.history-list-container {
+    padding: 0 !important;
+    width: 100%;
+}
+
+.history-row-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 30px;
+    border-bottom: 1px solid var(--surface-container-low);
+    transition: background 0.2s;
+}
+
+.history-row-item:hover {
+    background-color: var(--surface-container-low);
+}
+
+.row-main-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 2;
+}
+
+.status-icon-circle {
+    width: 45px;
+    height: 45px;
+    background: rgba(0, 105, 111, 0.1);
+    color: var(--tertiary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.status-icon-circle span { /* wysrodkowanie nie wiem czemu to nie dziala bez tego */
+    margin-left: 6px;
+    color: black;
+}
+
+.history-item-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.history-item-sub {
+    font-size: 0.8rem;
+    color: var(--secondary);
+}
+
+.row-amount-info {
+    text-align: right;
+    flex: 1;
+    margin-right: 40px;
+}
+
+.history-amount {
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.history-status-tag {
+    font-size: 0.65rem;
+    color: var(--tertiary);
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.btn-ghost-icon {
+    background: transparent;
+    color: var(--secondary);
+    padding: 8px;
+}
+
+.bold-text { font-weight: 700; }
+.error-text { color: var(--error); font-weight: 800; }
+
+.payment-methods-panel {
+    /* display: flex; */
+    width: 100%;
+    margin-bottom: 40px;
+    padding: 30px !important;
+    animation: slideDown 0.3s ease-out;
+}
+
+.method-title {
+    text-align: center;
+}
+
+.payment-divider {
+    background-color: var(--surface-container-high);
+    width: 3px;
+}
+
+.copy-box {
+    background-color: var(--surface-container-low);
+    padding: 3px;
+    border-radius: 5px;
+}
+
+.payment-method-column.left {
+    margin-right: 20px;
+}
+.payment-method-column.right {
+    margin-left: 20px;
+}
+
+.payments-page-header {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 30px;
+}
+.page-subtitle {
+    text-align: center;
+}

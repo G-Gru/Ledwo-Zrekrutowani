@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import '../styles/Auth.css';
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { handleLogin } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,7 +19,8 @@ export default function Login() {
 
     try {
       await handleLogin(email, password);
-      navigate("/");
+      const redirect = searchParams.get('redirect');
+      navigate(redirect || "/");
     } catch (err) {
       setError(err.message || "Błąd logowania. Spróbuj ponownie.");
     } finally {

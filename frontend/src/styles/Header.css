@@ -20,10 +20,11 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin: 0.5rem 0;
 }
 
 .logo img {
-  height: 70px;
+  height: 40px;
   width: auto;
 }
 
@@ -36,7 +37,10 @@
 
 .nav-buttons {
   display: flex;
-  gap: 2.5rem;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .btn {
@@ -53,6 +57,7 @@
   font-size: 1rem;
   position: relative;
   padding-bottom: 0.25rem;
+  white-space: nowrap;
 }
 
 .btn:hover {
@@ -74,4 +79,33 @@
 
 .btn-secondary {
   color: #ffffff;
+}
+
+.profile-icon {
+  /* text-align: center;
+  justify-self: center;
+  justify-content: center;
+  align-self: center; */
+  transform: translate(+10%,0); /* nie rozumiem czemu to jest potrzebne zeby bylo na srodku */
+  
+  border: 1px lightgrey solid;
+  padding: 2px;
+  border-radius: 50%;
+}
+
+@media (max-width: 900px) {
+  .header-container {
+    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-buttons {
+    gap: 1rem;
+    justify-content: flex-start;
+  }
+
+  .logo img {
+    height: 56px;
+  }
 }

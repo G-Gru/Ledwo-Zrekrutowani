@@ -1,0 +1,126 @@
+.admin-coordinator-stats-layout #account-page-column-middle {
+  width: 75%;
+  align-items: center;
+}
+
+.admin-coordinator-stats-layout #account-page-column-right {
+  display: none;
+}
+
+.admin-stats-width,
+.admin-stats-subtitle,
+.admin-stats-grid,
+.admin-stats-panel {
+  width: 90%;
+}
+
+.admin-stats-subtitle {
+  margin: -10px 0 16px;
+  text-align: left;
+  color: var(--text-muted);
+}
+
+.admin-stats-panel {
+  margin: 0 0 18px;
+  padding: 20px;
+}
+
+.admin-stats-toolbar {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.admin-stats-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.admin-stats-filter span {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--on-secondary-container);
+}
+
+.admin-stats-filter select {
+  height: 40px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  background: var(--surface-container-lowest);
+  color: var(--text-main);
+  padding: 0 10px;
+  font-weight: 600;
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.admin-stats-card {
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.admin-stats-label {
+  margin: 0 0 8px;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.admin-stats-value {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.admin-stats-success {
+  color: #1d5f2b;
+}
+
+.admin-stats-alert {
+  color: #a60f24;
+}
+
+.admin-stats-section-title {
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 1rem;
+  color: var(--on-secondary-container);
+}
+
+.admin-stats-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 1200px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-coordinator-stats-layout #account-page-column-middle,
+  .admin-stats-width,
+  .admin-stats-subtitle,
+  .admin-stats-grid,
+  .admin-stats-panel {
+    width: 96%;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
