@@ -7,9 +7,10 @@ import { getAccessToken, getUser } from '../../services/authService';
 import { formatDateInWarsaw, formatDateTimeInWarsaw } from '../../utils/dateTime';
 import '../../styles/AdminCandidates.css';
 import '../../styles/AdminNotifications.css';
+import {BASE_URL} from "../../api/client.js";
 
 const ENABLE_DEV_AUTH_BYPASS = true;
-const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE_URL = BASE_URL.replace(/\/$/, '');
 
 const EMAIL_TEMPLATES = {
   missing_documents: {

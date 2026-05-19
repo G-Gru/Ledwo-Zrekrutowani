@@ -28,6 +28,9 @@ class StudiesEdition(models.Model):
     recruitment_end_date = models.DateTimeField()
     academic_year = models.CharField(max_length=10)
 
+    task_open_id = models.CharField(max_length=255, null=True, blank=True)
+    task_close_id = models.CharField(max_length=255, null=True, blank=True)
+
     class Meta:
         constraints = [
             CheckConstraint(

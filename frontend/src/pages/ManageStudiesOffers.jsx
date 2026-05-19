@@ -3,6 +3,7 @@ import { getAccessToken } from '../services/authService';
 import { serverApi } from '../services/serverApi';
 import AccountPageLeftMenu from '../components/AccountPageLeftMenu';
 import '../styles/Style.css';
+import {BASE_URL} from "../api/client.js";
 
 const sampleStudies = [
   {
@@ -28,7 +29,7 @@ const emptyStudyForm = {
   organizational_unit: '',
 };
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE_URL = BASE_URL.replace(/\/$/, '');
 const getApiUrl = (path) => `${API_BASE_URL}/api${path}`;
 
 export default function ManageStudiesOffers() {

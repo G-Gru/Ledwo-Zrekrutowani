@@ -230,13 +230,13 @@ def resign(enrollment: Enrollment):
             raise UserNotRecruitingException()
 
         studies_edition = enrollment.studies_edition
-        is_post_recruitment = timezone.now() > studies_edition.recruitment_end_date
+        is_recruitment_closed = studies_edition.status == StudiesEdition.StatusChoices.CLOSED
 
-        status = Enrollment.Status.EXPELLED if is_post_recruitment else Enrollment.Status.REJECTED
+        status = Enrollment.Status.EXPELLED if is_recruitment_closed else Enrollment.Status.REJECTED
         enrollment.status = status
         enrollment.save(update_fields=['status'])
 
-        if is_post_recruitment:
+        if is_recruitment_closed:
             return
 
         if current_status in ENROLLMENT_TAKING_UP_PLACE_STATUSES:

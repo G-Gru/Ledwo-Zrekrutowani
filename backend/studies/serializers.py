@@ -65,7 +65,7 @@ class StudiesEditionCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudiesEdition
-        exclude = ('studies', )
+        exclude = ('studies', 'task_open_id', 'task_close_id')
 
 class StudiesEditionListSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='studies.name', read_only=True)
@@ -81,7 +81,7 @@ class StudiesEditionDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudiesEdition
-        exclude = ('studies', )
+        exclude = ('studies', 'task_open_id', 'task_close_id')
 
 
 class StudiesEditionStaffWriteSerializer(serializers.ModelSerializer):

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Style.css';
 import { serverApi } from '../services/serverApi';
+import {BASE_URL} from "../api/client.js";
 
 const CARD_IMAGES = [
   'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&q=80', // kod na ekranie
@@ -15,7 +16,7 @@ const CARD_IMAGES = [
 ];
 
 const PAGE_BG_IMAGE = 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1920&q=60';
-const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE_URL = BASE_URL.replace(/\/$/, '');
 
 const sampleOffers = [
   { id: 1, name: 'Informatyka', price: '5000.00', start_date: '2024-10-01', status: 'ACTIVE' },

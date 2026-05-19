@@ -1,6 +1,4 @@
-import { apiClient } from "../api/client";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import {apiClient, BASE_URL} from "../api/client";
 
 const decodeBase64Url = (value) => {
   try {
@@ -63,7 +61,7 @@ export const isLoggedIn = () => !!getAccessToken();
  */
 export const login = async (email, password) => {
     try {
-        const response = await apiClient(`${API_BASE_URL}/api/auth/login`, {
+        const response = await apiClient(`${BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -100,7 +98,7 @@ export const logout = () => {
  */
 export const register = async (userData) => {
   try {
-    const response = await apiClient(`${API_BASE_URL}/api/auth/register`, {
+    const response = await apiClient(`${BASE_URL}/api/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -122,7 +120,7 @@ export const refreshAccessToken = async () => {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+    const response = await fetch(`${BASE_URL}/api/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh: refreshToken }),

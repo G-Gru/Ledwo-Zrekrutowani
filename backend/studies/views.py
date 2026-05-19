@@ -85,7 +85,7 @@ class StudiesEditionListCreateAdminAPIView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         edition = serializer.save()
-        services.create_auto_documents(edition)
+        services.on_create_edition(edition)
 
 
 class StudiesEditionRetrieveUpdateDestroyAdminAPIView(generics.RetrieveUpdateDestroyAPIView):
@@ -101,6 +101,13 @@ class StudiesEditionRetrieveUpdateDestroyAdminAPIView(generics.RetrieveUpdateDes
             return [IsEmployee(), IsDirectorOrCoordinator()]
         return [IsEmployee(), IsDirectorOrAdministrativeCoordinator()]
 
+    def perform_update(self, serializer):
+        edition = serializer.save()
+        services.on_update_edition(edition)
+
+    def perform_destroy(self, instance):
+        services.on_delete_edition(instance)
+        instance.delete()
 
 class StudiesEditionStaffListCreateAdminAPIView(generics.ListCreateAPIView):
     lookup_url_kwarg = "edition_pk"
