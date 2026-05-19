@@ -7,10 +7,8 @@ export default function Register() {
   const navigate = useNavigate();
   const { handleRegister } = useAuth();
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    pesel: "",
-    nationality: "",
+    first_name: "",
+    last_name: "",
     email: "",
     phone: "",
     password: "",
@@ -42,11 +40,6 @@ export default function Register() {
       return;
     }
 
-    if (!/^\d{11}$/.test(formData.pesel)) {
-      setError("PESEL musi składać się z 11 cyfr.");
-      return;
-    }
-
     if (!/^\+?\d{9,12}$/.test(formData.phone.trim())) {
       setError("Niepoprawny numer telefonu");
       return;
@@ -71,7 +64,7 @@ export default function Register() {
       };
       console.log("Rejestracja payload:", registerPayload);
 
-      await handleRegister(formData.email, formData.password);
+      await handleRegister(registerPayload);
       navigate("/login");
     } catch (err) {
       setError(err?.message || "Błąd rejestracji");
@@ -88,50 +81,23 @@ export default function Register() {
           <div className="section-title">Dane osobowe</div>
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="firstName">Imię</label>
+              <label htmlFor="first_name">Imię <span className="required-inline-mark">*</span></label>
               <input
-                id="firstName"
-                name="firstName"
+                id="first_name"
+                name="first_name"
                 autoComplete="given-name"
-                value={formData.firstName}
+                value={formData.first_name}
                 onChange={handleChange}
                 required
               />
             </div>
             <div className="form-group">
-              <label htmlFor="lastName">Nazwisko</label>
+              <label htmlFor="last_name">Nazwisko <span className="required-inline-mark">*</span></label>
               <input
-                id="lastName"
-                name="lastName"
+                id="last_name"
+                name="last_name"
                 autoComplete="family-name"
-                value={formData.lastName}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="pesel">PESEL</label>
-              <input
-                id="pesel"
-                name="pesel"
-                autoComplete="off"
-                inputMode="numeric"
-                pattern="\d{11}"
-                value={formData.pesel}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="nationality">Obywatelstwo</label>
-              <input
-                id="nationality"
-                name="nationality"
-                autoComplete="country-name"
-                value={formData.nationality}
+                value={formData.last_name}
                 onChange={handleChange}
                 required
               />
@@ -141,7 +107,7 @@ export default function Register() {
           <div className="section-title">Dane kontaktowe</div>
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">Email <span className="required-inline-mark">*</span></label>
               <input
                 id="email"
                 name="email"
@@ -153,7 +119,7 @@ export default function Register() {
               />
             </div>
             <div className="form-group">
-              <label htmlFor="phone">Numer telefonu</label>
+              <label htmlFor="phone">Numer telefonu <span className="required-inline-mark">*</span></label>
               <input
                 id="phone"
                 name="phone"
@@ -170,7 +136,7 @@ export default function Register() {
           <div className="section-title">Zabezpieczenia</div>
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="password">Hasło</label>
+              <label htmlFor="password">Hasło <span className="required-inline-mark">*</span></label>
               <input
                 id="password"
                 name="password"
@@ -182,7 +148,7 @@ export default function Register() {
               />
             </div>
             <div className="form-group">
-              <label htmlFor="confirmPassword">Powtórz hasło</label>
+              <label htmlFor="confirmPassword">Powtórz hasło <span className="required-inline-mark">*</span></label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -197,23 +163,23 @@ export default function Register() {
 
           <div className="section-title">Zgody i regulaminy</div>
           <div className="consent-box">
-            <label className="consent-item">
+            <label className="consent-item required">
               <input
                 type="checkbox"
                 name="infoClause"
                 checked={consents.infoClause}
                 onChange={handleChange}
               />
-              Potwierdzam, że zapoznałem(am) się z treścią klauzuli informacyjnej i przyjmuję do wiadomości informacje w niej zawarte.
+              <span><span className="required-mark">*</span> Potwierdzam, że zapoznałem(am) się z treścią klauzuli informacyjnej i przyjmuję do wiadomości informacje w niej zawarte.</span>
             </label>
-            <label className="consent-item">
+            <label className="consent-item required">
               <input
                 type="checkbox"
                 name="gdpr"
                 checked={consents.gdpr}
                 onChange={handleChange}
               />
-              Zgodnie z Rozporządzeniem Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016 r. w sprawie ochrony osób fizycznych w związku z przetwarzaniem danych osobowych i w sprawie swobodnego przepływu takich danych oraz uchylenia dyrektywy 95/46/WE (ogólne rozporządzenie o ochronie danych) [Dz. U. UE.L.2016.119.1 z dnia 4 maja 2016 r.], zwanego dalej RODO, wyrażam zgodę na przetwarzanie moich danych osobowych w ramach procesu rekrutacji na powyższe studia i dokumentowanie ich przebiegu.
+              <span><span className="required-mark">*</span> Zgodnie z Rozporządzeniem Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016 r. w sprawie ochrony osób fizycznych w związku z przetwarzaniem danych osobowych i w sprawie swobodnego przepływu takich danych oraz uchylenia dyrektywy 95/46/WE (ogólne rozporządzenie o ochronie danych) [Dz. U. UE.L.2016.119.1 z dnia 4 maja 2016 r.], zwanego dalej RODO, wyrażam zgodę na przetwarzanie moich danych osobowych w ramach procesu rekrutacji na powyższe studia i dokumentowanie ich przebiegu.</span>
             </label>
             <label className="consent-item">
               <input
@@ -222,7 +188,7 @@ export default function Register() {
                 checked={consents.updates}
                 onChange={handleChange}
               />
-              Chcę otrzymywać wiadomości o szkoleniach, kursach dokształcających i studiach podyplomowych organizowanych przez Wydział Informatyki AGH.
+              <span>Chcę otrzymywać wiadomości o szkoleniach, kursach dokształcających i studiach podyplomowych organizowanych przez Wydział Informatyki AGH.</span>
             </label>
           </div>
           {error && <div className="error-message">{error}</div>}

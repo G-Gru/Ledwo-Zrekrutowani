@@ -1,6 +1,19 @@
 from django.urls import path
-from . import views
+
+from .views import StudiesEditionListAPIView, StudiesEditionRetrieveAPIView, StudiesEditionStaffListAPIView, \
+    StudiesDocumentsListAPIView
 
 urlpatterns = [
-    path("", views.studies_editions, name="studies_editions"),
+    path("editions/",
+         StudiesEditionListAPIView.as_view(),
+         name="studies_list"),
+    path("editions/<int:edition_pk>/",
+         StudiesEditionRetrieveAPIView.as_view(),
+         name="studies_retrieve"),
+    path("editions/<int:edition_pk>/staff/",
+         StudiesEditionStaffListAPIView.as_view(),
+         name="studies_staff_list"),
+    path("editions/<int:edition_pk>/documents/",
+         StudiesDocumentsListAPIView.as_view(),
+         name="studies_documents_list"),
 ]
