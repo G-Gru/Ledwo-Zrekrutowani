@@ -7,6 +7,7 @@ import { formatDateInWarsaw } from '../utils/dateTime';
 
 export default function ApplicationSent(
 ) {
+    // TODO powinno pokazywać jakoś czy jesteśmy candidate czy tylko reserve
     const navigate = useNavigate();
     const [showPaymentCard, setShowPaymentCard] = useState(true);
     const [showDocumentCard, setShowDocumentCard] = useState(true);

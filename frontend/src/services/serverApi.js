@@ -1,13 +1,14 @@
 
-import { getAccessToken, getUser, isTokenExpired, refreshAccessToken } from './authService';
+import { getAccessToken, isTokenExpired, refreshAccessToken } from './authService';
 import {
     getMockAdminEnrollmentDetails,
     getMockAdminEnrollmentList,
     saveMockAdminEnrollmentDecision,
 } from '../mocks/adminEnrollmentMocks';
 import { formatDateInWarsaw } from '../utils/dateTime';
+import {BASE_URL} from "../api/client.js";
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE_URL = BASE_URL.replace(/\/$/, '');
 
 export class serverApi {
     // Pomocnicza metoda do zapytań

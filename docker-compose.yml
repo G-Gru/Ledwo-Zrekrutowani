@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: lz-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    env_file:
+      - .env
+
+  redis:
+    image: redis:7
+    container_name: lz-redis
+    ports:
+      - "6379:6379"
+    env_file:
+      - .env
+
+  celery:
+    build: ./backend
+    command: celery -A core worker --loglevel=info
+    container_name: lz-celery
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+
+  django:
+    build: ./backend
+    command: python manage.py runserver 0.0.0.0:8000
+    container_name: lz-django
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis  
+      - celery  
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+
+  frontend:
+    build: ./frontend
+    container_name: lz-frontend
+    depends_on:
+      - django
+    environment:
+      VITE_API_URL: http://lz-django:8080
+    ports:
+      - "5173:5173"
+
+volumes:
+  pgdata:

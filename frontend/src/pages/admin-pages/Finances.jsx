@@ -3,8 +3,9 @@ import { getAccessToken } from '../../services/authService';
 import { serverApi } from '../../services/serverApi';
 import AccountPageLeftMenu from '../../components/AccountPageLeftMenu';
 import '../../styles/AdminFinances.css';
+import {BASE_URL} from "../../api/client.js";
 
-const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE_URL = BASE_URL.replace(/\/$/, '');
 
 function getToken() {
   return getAccessToken();
@@ -120,7 +121,7 @@ export default function Finances() {
     setApprovingId(transactionId);
     try {
       const token = getToken();
-      const res = await serverApi.apiRequest(`${API_BASE}/api/admin/finances/transactions/${transactionId}/approve/`, 'POST', null, token);
+      const res = await serverApi.apiRequest(`${API_BASE_URL}/api/admin/finances/transactions/${transactionId}/approve/`, 'POST', null, token);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       /* refresh data */
       const [feesData, trxData, dashData] = await Promise.all([

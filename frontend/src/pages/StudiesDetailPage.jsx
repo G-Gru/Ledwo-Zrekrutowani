@@ -4,6 +4,7 @@ import '../styles/Style.css';
 import { serverApi } from '../services/serverApi';
 import { formatDateInWarsaw } from '../utils/dateTime';
 import { getUserRole, isLoggedIn } from '../services/authService';
+import {BASE_URL} from "../api/client.js";
 
 const sampleEdition = {
   id: 1,
@@ -58,7 +59,7 @@ const roleLabels = {
   ADMINISTRATIVE_COORDINATOR: 'Koordynator administracyjny',
   FINANCE_COORDINATOR: 'Koordynator finansowy',
 };
-const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE_URL = BASE_URL.replace(/\/$/, '');
 
 export default function StudiesDetailPage() {
   const { id } = useParams();

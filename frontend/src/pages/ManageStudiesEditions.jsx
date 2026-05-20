@@ -4,6 +4,7 @@ import { serverApi } from '../services/serverApi';
 import AccountPageLeftMenu from '../components/AccountPageLeftMenu';
 import '../styles/Style.css';
 import { toDateTimeLocalInWarsaw } from '../utils/dateTime';
+import {BASE_URL} from "../api/client.js";
 
 const sampleStudies = [
   {
@@ -119,7 +120,7 @@ const staffRoleLabels = {
   FINANCE_COORDINATOR: 'Koordynator finansowy'
 };
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE_URL = BASE_URL.replace(/\/$/, '');
 const getApiUrl = (path) => `${API_BASE_URL}/api${path}`;
 
 export default function ManageStudiesEditions() {

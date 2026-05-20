@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 from pathlib import Path
 from uuid import uuid4
@@ -6,16 +7,21 @@ from uuid import uuid4
 from django.core.files import File as DjangoFile
 from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from docxtpl import DocxTemplate
 
 from core import settings
-from enrollments.exceptions import UserAlreadyEnrolledException, NoPlacesAvailableException, MissingDocumentsException
+from enrollments.exceptions import UserAlreadyEnrolledException, NoPlacesAvailableException, MissingDocumentsException, \
+    UserNotRecruitingException
 from enrollments.models import Enrollment, FormData, ENROLLMENT_TAKING_UP_PLACE_STATUSES, SubmittedDocument, \
-    SUBMITTED_DOCUMENT_CONFIRMED_STATUSES
+    SUBMITTED_DOCUMENT_CONFIRMED_STATUSES, ENROLLMENT_ACTIVE_STATUSES
 from files.models import File
+from notifications.exceptions import NotificationSendFailedException
+from notifications.services import send_notif_to
 from studies.models import StudiesEdition, StudiesDocument
 from studies.services import get_enrollable_editions_queryset, DELIVERY_DOCUMENT_NAME
 
+logger = logging.getLogger(__name__)
 
 def get_enrollable_edition(edition_pk):
     return get_object_or_404(
@@ -80,10 +86,11 @@ def enroll(edition_id, enrollment_id):
         ).count()
 
         if total >= edition.max_participants:
-            raise NoPlacesAvailableException()
+            status = Enrollment.Status.RESERVE
+        else:
+            status = Enrollment.Status.CANDIDATE
 
-
-        enrollment.status = Enrollment.Status.CANDIDATE
+        enrollment.status = status
         enrollment.enrollment_date = datetime.datetime.now()
         enrollment.save()
         create_form_delivery_file(enrollment)
@@ -101,7 +108,7 @@ def submit_document(enrollment_id, user, serializer):
         )
 
         file_data = serializer.validated_data.pop("file")
-        _create_submitted_document(enrollment_id, file_data)
+        _create_submitted_document(enrollment_id, file_data["studies_document_id"], file_data["file"])
 
 def _create_submitted_document(enrollment_id, studies_document_id, uploaded_file):
     file_model_obj = File.objects.create(
@@ -186,12 +193,15 @@ def generate_form_docx(form: FormData):
     return file_path
 
 
-def check_and_promote_to_student(enrollment):
+def check_and_promote_candidate_to_student(enrollment):
     if enrollment.status != Enrollment.Status.CANDIDATE:
         return
 
+    _check_and_promote_to_student(enrollment)
+
+def _check_student_promotion_available(enrollment):
     if enrollment.fees.filter(paid_date__isnull=True).exists():
-        return
+        return False
 
     required_docs = StudiesDocument.objects.filter(
         studies_edition=enrollment.studies_edition,
@@ -202,7 +212,86 @@ def check_and_promote_to_student(enrollment):
         submitted_documents__status__in=SUBMITTED_DOCUMENT_CONFIRMED_STATUSES
     )
     if unconfirmed.exists():
+        return False
+
+    return True
+
+def _check_and_promote_to_student(enrollment):
+    if not _check_student_promotion_available(enrollment):
         return
 
     enrollment.status = Enrollment.Status.STUDENT
     enrollment.save(update_fields=['status'])
+
+def resign(enrollment: Enrollment):
+    with transaction.atomic():
+        current_status = enrollment.status
+        if current_status not in ENROLLMENT_ACTIVE_STATUSES:
+            raise UserNotRecruitingException()
+
+        studies_edition = enrollment.studies_edition
+        is_recruitment_closed = studies_edition.status == StudiesEdition.StatusChoices.CLOSED
+
+        status = Enrollment.Status.EXPELLED if is_recruitment_closed else Enrollment.Status.REJECTED
+        enrollment.status = status
+        enrollment.save(update_fields=['status'])
+
+        if is_recruitment_closed:
+            return
+
+        if current_status in ENROLLMENT_TAKING_UP_PLACE_STATUSES:
+            _promote_single_reservist(studies_edition)
+
+def _promote_single_reservist(studies_edition):
+    enrollment = (Enrollment.objects
+                  .filter(studies_edition=studies_edition, status=Enrollment.Status.RESERVE)
+                  .order_by('enrollment_date')
+                  .first())
+
+    if enrollment is None:
+        return
+
+    if _check_student_promotion_available(enrollment):
+        status = Enrollment.Status.STUDENT
+    else:
+        status = Enrollment.Status.CANDIDATE
+
+    change_enrollment_status(enrollment, status)
+
+def promote_reservists_to_students(studies_edition, count):
+    if count <= 0:
+        return
+
+    enrollments = (Enrollment.objects
+                   .filter(studies_edition=studies_edition, status=Enrollment.Status.RESERVE)
+                   .order_by('enrollment_date'))
+
+    for enrollment in enrollments:
+        if _check_student_promotion_available(enrollment):
+            change_enrollment_status(enrollment, Enrollment.Status.STUDENT)
+
+            count -= 1
+            if count == 0:
+                return
+
+def change_enrollment_status(enrollment, new_status):
+    enrollment.status = new_status
+    enrollment.save(update_fields=['status'])
+
+    def send_notification():
+        studies = enrollment.studies_edition.studies
+        user = enrollment.user
+        subject = "Aktualizacja statusu rekrutacji"
+        body = (
+            f"Twój status zgłoszenia na kierunek\n"
+            f"{studies.name}\n"
+            f"Zmienił się na {new_status}"
+        )
+        try:
+            send_notif_to(user, subject, body)
+        except NotificationSendFailedException:
+            logger.warning(
+                f"Failed to send promotion notification for {user} - {subject}"
+            )
+
+    transaction.on_commit(send_notification)
