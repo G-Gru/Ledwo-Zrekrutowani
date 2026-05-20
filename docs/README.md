@@ -112,7 +112,7 @@ Dla kogo: DevOps, System Administrators, Maintenance Engineers
 
 ---
 
-### 6. [WORKFLOW_PROCESY.md](WORKFLOW_PROCESY.md) (TODO)
+### 6. [WORKFLOW_PROCESY.md](WORKFLOW_PROCESY.md)
 Procesy biznesowe i przeplywy systemu.
 
 Bedzie zawierac:
@@ -125,7 +125,7 @@ Bedzie zawierac:
 
 ---
 
-### 7. [KODOWANIE_KONWENCJE.md](KODOWANIE_KONWENCJE.md) (TODO)
+### 7. [KODOWANIE_KONWENCJE.md](KODOWANIE_KONWENCJE.md)
 Konwencje kodowania i best practices.
 
 Bedzie zawierac:
@@ -219,15 +219,13 @@ Ledwo-Zrekrutowani/
 
 ## Linki do Dokumentow
 
-| Dokument | Sciezka | Status |
-|----------|---------|--------|
-| Architektura | [ARCHITEKTURA_TECHNICZNA.md](ARCHITEKTURA_TECHNICZNA.md) | Gotowy |
-| Instalacja i deployment | [INSTALACJA_KONFIGURACJA_WDROZENIE.md](INSTALACJA_KONFIGURACJA_WDROZENIE.md) | Gotowy |
-| API Reference | [API_REFERENCE.md](API_REFERENCE.md) | Gotowy |
-| Admin i User Guide | [ADMINISTRACJA_I_UZYTKOWNIK.md](ADMINISTRACJA_I_UZYTKOWNIK.md) | Gotowy |
-| Zaleznosci i procedury | [ZALEZNOSCI_I_PROCEDURY.md](ZALEZNOSCI_I_PROCEDURY.md) | Gotowy |
-| Procesy biznesowe | [WORKFLOW_PROCESY.md](WORKFLOW_PROCESY.md) | TODO |
-| Konwencje kodowania | [KODOWANIE_KONWENCJE.md](KODOWANIE_KONWENCJE.md) | TODO |
+| Dokument | Sciezka |
+|----------|---------|
+| Architektura | [ARCHITEKTURA_TECHNICZNA.md](ARCHITEKTURA_TECHNICZNA.md) |
+| Instalacja i deployment | [INSTALACJA_KONFIGURACJA_WDROZENIE.md](INSTALACJA_KONFIGURACJA_WDROZENIE.md) |
+| API Reference | [API_REFERENCE.md](API_REFERENCE.md) |
+| Admin i User Guide | [ADMINISTRACJA_I_UZYTKOWNIK.md](ADMINISTRACJA_I_UZYTKOWNIK.md) |
+| Zaleznosci i procedury | [ZALEZNOSCI_I_PROCEDURY.md](ZALEZNOSCI_I_PROCEDURY.md) |
 
 ---
 
@@ -300,7 +298,7 @@ O: [KODOWANIE_KONWENCJE.md](KODOWANIE_KONWENCJE.md) (w przygotowaniu)
 
 ## Licencja
 
-Projekt dostepny na licencji MIT (lub inna - do uzupelnienia)
+All Rights Reserved.
 
 ---
 
