@@ -2,6 +2,7 @@ from celery.result import AsyncResult
 from django.db import transaction
 from rest_framework.generics import get_object_or_404
 
+from enrollments.models import Enrollment
 from studies import tasks
 from studies.models import StudiesEdition, STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES, STUDIES_EDITION_ENROLLABLE_STATUSES, \
     StudiesDocument
@@ -102,6 +103,8 @@ def open_recruitment(studies_edition_id):
 
 @transaction.atomic
 def close_recruitment(studies_edition_id):
+    from enrollments.services import promote_reservists_to_students, change_enrollment_status
+
     edition = StudiesEdition.objects.select_for_update().get(
         pk=studies_edition_id
     )
@@ -111,3 +114,23 @@ def close_recruitment(studies_edition_id):
 
     edition.status = StudiesEdition.StatusChoices.CLOSED
     edition.save(update_fields=["status"])
+
+    # All candidates left are to be rejected and replaced
+    candidates_left = Enrollment.objects.filter(
+        studies_edition=edition,
+        status=Enrollment.Status.CANDIDATE
+    ).count()
+
+    promote_reservists_to_students(edition, candidates_left)
+
+    remaining_list = Enrollment.objects.filter(
+        studies_edition=edition,
+        status__in=[
+            Enrollment.Status.DRAFT,
+            Enrollment.Status.CANDIDATE,
+            Enrollment.Status.RESERVE
+        ]
+    ).select_related("user", "studies_edition__studies")
+
+    for enrollment in remaining_list:
+        change_enrollment_status(enrollment, Enrollment.Status.REJECTED)

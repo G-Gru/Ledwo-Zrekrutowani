@@ -108,7 +108,7 @@ def submit_document(enrollment_id, user, serializer):
         )
 
         file_data = serializer.validated_data.pop("file")
-        _create_submitted_document(enrollment_id, file_data)
+        _create_submitted_document(enrollment_id, file_data["studies_document_id"], file_data["file"])
 
 def _create_submitted_document(enrollment_id, studies_document_id, uploaded_file):
     file_model_obj = File.objects.create(
@@ -256,16 +256,42 @@ def _promote_single_reservist(studies_edition):
     else:
         status = Enrollment.Status.CANDIDATE
 
-    enrollment.status = status
+    change_enrollment_status(enrollment, status)
+
+def promote_reservists_to_students(studies_edition, count):
+    if count <= 0:
+        return
+
+    enrollments = (Enrollment.objects
+                   .filter(studies_edition=studies_edition, status=Enrollment.Status.RESERVE)
+                   .order_by('enrollment_date'))
+
+    for enrollment in enrollments:
+        if _check_student_promotion_available(enrollment):
+            change_enrollment_status(enrollment, Enrollment.Status.STUDENT)
+
+            count -= 1
+            if count == 0:
+                return
+
+def change_enrollment_status(enrollment, new_status):
+    enrollment.status = new_status
     enrollment.save(update_fields=['status'])
 
-    studies = studies_edition.studies
-    user = enrollment.user
-    subject = f"Aktualizacja statusu rekrutacji"
-    body = (f"Twój status zgłoszenia na kierunek\n"
+    def send_notification():
+        studies = enrollment.studies_edition.studies
+        user = enrollment.user
+        subject = "Aktualizacja statusu rekrutacji"
+        body = (
+            f"Twój status zgłoszenia na kierunek\n"
             f"{studies.name}\n"
-            f"Zmienił się na {status}")
-    try:
-        send_notif_to(user, subject, body)
-    except NotificationSendFailedException:
-        logger.warning(f"Failed to send promotion notification for {user} - {subject}")
+            f"Zmienił się na {new_status}"
+        )
+        try:
+            send_notif_to(user, subject, body)
+        except NotificationSendFailedException:
+            logger.warning(
+                f"Failed to send promotion notification for {user} - {subject}"
+            )
+
+    transaction.on_commit(send_notification)

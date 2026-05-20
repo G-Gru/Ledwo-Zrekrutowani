@@ -152,7 +152,11 @@ class SubmittedDocumentsCreateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         file = attrs["file"]
         doc_id = file["studies_document_id"]
-        studies_document = StudiesDocument.objects.get(id=doc_id)
+
+        try:
+            studies_document = StudiesDocument.objects.get(id=doc_id)
+        except StudiesDocument.DoesNotExist:
+            raise serializers.ValidationError("Invalid studies_document_id")
 
         if studies_document.is_read_only:
             raise serializers.ValidationError(
