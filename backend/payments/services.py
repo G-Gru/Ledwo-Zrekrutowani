@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from django.db import transaction
 
-from enrollments.services import check_and_promote_to_student
+from enrollments import services
 from files.models import File
 from notifications.exceptions import NotificationSendFailedException
 from notifications.services import send_notif_to
@@ -59,7 +59,7 @@ def pay_fee(fee, proof_file=None):
 
     if payment_status == "COMPLETED":
         send_payment_confirmation_notif(fee)
-        check_and_promote_to_student(fee.enrollment)
+        services.check_and_promote_candidate_to_student(fee.enrollment)
 
 
 def approve_payment(payment):
@@ -77,7 +77,7 @@ def approve_payment(payment):
         fee.save(update_fields=['paid_date'])
 
     send_payment_confirmation_notif(payment.fee)
-    check_and_promote_to_student(payment.fee.enrollment)
+    services.check_and_promote_candidate_to_student(payment.fee.enrollment)
 
 
 def send_fee_issued_notif(fee):

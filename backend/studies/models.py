@@ -15,7 +15,7 @@ class StudiesEdition(models.Model):
     class StatusChoices(models.TextChoices):
         HIDDEN = 'HIDDEN'
         ACTIVE = 'ACTIVE'
-        CLOSED = 'CLOSED' # todo
+        CLOSED = 'CLOSED'
 
     studies = models.ForeignKey(Studies, on_delete=models.RESTRICT)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -27,6 +27,9 @@ class StudiesEdition(models.Model):
     recruitment_start_date = models.DateTimeField()
     recruitment_end_date = models.DateTimeField()
     academic_year = models.CharField(max_length=10)
+
+    task_open_id = models.CharField(max_length=255, null=True, blank=True)
+    task_close_id = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         constraints = [

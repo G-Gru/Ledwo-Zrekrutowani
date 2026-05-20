@@ -17,7 +17,9 @@ class Enrollment(models.Model):
     class Status(models.TextChoices):
         DRAFT = 'DRAFT'
         CANDIDATE = 'CANDIDATE'
+        RESERVE = 'RESERVE'
         STUDENT = 'STUDENT'
+        REJECTED = 'REJECTED'
         EXPELLED = 'EXPELLED'
 
     user = models.ForeignKey(User, on_delete=models.RESTRICT)
@@ -43,6 +45,23 @@ class Enrollment(models.Model):
 ENROLLMENT_TAKING_UP_PLACE_STATUSES = [
     Enrollment.Status.CANDIDATE,
     Enrollment.Status.STUDENT,
+]
+
+ENROLLMENT_RECRUITING_STATUSES = [
+    Enrollment.Status.CANDIDATE,
+    Enrollment.Status.RESERVE,
+]
+
+ENROLLMENT_ACTIVE_STATUSES = [
+    Enrollment.Status.DRAFT,
+    Enrollment.Status.CANDIDATE,
+    Enrollment.Status.RESERVE,
+    Enrollment.Status.STUDENT,
+]
+
+ENROLLMENT_NON_ACTIVE_STATUSES = [
+    Enrollment.Status.REJECTED,
+    Enrollment.Status.EXPELLED
 ]
 
 class SubmittedDocument(models.Model):
