@@ -28,10 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.getenv('DEBUG', False))
-
-ALLOWED_HOSTS = []
-
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
 # Application definition
 
@@ -157,11 +154,12 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-]
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
-CORS_ALLOW_ALL_ORIGINS = True #todo
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:5173").split(",")
+
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 
 AUTH_USER_MODEL = "users.User"
 
