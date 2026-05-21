@@ -89,6 +89,15 @@ export class serverApi {
                 return {data: response, error: false};
             }
 
+            const contentLength = response.headers.get('Content-Length');
+            const contentType = response.headers.get('Content-Type') || '';
+
+            // Some successful endpoints (especially DELETE) return 204 or empty body.
+            // Avoid parsing JSON when there is no payload.
+            if (response.status === 204 || contentLength === '0' || !contentType.toLowerCase().includes('application/json')) {
+                return {data: null, error: false, errorMsg: ""};
+            }
+
             const data = await response.json();
             return {data, error: false, errorMsg: ""};
         } catch (err) {
@@ -720,6 +729,22 @@ export class serverApi {
         }));
 
         return {applications: mapped, error: false, errorMsg: ""};
+    }
+
+    static async resignFromEnrollment(token, enrollmentId) {
+        if (!enrollmentId) {
+            return {error: true, errorMsg: 'Brak identyfikatora zgłoszenia.'};
+        }
+
+        const res = await this.apiRequest(`/api/enrollments/${enrollmentId}/`, 'DELETE', null, token);
+        if (res.error) {
+            return {
+                error: true,
+                errorMsg: res.errorDetail || res.errorMsg || 'Nie udało się zrezygnować z rekrutacji.',
+            };
+        }
+
+        return {error: false, errorMsg: ''};
     }
 
     /* Payments */

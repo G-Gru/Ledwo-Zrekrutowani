@@ -5,6 +5,32 @@ import { serverApi } from '../services/serverApi';
 import { getAccessToken } from '../services/authService';
 import { formatDateInWarsaw } from '../utils/dateTime';
 
+const KNOWN_ENROLLMENT_STATUSES = new Set(['CANDIDATE', 'RESERVE', 'STUDENT', 'DRAFT', 'REJECTED', 'EXPELLED']);
+
+const getPrimaryEnrollmentStatus = (status) => {
+    const rawStatuses = Array.isArray(status) ? status : [status];
+    for (const rawStatus of rawStatuses) {
+        const normalized = String(rawStatus || '').trim().toUpperCase();
+        if (KNOWN_ENROLLMENT_STATUSES.has(normalized)) {
+            return normalized;
+        }
+    }
+    return '';
+};
+
+const enrollmentResultContent = {
+    CANDIDATE: {
+        title: 'Status po wysłaniu: Kandydat',
+        text: 'Zakwalifikowano Cię do podstawowej listy kandydatów. Kontynuuj opłatę i dostarczenie dokumentów, aby domknąć rekrutację.',
+        variant: 'candidate',
+    },
+    RESERVE: {
+        title: 'Status po wysłaniu: Lista rezerwowa',
+        text: 'Aktualnie jesteś na liście rezerwowej. Jeżeli zwolni się miejsce, status może zostać automatycznie zaktualizowany.',
+        variant: 'reserve',
+    },
+};
+
 export default function ApplicationSent(
 ) {
     // TODO powinno pokazywać jakoś czy jesteśmy candidate czy tylko reserve
@@ -12,6 +38,7 @@ export default function ApplicationSent(
     const [showPaymentCard, setShowPaymentCard] = useState(true);
     const [showDocumentCard, setShowDocumentCard] = useState(true);
     const [courseInfo, setCourseInfo] = useState({ name: "Nieznany kierunek", deadline: "-"});
+    const [enrollmentStatusCode, setEnrollmentStatusCode] = useState('');
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -33,9 +60,33 @@ export default function ApplicationSent(
         fetchCourseInfo();
     }, [courseId]);
 
+    useEffect(() => {
+        const fetchEnrollmentResult = async () => {
+            const token = getAccessToken();
+            if (!token || !courseId) return;
+
+            const applicationsResult = await serverApi.getUserApplications(token);
+            if (applicationsResult.error || !Array.isArray(applicationsResult.applications)) return;
+
+            const currentEditionApplication = applicationsResult.applications.find((application) => {
+                const editionId = application?.studies_edition?.id ?? application?.studies_edition;
+                return String(editionId) === String(courseId);
+            });
+
+            if (!currentEditionApplication) return;
+
+            const statusCode = getPrimaryEnrollmentStatus(currentEditionApplication.status);
+            setEnrollmentStatusCode(statusCode);
+        };
+
+        fetchEnrollmentResult();
+    }, [courseId]);
+
     const handleDismissCard = (cardSetter) => {
         cardSetter(false);
     };
+
+    const resultInfo = enrollmentResultContent[enrollmentStatusCode] || null;
 
 
   return (
@@ -50,6 +101,12 @@ export default function ApplicationSent(
         <p>
             Twoje zgłoszenie na kierunek <b>{courseInfo.name}</b> zostało pomyślnie wysłane. 
         </p>
+        {resultInfo && (
+            <div className={`enrollment-result-banner ${resultInfo.variant}`}>
+                <h3>{resultInfo.title}</h3>
+                <p>{resultInfo.text}</p>
+            </div>
+        )}
         {/* <p>
             Wyniki rekrutacji zostaną ogłoszone do dnia <b><i>{courseInfo.deadline}</i></b>
         </p> */}

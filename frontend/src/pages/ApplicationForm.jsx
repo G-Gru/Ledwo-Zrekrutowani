@@ -8,11 +8,23 @@ import LoginRedirectPage from '../components/LoginRedirectPage';
 import * as authService from "../services/authService.js";
 import AddressTile from '../components/AddressTile.jsx';
 
+const ENROLLMENT_STATUS_CODES = new Set(['DRAFT', 'CANDIDATE', 'RESERVE', 'STUDENT', 'REJECTED', 'EXPELLED']);
+
+const normalizeStatusCode = (status) => String(status || '').trim().toUpperCase();
+
+const getKnownStatusCodes = (status) => {
+    const rawStatuses = Array.isArray(status) ? status : [status];
+    return rawStatuses
+        .map(normalizeStatusCode)
+        .filter((code) => ENROLLMENT_STATUS_CODES.has(code));
+};
+
 export default function ApplicationForm() {
     // Pobieranie danych uzytkownika
     const [isUserLoggedIn, setUserLoggedIn] = useState(true)
     const [userToken, setUserToken] = useState(null)
     const [isUserAlreadyEnrolled, setUserAlreadyEnrolled] = useState(false)
+    const [blockingEnrollmentStatus, setBlockingEnrollmentStatus] = useState('')
     const [enrollmentId, setEnrollmentId] = useState(null)
 
     const navigate = useNavigate();
@@ -90,8 +102,11 @@ export default function ApplicationForm() {
             };
 
             const existingApplication = await serverApi.getExistingApplicationForm(token, courseId);
+            let matchedStatusCodes = [];
+
             if (!existingApplication.error && existingApplication.data) {
                 setEnrollmentId(existingApplication.data.enrollment)
+                matchedStatusCodes = getKnownStatusCodes(existingApplication.data.status);
 
                 const mappedExistingData = await serverApi.mapExistingApplicationToFormData(
                     token,
@@ -143,15 +158,19 @@ export default function ApplicationForm() {
 
             const otherEnrollmentData = await serverApi.getUserApplications(token);
             if (otherEnrollmentData && Array.isArray(otherEnrollmentData.applications)) {
-                const alreadyEnrolled = otherEnrollmentData.applications.some(application => {
+                const matchingApplication = otherEnrollmentData.applications.find(application => {
                     const editionId = application?.studies_edition?.id ?? application?.studies_edition;
-                    const statusCode = application?.status?.[0];
-
-                    return String(editionId) === String(courseId) && String(statusCode) !== "DRAFT";
+                    return String(editionId) === String(courseId);
                 });
 
-                setUserAlreadyEnrolled(alreadyEnrolled);
+                if (matchingApplication) {
+                    matchedStatusCodes = getKnownStatusCodes(matchingApplication.status);
+                }
             }
+
+            const hasBlockingStatus = matchedStatusCodes.some((code) => code !== 'DRAFT');
+            setUserAlreadyEnrolled(hasBlockingStatus);
+            setBlockingEnrollmentStatus(hasBlockingStatus ? matchedStatusCodes.find((code) => code !== 'DRAFT') || '' : '');
 
             const docsResult = await serverApi.getStudiesEditionDocuments(token, courseId);
             if (!docsResult.error && Array.isArray(docsResult.data)) {
@@ -260,6 +279,11 @@ export default function ApplicationForm() {
 
     // wysylanie formularza
     const handleSaveForm = async () => {
+        if (isUserAlreadyEnrolled) {
+            setError('Ten kierunek ma już aktywne zgłoszenie i formularz nie może być ponownie edytowany.');
+            return;
+        }
+
         if (! await handleSubmit('SAVE')) {
             setError("Nie udało się zapisać formularza")
         } else {
@@ -277,6 +301,11 @@ export default function ApplicationForm() {
 
         if (actionType === "ENROLL" && isUserAlreadyEnrolled) {
             setError('Jesteś już zapisany na ten sam kierunek. Nie możesz wysłać kolejnego wniosku.');
+            return false;
+        }
+
+        if (actionType === "SAVE" && isUserAlreadyEnrolled) {
+            setError('Ten formularz nie może być zapisany ponownie, ponieważ zgłoszenie ma już status inny niż draft.');
             return false;
         }
 
@@ -533,6 +562,9 @@ export default function ApplicationForm() {
                         <div className="error-banner-text">
                             <strong>Już uczestniczysz w rekrutacji do tego kierunku.</strong>
                             <p>Nie możesz wysłać kolejnego wniosku dla tej samej edycji studiów.</p>
+                            {blockingEnrollmentStatus && (
+                                <p>Aktualny status zgłoszenia: {blockingEnrollmentStatus}.</p>
+                            )}
                         </div>
                     </div>
                 )}
@@ -980,6 +1012,7 @@ export default function ApplicationForm() {
                     name="action"
                     value=""
                     onClick={handleSaveForm}
+                    disabled={isUserAlreadyEnrolled}
                     style={{
                         background: applicationFormRecentlySaved ? "lightgrey" : ""
                     }}

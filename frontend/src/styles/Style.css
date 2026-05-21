@@ -700,8 +700,10 @@ button:hover {
 }
 #account-page-column-left {
   background-color: var(--surface-container);
-  max-width: 25%;
-  min-width: 25%;
+  flex: 0 0 290px;
+  width: 290px;
+  min-width: 290px;
+  max-width: 290px;
   align-items: left;
   text-align: left;
 }

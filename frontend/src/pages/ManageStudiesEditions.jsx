@@ -166,8 +166,17 @@ export default function ManageStudiesEditions() {
 
   const fetchStudies = async () => {
     try {
-      const { data: data, error, errorMsg } = await serverApi.apiRequest('/api/admin/studies/', 'GET', null, token, true, false, false);
-      if (error) throw new Error(errorMsg);
+      const res = await serverApi.apiRequest('/api/admin/studies/', 'GET', null, token, true, false, false);
+
+      if (res.status === 403) {
+        setStudies([]);
+        setEditionsPermissionMessage('Brak uprawnień administratora do podglądu kierunków studiów.');
+        return;
+      }
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
       setStudies(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Fetch studies error:', err);
@@ -518,6 +527,11 @@ export default function ManageStudiesEditions() {
                         required
                       >
                         <option value="">Wybierz kierunek</option>
+                        {studies.length === 0 && (
+                          <option value="" disabled>
+                            Brak dostępnych kierunków
+                          </option>
+                        )}
                         {studies.map((study) => (
                           <option key={study.id} value={study.id}>
                             {study.id} - {study.name}

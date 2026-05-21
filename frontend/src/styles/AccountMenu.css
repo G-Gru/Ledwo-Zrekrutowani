@@ -1,34 +1,42 @@
 #account-page-column-left {
   background-color: #f2efee;
-  max-width: 25%;
-  min-width: 250px;
-  padding: 20px 0;
+  flex: 0 0 290px;
+  width: 290px;
+  min-width: 290px;
+  max-width: 290px;
+  padding: 20px 10px;
+  box-sizing: border-box;
 }
 
 .side-menu {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  width: 100%;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 24px;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
   text-decoration: none;
   color: #757575;
   text-transform: uppercase;
   font-weight: 600;
   font-size: 0.85rem;
-  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  box-sizing: border-box;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .menu-item.active {
   background-color: #ffffff;
   color: #b08d57; 
-  margin: 0 10px;
-  border-radius: 4px;
+  border-color: rgba(176, 141, 87, 0.25);
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
@@ -37,11 +45,11 @@
 }
 
 .menu-item.indent {
-  padding-left: 45px;
+  padding-left: 34px;
 }
 
 .menu-section-header {
-  padding: 20px 24px 10px;
+  padding: 20px 14px 10px;
   font-size: 0.9rem;
   font-weight: 500;
   color: #333;
@@ -56,4 +64,17 @@
 
 .menu-item:hover:not(.active) {
   background-color: rgba(255, 255, 255, 0.5);
+}
+
+.menu-item .label {
+  white-space: nowrap;
+}
+
+@media (max-width: 1024px) {
+  #account-page-column-left {
+    flex: 0 0 260px;
+    width: 260px;
+    min-width: 260px;
+    max-width: 260px;
+  }
 }

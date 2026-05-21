@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import '../styles/Style.css';
 import { serverApi } from '../services/serverApi';
 import { formatDateInWarsaw } from '../utils/dateTime';
-import { getUserRole, isLoggedIn } from '../services/authService';
+import { getAccessToken, getUserRole, isLoggedIn } from '../services/authService';
 import {BASE_URL} from "../api/client.js";
 
 const sampleEdition = {
@@ -59,6 +59,30 @@ const roleLabels = {
   ADMINISTRATIVE_COORDINATOR: 'Koordynator administracyjny',
   FINANCE_COORDINATOR: 'Koordynator finansowy',
 };
+
+const getRecruitmentStatusLabel = (status) => {
+  const normalizedStatus = String(status || '').toLowerCase();
+
+  if (normalizedStatus === 'active') return 'Otwarta rekrutacja';
+  if (normalizedStatus === 'closed') return 'Rekrutacja zamknięta';
+
+  return status || '-';
+};
+
+const isRecruitmentOpen = (status) => String(status || '').toLowerCase() === 'active';
+const ENROLLMENT_STATUS_CODES = new Set(['DRAFT', 'CANDIDATE', 'RESERVE', 'STUDENT', 'REJECTED', 'EXPELLED']);
+
+const getPrimaryEnrollmentStatus = (status) => {
+  const rawStatuses = Array.isArray(status) ? status : [status];
+  for (const rawStatus of rawStatuses) {
+    const normalized = String(rawStatus || '').trim().toUpperCase();
+    if (ENROLLMENT_STATUS_CODES.has(normalized)) {
+      return normalized;
+    }
+  }
+  return '';
+};
+
 const API_BASE_URL = BASE_URL.replace(/\/$/, '');
 
 export default function StudiesDetailPage() {
@@ -68,6 +92,9 @@ export default function StudiesDetailPage() {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [recruitmentActive, setRecruitmentActive] = useState(true);
+  const [canStartEnrollment, setCanStartEnrollment] = useState(true);
+  const [hasDraftEnrollment, setHasDraftEnrollment] = useState(false);
+  const [blockingEnrollmentStatus, setBlockingEnrollmentStatus] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,7 +109,7 @@ export default function StudiesDetailPage() {
         }
 
         setEdition(editionRes.data);
-        setRecruitmentActive(editionRes.data.status == "ACTIVE")
+        setRecruitmentActive(isRecruitmentOpen(editionRes.data.status));
 
         if (!staffRes.error && Array.isArray(staffRes.data)) {
           setStaff(staffRes.data);
@@ -98,6 +125,54 @@ export default function StudiesDetailPage() {
       }
     };
     fetchData();
+  }, [id]);
+
+  useEffect(() => {
+    const loadEnrollmentGuard = async () => {
+      if (!isLoggedIn()) {
+        setCanStartEnrollment(true);
+        setHasDraftEnrollment(false);
+        setBlockingEnrollmentStatus('');
+        return;
+      }
+
+      const token = getAccessToken();
+      if (!token) return;
+
+      try {
+        const appsResponse = await serverApi.getUserApplications(token);
+        if (appsResponse.error || !Array.isArray(appsResponse.applications)) {
+          setCanStartEnrollment(true);
+          setHasDraftEnrollment(false);
+          setBlockingEnrollmentStatus('');
+          return;
+        }
+
+        const matchingApplication = appsResponse.applications.find((application) => {
+          const editionId = application?.studies_edition?.id ?? application?.studies_edition;
+          return String(editionId) === String(id);
+        });
+
+        const status = matchingApplication ? getPrimaryEnrollmentStatus(matchingApplication.status) : '';
+        if (!status || status === 'DRAFT') {
+          setCanStartEnrollment(true);
+          setHasDraftEnrollment(status === 'DRAFT');
+          setBlockingEnrollmentStatus('');
+          return;
+        }
+
+        setCanStartEnrollment(false);
+        setHasDraftEnrollment(false);
+        setBlockingEnrollmentStatus(status);
+      } catch (err) {
+        console.warn('Error checking existing enrollment status:', err);
+        setCanStartEnrollment(true);
+        setHasDraftEnrollment(false);
+        setBlockingEnrollmentStatus('');
+      }
+    };
+
+    loadEnrollmentGuard();
   }, [id]);
 
   if (loading) return <div className="page-layout"><p>Ładowanie...</p></div>;
@@ -169,7 +244,7 @@ export default function StudiesDetailPage() {
           </div>
           <div className="detail-box status-box">
             <h4>Status</h4>
-            <p>{edition.status ?? '-'}</p>
+            <p>{getRecruitmentStatusLabel(edition.status)}</p>
           </div>
         </aside>
       </div>
@@ -220,7 +295,12 @@ export default function StudiesDetailPage() {
         const role = getUserRole();
         const isStaffOrAdmin = role === 'ADMIN' || role === 'STUDIES_DIRECTOR' || role === 'ADMINISTRATIVE_COORDINATOR' || role === 'FINANCE_COORDINATOR';
         if (isStaffOrAdmin) return null;
-        return !recruitmentActive ? <p style={{border: '1px solid lightgrey', borderRadius: '15px', padding: '15px'}}> Kierunek nie prowadzi obecnie rekrutacji </p> : (
+        return !recruitmentActive ? <p style={{border: '1px solid lightgrey', borderRadius: '15px', padding: '15px'}}> Kierunek nie prowadzi obecnie rekrutacji </p> : !canStartEnrollment ? (
+          <p style={{border: '1px solid lightgrey', borderRadius: '15px', padding: '15px'}}>
+            Masz już złożony wniosek dla tej edycji i nie możesz rozpocząć nowego formularza.
+            {blockingEnrollmentStatus ? ` Aktualny status: ${blockingEnrollmentStatus}.` : ''}
+          </p>
+        ) : (
           <div className="apply-section">
               <button
               className="button-primary apply-button"
@@ -233,7 +313,7 @@ export default function StudiesDetailPage() {
                 }
               }}
               >
-              Rekrutuj się
+              {hasDraftEnrollment ? 'Kontynuuj wypełnianie wniosku' : 'Rekrutuj się'}
               </button>
           </div>
         );
