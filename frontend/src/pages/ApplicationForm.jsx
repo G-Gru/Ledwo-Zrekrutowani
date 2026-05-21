@@ -189,7 +189,7 @@ export default function ApplicationForm() {
             setAddrError( `Error getting user addresses, returning empty (${addressesResponse.errorMsg})` )
         } else {
             setAddressData(addressesResponse.data || [])
-            // setAddrError("")
+            setAddResidenceAddressExpanded(addressesResponse.data.length === 0)
         }
     }
 

@@ -69,3 +69,17 @@
         margin-left: 1rem;
     }
 }
+
+.account-buttons button {
+    background: transparent;
+    text-align: center;
+    border: 3px var(--primary) solid;
+    border-radius: 5px;
+}
+
+.account-buttons {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

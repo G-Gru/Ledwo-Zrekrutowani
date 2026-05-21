@@ -26,6 +26,7 @@ import CoordinatorRecruitmentStats from './pages/admin-pages/CoordinatorRecruitm
 import { getUser, isLoggedIn } from './services/authService';
 import NavigationPage from './pages/NavigationPage';
 import FAQ from './pages/FAQ';
+import ManageEmployees from './pages/ManageEmployees';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -73,6 +74,14 @@ function App() {
           element={(
             <ProtectedRoute allowedRoles={['ADMIN']}>
               <ManageStudiesEditions />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path='/manage-studies/employees'
+          element={(
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <ManageEmployees />
             </ProtectedRoute>
           )}
         />

@@ -1,4 +1,5 @@
 import {apiClient, BASE_URL} from "../api/client";
+import { serverApi } from "./serverApi"
 
 const decodeBase64Url = (value) => {
   try {
@@ -143,3 +144,11 @@ export const refreshAccessToken = async () => {
     return null;
   }
 };
+
+export const changeUserPassword = async (oldPassword, newPassword) => {
+    // serverApi.apiRequest()
+    return {
+      error: true,
+      errorMsg: "Blad serwera: zmiana hasla niezaimplementowana"
+    }
+}

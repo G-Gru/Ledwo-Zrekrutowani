@@ -26,8 +26,13 @@ function getIconFromDocumentType(docType) {
 
 function getStatusPolishTranslation(status) {
     console.log
-    switch (status.toLowerCase()) {
-        case "candidate": return "Kandydat"
+    switch (status.toUpperCase()) {
+        case "CANDIDATE": return "Kandydat"
+        case "DRAFT": return 'Wniosek Niewysłany'
+        case "RESERVE": return 'Kandydat Rezerwowy'
+        case "STUDENT": return 'Student'
+        case "REJECTED": return 'Wniosek Odrzucony'
+        case "EXPELLED": return 'Student Wydalony'
         default: return status
     }
 }

@@ -1,0 +1,37 @@
+#employee-manage-column {
+    width: 80%;
+}
+
+.bg-panel {
+    width: 80%;
+    max-width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.manage-table {
+    width: 80%;
+    overflow-x: auto;
+}
+
+.employee-table,
+.styled-table {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0 auto;
+    font-size: small;
+}
+
+.employee-table th,
+.employee-table td,
+.styled-table th,
+.styled-table td {
+    white-space: normal;
+    word-break: break-word;
+}
+
+.auto-input-field {
+    border: 1px black solid;
+    cursor:not-allowed;
+}
