@@ -11,8 +11,7 @@ from payments.serializers import FeeSerializer
 from studies.models import StudiesEdition, StudiesEditionStaff, StudiesDocument
 from users.permissions import IsObjectOwner, IsStudent, CanViewDocument, IsEmployee
 from . import services
-from .models import Enrollment, FormData, Address, SubmittedDocument, DocumentHistory, ENROLLMENT_ACTIVE_STATUSES, \
-    ENROLLMENT_NON_ACTIVE_STATUSES
+from .models import Enrollment, FormData, Address, SubmittedDocument, DocumentHistory
 from .serializers import AdminEnrollmentSerializer, AdminEnrollmentDetailSerializer, FormDataSerializer, \
     AddressSerializer, EnrollmentSerializer, ActiveEnrollmentSerializer, \
     EnrollmentRecruitmentEndDateSerializer, SubmittedDocumentsCreateSerializer, SubmittedDocumentsListSerializer
@@ -61,6 +60,13 @@ class EnrollmentFormRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
         get_enrollable_edition(edition_pk)
         services.update_enrollment_form(edition_pk, self.request.user, serializer)
 
+class EnrollmentPreviousFormRetrieveAPIView(generics.RetrieveAPIView):
+    serializer_class = FormDataSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_object(self):
+        return services.get_previous_form(self.request.user)
+
 class AddressListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = AddressSerializer
     permission_classes = [IsAuthenticated, IsStudent]
@@ -99,7 +105,7 @@ class ActiveEnrollmentListAPIView(generics.ListAPIView):
     def get_queryset(self):
         return Enrollment.objects.filter(
             user=self.request.user,
-            status__in=ENROLLMENT_ACTIVE_STATUSES
+            status__in=Enrollment.Status.active()
         )
 
 class EnrollmentRetrieveDestroyAPIView(generics.RetrieveDestroyAPIView):
@@ -402,7 +408,7 @@ class AdminRecruitmentStatsAPIView(generics.GenericAPIView):
 
             if enrollment.status == Enrollment.Status.STUDENT:
                 row['statuses']['student'] += 1
-            elif enrollment.status in ENROLLMENT_NON_ACTIVE_STATUSES:
+            elif enrollment.status in Enrollment.Status.non_active():
                 row['statuses']['expelled'] += 1
             else:
                 row['statuses']['candidate'] += 1

@@ -4,7 +4,7 @@ from rest_framework.generics import get_object_or_404
 
 from enrollments.models import Enrollment
 from studies import tasks
-from studies.models import StudiesEdition, STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES, STUDIES_EDITION_ENROLLABLE_STATUSES, \
+from studies.models import StudiesEdition, \
     StudiesDocument
 
 
@@ -24,12 +24,12 @@ def get_user_editions_queryset(user):
 
 def get_public_visible_editions_queryset():
     return StudiesEdition.objects.filter(
-        status__in=STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES
+        status__in=StudiesEdition.Status.public_visible()
     )
 
 def get_enrollable_editions_queryset():
     return StudiesEdition.objects.filter(
-        status__in=STUDIES_EDITION_ENROLLABLE_STATUSES
+        status__in=StudiesEdition.Status.enrollable()
     )
 
 def add_to_edition(edition_id, user, serializer):
@@ -95,10 +95,10 @@ def open_recruitment(studies_edition_id):
         pk=studies_edition_id
     )
 
-    if edition.status != StudiesEdition.StatusChoices.HIDDEN:
+    if edition.status != StudiesEdition.Status.HIDDEN:
         return
 
-    edition.status = StudiesEdition.StatusChoices.ACTIVE
+    edition.status = StudiesEdition.Status.ACTIVE
     edition.save(update_fields=["status"])
 
 @transaction.atomic
@@ -109,10 +109,10 @@ def close_recruitment(studies_edition_id):
         pk=studies_edition_id
     )
 
-    if edition.status != StudiesEdition.StatusChoices.ACTIVE:
+    if edition.status != StudiesEdition.Status.ACTIVE:
         return
 
-    edition.status = StudiesEdition.StatusChoices.CLOSED
+    edition.status = StudiesEdition.Status.CLOSED
     edition.save(update_fields=["status"])
 
     # All candidates left are to be rejected and replaced
