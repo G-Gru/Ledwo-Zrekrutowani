@@ -471,6 +471,43 @@ export class serverApi {
         };
     }
 
+    static async getPreviousApplicationForm(token) {
+        const result = await this.apiRequest(
+            `/api/enrollments/form/previous/`,
+            'GET',
+            null,
+            token
+        );
+
+        if (result.error) {
+            const status = result.status || result.errorStatus;
+
+            if (status === 404) {
+                return {
+                    data: null,
+                    error: false,
+                    errorMsg: '',
+                    errorDetail: ''
+                };
+            }
+
+            return {
+                data: null,
+                error: true,
+                errorMsg: result.errorMsg || 'Failed to fetch previous application form',
+                errorDetail: result.errorDetail || null
+            };
+        }
+
+        result.data.enrollment = undefined;
+        return {
+            data: result.data,
+            error: false,
+            errorMsg: '',
+            errorDetail: ''
+        };
+    }
+
     static async getEnrollmentDocuments(token, enrollmentId) {
         if (!enrollmentId) {
             return {

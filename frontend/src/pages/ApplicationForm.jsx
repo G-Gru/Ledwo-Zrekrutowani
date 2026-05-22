@@ -7,6 +7,7 @@ import DocumentUploadCard from '../components/DocumentUploadCard'
 import LoginRedirectPage from '../components/LoginRedirectPage';
 import * as authService from "../services/authService.js";
 import AddressTile from '../components/AddressTile.jsx';
+import app from "../App.jsx";
 
 const ENROLLMENT_STATUS_CODES = new Set(['DRAFT', 'CANDIDATE', 'RESERVE', 'STUDENT', 'REJECTED', 'EXPELLED']);
 
@@ -81,6 +82,15 @@ export default function ApplicationForm() {
         }));
     };
 
+    const removeEmergencyContact = () => {
+        setFormData(prev => ({
+            ...prev,
+            emergencyName: "",
+            emergencyLastName: "",
+            emergencyPhone: ""
+        }));
+    }
+
     useEffect(() => {
         const token = getAccessToken();
         if (!token) {
@@ -102,15 +112,27 @@ export default function ApplicationForm() {
             };
 
             const existingApplication = await serverApi.getExistingApplicationForm(token, courseId);
+            
+            let applicationData = null;
             let matchedStatusCodes = [];
 
             if (!existingApplication.error && existingApplication.data) {
-                setEnrollmentId(existingApplication.data.enrollment)
-                matchedStatusCodes = getKnownStatusCodes(existingApplication.data.status);
+                // Filled form previously
+                applicationData = existingApplication.data;
+            } else {
+                // Try to get other form data
+                const previousApplication = await serverApi.getPreviousApplicationForm(token);
+                if (!previousApplication.error && previousApplication.data) {
+                    applicationData = previousApplication.data;
+                }
+            }
+
+            if (applicationData) {
+                matchedStatusCodes = getKnownStatusCodes(applicationData.status);
 
                 const mappedExistingData = await serverApi.mapExistingApplicationToFormData(
                     token,
-                    existingApplication.data
+                    applicationData
                 );
 
                 mergedFormData = {
@@ -119,9 +141,9 @@ export default function ApplicationForm() {
                 };
 
                 const hasDifferentCorrespondence =
-                    existingApplication.data.registered_address &&
-                    existingApplication.data.residential_address &&
-                    String(existingApplication.data.registered_address) !== String(existingApplication.data.residential_address);
+                    applicationData.registered_address &&
+                    applicationData.residential_address &&
+                    String(applicationData.registered_address) !== String(applicationData.residential_address);
                 setHasDifferentCorrespondenceAddress(hasDifferentCorrespondence);
 
 
@@ -130,23 +152,24 @@ export default function ApplicationForm() {
                     !!mappedExistingData.emergencyLastName ||
                     !!mappedExistingData.emergencyPhone;
                 setHasEmergencyContact(hasEmergency);
-            }
 
-            if (existingApplication.data?.enrollment) {
-                const docsRes = await serverApi.getEnrollmentDocuments(
-                    token,
-                    existingApplication.data.enrollment
-                );
+                if (applicationData.enrollment) {
+                    setEnrollmentId(applicationData.enrollment)
 
-                if (!docsRes.error && Array.isArray(docsRes.data)) {
-                    const mapped = {};
+                    const docsRes = await serverApi.getEnrollmentDocuments(
+                        token,
+                        applicationData.enrollment
+                    );
 
-                    docsRes.data.forEach(doc => {
-                        mapped[doc.studies_document.id] = doc;
-                    });
+                    if (!docsRes.error && Array.isArray(docsRes.data)) {
+                        const mapped = {};
 
-                    setExistingDocuments(mapped);
-                    console.log(mapped)
+                        docsRes.data.forEach(doc => {
+                            mapped[doc.studies_document.id] = doc;
+                        });
+
+                        setExistingDocuments(mapped);
+                    }
                 }
             }
 
@@ -279,11 +302,6 @@ export default function ApplicationForm() {
 
     // wysylanie formularza
     const handleSaveForm = async () => {
-        if (isUserAlreadyEnrolled) {
-            setError('Ten kierunek ma już aktywne zgłoszenie i formularz nie może być ponownie edytowany.');
-            return;
-        }
-
         if (! await handleSubmit('SAVE')) {
             setError("Nie udało się zapisać formularza")
         } else {
@@ -299,13 +317,8 @@ export default function ApplicationForm() {
     const handleSubmit = async (actionType) => {
         setError(null);
 
-        if (actionType === "ENROLL" && isUserAlreadyEnrolled) {
+        if (isUserAlreadyEnrolled) {
             setError('Jesteś już zapisany na ten sam kierunek. Nie możesz wysłać kolejnego wniosku.');
-            return false;
-        }
-
-        if (actionType === "SAVE" && isUserAlreadyEnrolled) {
-            setError('Ten formularz nie może być zapisany ponownie, ponieważ zgłoszenie ma już status inny niż draft.');
             return false;
         }
 
@@ -873,7 +886,16 @@ export default function ApplicationForm() {
             </div>
 
             <label className="checkbox-container">
-                <input type="checkbox" checked={hasEmergencyContact} onChange={(e) => setHasEmergencyContact(e.target.checked)} />
+                <input type="checkbox" checked={hasEmergencyContact}
+                       onChange={(e) => {
+                           const checked = e.target.checked
+                           setHasEmergencyContact(checked)
+
+                           if (!checked) {
+                               removeEmergencyContact()
+                           }
+                       }}
+                />
                 Chcę dodać kontakt awaryjny
             </label>
 
