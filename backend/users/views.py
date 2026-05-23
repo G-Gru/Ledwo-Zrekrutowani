@@ -9,7 +9,7 @@ from studies.models import StudiesEditionStaff
 from .models import User, WorkPhoneNumber
 from .permissions import IsEmployee, IsObjectOwner
 from .serializers import RegisterSerializer, LoginSerializer, EmployeeSerializer, \
-    WorkPhoneNumberSerializer, ChangePasswordSerializer
+    WorkPhoneNumberSerializer, ChangePasswordSerializer, CreateEmployeeSerializer
 
 
 def _resolve_login_role(user: User) -> str:
@@ -94,9 +94,13 @@ class ChangePasswordAPIView(APIView):
 
 
 ## ADMIN
-class EmployeesListAPIView(generics.ListAPIView):
-    serializer_class = EmployeeSerializer
+class EmployeesListAPIView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsEmployee]
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return CreateEmployeeSerializer
+        return EmployeeSerializer
 
     def get_queryset(self):
         return (User.objects.all()
@@ -104,6 +108,9 @@ class EmployeesListAPIView(generics.ListAPIView):
                 .select_related('employee')
                 .prefetch_related('employee__work_phones')
                 .order_by('last_name', 'first_name'))
+
+    def perform_create(self, serializer):
+        serializer.save()
 
 class EmployeesPhonesCreateAPIView(generics.CreateAPIView):
     serializer_class = WorkPhoneNumberSerializer

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, WorkPhoneNumber
+from .models import User, WorkPhoneNumber, Employee
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -58,6 +58,28 @@ class RegisterSerializer(serializers.ModelSerializer):
             user.set_password(password)
         user.save()
         return user
+
+class CreateEmployeeSerializer(serializers.Serializer):
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.EmailField()
+    phone = serializers.CharField(required=False, allow_blank=True, default='')
+    password = serializers.CharField(write_only=True)
+
+    def validate_email(self, value):
+        value = value.lower()
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Istnieje już użytkownik z tym adresem email.")
+        return value
+
+    def create(self, validated_data):
+        password = validated_data.pop("password")
+        user = User(**validated_data, is_employee=True)
+        user.set_password(password)
+        user.save()
+        Employee.objects.create(user=user)
+        return user
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True, error_messages={"blank": "Pole wymagane.", "required": "Pole wymagane."})
