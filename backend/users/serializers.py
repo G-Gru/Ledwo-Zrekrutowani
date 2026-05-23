@@ -60,8 +60,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(write_only=True, error_messages={"blank": "Pole wymagane."})
-    new_password = serializers.CharField(write_only=True, error_messages={"blank": "Pole wymagane."})
+    old_password = serializers.CharField(write_only=True, error_messages={"blank": "Pole wymagane.", "required": "Pole wymagane."})
+    new_password = serializers.CharField(write_only=True, error_messages={"blank": "Pole wymagane.", "required": "Pole wymagane."})
 
 
 class LoginSerializer(serializers.Serializer):
