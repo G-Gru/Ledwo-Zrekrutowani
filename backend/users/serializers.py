@@ -59,6 +59,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True, error_messages={"blank": "Pole wymagane."})
+    new_password = serializers.CharField(write_only=True, error_messages={"blank": "Pole wymagane."})
+
+
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(error_messages={"invalid": "Niepoprawny format email.", "blank": "Pole email jest wymagane."})
     password = serializers.CharField(write_only=True, error_messages={"blank": "Hasło jest wymagane."})

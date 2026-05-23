@@ -2,13 +2,14 @@ from rest_framework import generics
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from studies.models import StudiesEditionStaff
 from .models import User, WorkPhoneNumber
 from .permissions import IsEmployee, IsObjectOwner
 from .serializers import RegisterSerializer, LoginSerializer, EmployeeSerializer, \
-    WorkPhoneNumberSerializer
+    WorkPhoneNumberSerializer, ChangePasswordSerializer
 
 
 def _resolve_login_role(user: User) -> str:
@@ -75,6 +76,22 @@ class LoginAPIView(generics.CreateAPIView):
                 "role": user_role,   # specific: ADMIN/CANDIDATE/STUDENT/STUDIES_DIRECTOR/ADMINISTRATIVE_COORDINATOR/FINANCE_COORDINATOR
             }
         })
+
+class ChangePasswordAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = ChangePasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        if not user.check_password(serializer.validated_data["old_password"]):
+            return Response({"old_password": "Niepoprawne hasło."}, status=400)
+
+        user.set_password(serializer.validated_data["new_password"])
+        user.save()
+        return Response({"detail": "Hasło zostało zmienione."})
+
 
 ## ADMIN
 class EmployeesListAPIView(generics.ListAPIView):
