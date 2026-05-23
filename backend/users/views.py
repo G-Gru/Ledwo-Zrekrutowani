@@ -15,7 +15,9 @@ def _resolve_login_role(user: User) -> str:
     if user.is_staff:
         return "ADMIN"
     if not user.is_employee:
-        return "STUDENT"
+        if user.enrollment_set.filter(status="STUDENT").exists():
+            return "STUDENT"
+        return "CANDIDATE"
 
     # Return one specific role for EMPLOYEE user type.
     role_priority = (
@@ -70,7 +72,7 @@ class LoginAPIView(generics.CreateAPIView):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "type": user_type,   # backward-compatible # todo remove
-                "role": user_role,   # specific: ADMIN/STUDENT/STUDIES_DIRECTOR/ADMINISTRATIVE_COORDINATOR/FINANCE_COORDINATOR
+                "role": user_role,   # specific: ADMIN/CANDIDATE/STUDENT/STUDIES_DIRECTOR/ADMINISTRATIVE_COORDINATOR/FINANCE_COORDINATOR
             }
         })
 

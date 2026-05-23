@@ -1,4 +1,4 @@
-from django.db.models import Count
+from django.db.models import Count, Subquery, OuterRef, Q, BooleanField, ExpressionWrapper
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
@@ -103,9 +103,23 @@ class ActiveEnrollmentListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsStudent, IsObjectOwner]
 
     def get_queryset(self):
+        entry_fee_subquery = Fee.objects.filter(
+            enrollment=OuterRef('pk'),
+            title__icontains='Opłata rekrutacyjna'
+        ).order_by('-id').values('paid_date')[:1]
+
         return Enrollment.objects.filter(
             user=self.request.user,
             status__in=Enrollment.Status.active()
+        ).annotate(
+            entry_payment_date=Subquery(entry_fee_subquery),
+            is_draft_application=ExpressionWrapper(
+                Q(status=Enrollment.Status.DRAFT),
+                output_field=BooleanField()
+            )
+        ).prefetch_related(
+            'studies_edition__studiesdocument_set',
+            'submitteddocument_set'
         )
 
 class EnrollmentRetrieveDestroyAPIView(generics.RetrieveDestroyAPIView):

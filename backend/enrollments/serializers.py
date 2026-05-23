@@ -3,7 +3,7 @@ from rest_framework import serializers
 from files.models import File
 from studies.models import StudiesEdition, StudiesDocument
 from studies.serializers import StudiesEditionListSerializer, StudiesDocumentSerializer
-from .models import Enrollment, SubmittedDocument, FormData, Address
+from .models import Enrollment, SubmittedDocument, FormData, Address, DocumentHistory
 from .validators import is_valid_pesel, pesel_to_birthdate, is_valid_phone, is_valid_education_year, is_at_least_18
 
 
@@ -197,9 +197,27 @@ class StudiesEditionForCandidateSerializer(serializers.ModelSerializer):
 class ActiveEnrollmentSerializer(serializers.ModelSerializer):
     studies_edition = StudiesEditionForCandidateSerializer(read_only=True)
 
+    entry_payment_date = serializers.DateField(read_only=True)
+    is_draft_application = serializers.BooleanField(read_only=True)
+    all_documents_accepted_date = serializers.SerializerMethodField()
+
     class Meta:
         model = Enrollment
         exclude = ('user', )
+
+    def get_all_documents_accepted_date(self, obj):
+        if not obj.has_all_documents():
+            return None
+            
+        last_accepted_history = DocumentHistory.objects.filter(
+            submitted_document__enrollment=obj,
+            new_status='ACCEPTED'
+        ).order_by('-modified_date').first()
+
+        if last_accepted_history:
+            return str(last_accepted_history.modified_date.date())
+            
+        return None
 
 class AdminFormDataSerializer(serializers.ModelSerializer):
     residential_address = AddressSerializer(read_only=True)
