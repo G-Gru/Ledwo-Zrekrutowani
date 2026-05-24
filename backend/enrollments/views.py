@@ -175,7 +175,7 @@ class FeeListAPIView(generics.ListAPIView):
 
 class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
     # W przyszłości dodać permission_classes = [IsAdminUser]
-    permission_classes = [IsEmployee]
+    permission_classes = [IsEmployee, IsAuthenticated]
     serializer_class = AdminEnrollmentSerializer
 
     def get_serializer_class(self):
@@ -184,15 +184,17 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
         return AdminEnrollmentSerializer
 
     def get_queryset(self):
+        base_qs = Enrollment.objects.exclude(status=Enrollment.Status.DRAFT)
+
         if self.action in ['retrieve', 'decide', 'get_details', 'get_documents', 'get_fees', 'accept', 'reject', 'send_payment_reminder']:
-            base_qs = Enrollment.objects.all().select_related(
+            qs = base_qs.select_related(
                 'user',
                 'studies_edition',
                 'form', 'form__residential_address', 'form__registered_address',
             ).prefetch_related('fees', 'submitteddocument_set')
-            return _scope_enrollments_queryset_for_user(base_qs, self.request.user)
+            return _scope_enrollments_queryset_for_user(qs, self.request.user)
 
-        qs = Enrollment.objects.all().select_related('user', 'studies_edition').prefetch_related('fees', 'submitteddocument_set')
+        qs = base_qs.select_related('user', 'studies_edition').prefetch_related('fees', 'submitteddocument_set')
         qs = _scope_enrollments_queryset_for_user(qs, self.request.user)
         
         # Filtrowanie po nieopłaconych, jeśli w URL pojawi się ?unpaid_only=true
