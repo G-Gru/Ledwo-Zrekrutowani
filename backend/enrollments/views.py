@@ -436,7 +436,9 @@ class AdminUsosExportAPIView(generics.GenericAPIView):
     permission_classes = [IsEmployee]
 
     def get(self, request):
-        enrollments_qs = Enrollment.objects.select_related(
+        enrollments_qs = Enrollment.objects.exclude(
+            status=Enrollment.Status.DRAFT
+        ).select_related(
             'user',
             'studies_edition__studies',
             'form',
