@@ -88,7 +88,7 @@ export default function Profile({}) {
                 </div>
             </div>
 
-            { showPasswordChange && <PasswordChangePanel />}
+            { showPasswordChange && <PasswordChangePanel onPasswordSuccessfullyChanged={()=>{setShowPasswordChange(false)}} />}
 
             <div className='account-buttons'>
                 <button onClick={() => setShowPasswordChange(!showPasswordChange)}> 

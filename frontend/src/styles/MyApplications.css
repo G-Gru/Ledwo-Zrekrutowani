@@ -195,11 +195,12 @@
     font-size: medium;
 }
 
-.application-resign-link {
-    background: none;
-    border: none;
-    padding: 0;
-    font-family: inherit;
+.application-resign-link {  
+    background: none; /* #da450040; */    
+    border: 2px solid var(--on-error-container);
+    width: auto;
+    color: var(--text-main);
+    border-radius: 10px;
 }
 
 .application-resign-link[disabled] {

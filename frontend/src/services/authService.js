@@ -146,9 +146,39 @@ export const refreshAccessToken = async () => {
 };
 
 export const changeUserPassword = async (oldPassword, newPassword) => {
-    // serverApi.apiRequest()
+    let token = getAccessToken()
+    let body = {
+        "old_password": oldPassword,
+        "new_password": newPassword
+    }
+    const response = await serverApi.apiRequest("/api/auth/change-password", "POST", body, token)
+
+    console.log(response)
+
+    // on response error
+    if (!response || response.error || !response.data) {
+        // on wrong old password
+        if (response.errorDetail?.includes("Niepoprawne hasło")) {
+            return {
+                data: null,
+                error: true,
+                errorMsg: `Niepoprawne stare hasło`
+            }
+        }    
+        // comms error
+        else {
+            return {
+                data: null,  
+                error: true,
+                errorMsg: `Blad komunikacji z serwerem: ${response.errorMsg} (${response.errorDetail})`
+            }  
+        }    
+    }    
+
+    // success
     return {
-      error: true,
-      errorMsg: "Blad serwera: zmiana hasla niezaimplementowana"
+        data: null,
+        error: false,
+        errorMsg: ""
     }
 }

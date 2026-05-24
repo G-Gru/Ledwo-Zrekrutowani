@@ -180,19 +180,22 @@ export default function MyApplications({}) {
                             </div>
                         ) : null}
 
-                        <button
-                            type="button"
-                            className="docs-inline-link application-resign-link"
-                            disabled={isResigning}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onResign?.();
-                            }}
-                        >
-                            {isResigning ? 'Rezygnacja...' : 'Rezygnuj z kierunku'}
-                        </button>
                     </div>
                 )}
+
+                <div>
+                    <button
+                        type="button"
+                        className="docs-inline-link application-resign-link"
+                        disabled={isResigning}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onResign?.();
+                        }}
+                        >
+                        {isResigning ? 'Rezygnacja...' : 'Rezygnuj z kierunku'}
+                    </button>
+                </div>
             </div>
         )
     };

@@ -57,7 +57,7 @@ export default function ManageEmployees() {
 
     const generateEmployeeEmail = (name, surname) => {
         if (name === "" || surname === "") return ""
-        return `${name}.${surname}@employee.agh.edu.pl`
+        return `${name}.${surname}@agh.edu.pl`
     }
     const generateEmployeeOneTimePassword = (surname) => {
         if (surname === "") return ""
@@ -103,25 +103,22 @@ export default function ManageEmployees() {
             return;
         }
 
-        try {
-            const payload = {
-                first_name: form.first_name,
-                last_name: form.last_name,
-                email: form.email,
-                phone: "",
-                password: form.password,    
-                updates: false,
-            };
+        const payload = {
+            first_name: form.first_name,
+            last_name: form.last_name,
+            email: form.email,
+            password: form.password,    
+        };
+        const response = await serverApi.apiRequest("/api/admin/users/employees/", "POST", payload, getAccessToken());
 
-            const response = await register(payload);
-
-            alert(`Konto pracownika zostało utworzone. \n EMAIL: ${form.email} \n HASLO: ${form.password}`);
-            alert("UWAGA Utworzone konto nie jest pracownicze tylko zwykle (na razie nie ma endpointu) ")
+        if (!response || response.error) {
+            let err = `BŁĄD ${response.errorDetail} (${response.errorMsg})`
+            console.error(err)
+            setError(err)
+        } else {
+            alert(`Konto pracownika zostało utworzone. \n EMAIL: ${form.email} \n HASLO: ${form.password} \n\n  Dane logownia wysłano pracownikowi na email.`);
             setForm({ first_name: '', last_name: '', email: '', phone: '', password: '', updates: false });
             fetchEmployees();
-        } catch (err) {
-            console.error('Register error', err);
-            setError(err.message || 'Błąd podczas tworzenia konta.');
         }
     };
 
@@ -167,8 +164,8 @@ export default function ManageEmployees() {
                     <input type="checkbox" checked={automaticEmail} onChange={(e) => {setAutomaticEmail(!automaticEmail)} } />
 
                     <div className='form-actions'>
-                    <button type='submit' className='button-primary'>Utwórz konto</button>
-                    <button type='button' className='button-secondary' onClick={() => setForm({ first_name: '', last_name: '', email: '', phone: '', password: '', updates: false })}>Wyczyść</button>
+                        <button type='submit' className='button-primary'>Utwórz konto</button>
+                        <button type='button' className='button-secondary' onClick={() => setForm({ first_name: '', last_name: '', email: '', phone: '', password: '', updates: false })}>Wyczyść</button>
                     </div>
                     {error && <div className='error-message' style={{ marginTop: '0.5rem' }}>{error}</div>}
                 </form>

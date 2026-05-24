@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { changeUserPassword } from '../services/authService';
 
-export default function PasswordChangePanel({}) {
+export default function PasswordChangePanel({ onPasswordSuccessfullyChanged }) {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -53,6 +53,10 @@ export default function PasswordChangePanel({}) {
             let apiErrors = await changeUserPassword(passwordChangeData.oldPassword, passwordChangeData.newPassword)
             console.log(apiErrors)
             if (apiErrors.error) errors.server = apiErrors.errorMsg
+            else { 
+                alert("Pomyślnie zmieniono hasło użytkownika")
+                if (onPasswordSuccessfullyChanged) onPasswordSuccessfullyChanged()
+            }
         }
         setErrors(errors)
     }
