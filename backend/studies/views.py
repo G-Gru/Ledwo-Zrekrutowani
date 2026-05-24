@@ -1,5 +1,7 @@
 from rest_framework import generics, permissions
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from studies import services
 from studies.models import Studies, StudiesEditionStaff, StudiesDocument
@@ -178,3 +180,16 @@ class StudiesDocumentsDestroyAdminAPIView(generics.DestroyAPIView):
         return (StudiesDocument.objects
                 .filter(studies_edition_id=pk)
                 .filter(studies_edition__in=user_editions))
+
+
+class CancelEditionAPIView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, edition_pk):
+        try:
+            services.cancel_edition(edition_pk)
+        except Exception as e:
+            if hasattr(e, 'args') and e.args:
+                return Response({"detail": e.args[0]}, status=400)
+            return Response({"detail": "Nie udało się anulować edycji."}, status=400)
+        return Response({"detail": "Edycja została anulowana, kandydaci zostali powiadomieni."})

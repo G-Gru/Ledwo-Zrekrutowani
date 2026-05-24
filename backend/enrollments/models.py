@@ -21,6 +21,7 @@ class Enrollment(models.Model):
         STUDENT = 'STUDENT'
         REJECTED = 'REJECTED'
         EXPELLED = 'EXPELLED'
+        CANCELLED = 'CANCELLED'
 
         @classmethod
         def taking_up_place(cls):

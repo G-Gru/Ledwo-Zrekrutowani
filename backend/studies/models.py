@@ -16,6 +16,7 @@ class StudiesEdition(models.Model):
         HIDDEN = 'HIDDEN'
         ACTIVE = 'ACTIVE'
         CLOSED = 'CLOSED'
+        CANCELLED = 'CANCELLED'
 
         @classmethod
         def public_visible(cls):
