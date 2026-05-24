@@ -120,6 +120,13 @@ const staffRoleLabels = {
   FINANCE_COORDINATOR: 'Koordynator finansowy'
 };
 
+const editionStatusLabels = {
+  HIDDEN: 'Ukryta',
+  ACTIVE: 'Aktywna',
+  CLOSED: 'Zamknieta',
+  CANCELLED: 'Odwolana'
+};
+
 const API_BASE_URL = BASE_URL.replace(/\/$/, '');
 const getApiUrl = (path) => `${API_BASE_URL}/api${path}`;
 
@@ -133,6 +140,7 @@ export default function ManageStudiesEditions() {
   const [staffFormData, setStaffFormData] = useState(emptyStaffForm);
   const [loadingEditionSubmit, setLoadingEditionSubmit] = useState(false);
   const [loadingStaffSubmit, setLoadingStaffSubmit] = useState(false);
+  const [cancellingEditionId, setCancellingEditionId] = useState(null);
 
   const [editionsError, setEditionsError] = useState('');
   const [staffError, setStaffError] = useState('');
@@ -327,6 +335,52 @@ export default function ManageStudiesEditions() {
     }
   };
 
+  const onCancelEdition = async (edition) => {
+    if (edition.status === 'CANCELLED') return;
+
+    if (!window.confirm(`Czy na pewno odwołać edycję "${edition.name}"? Ta operacja ustawi status na "Odwolana".`)) return;
+
+    setCancellingEditionId(edition.id);
+
+    try {
+      const res = await serverApi.apiRequest(`/api/admin/studies/editions/${edition.id}/cancel/`, 'POST', null, token, true, false, false);
+
+      if (res.status === 403) {
+        setCanModifyEdition(false);
+        setEditionsPermissionMessage('Twoja rola nie ma uprawnień do odwoływania edycji.');
+        return;
+      }
+
+      if (!res.ok) {
+        let errorMessage = `HTTP ${res.status}`;
+        try {
+          const errorData = await res.json();
+          if (errorData?.detail) errorMessage = errorData.detail;
+        } catch {
+          // Ignore parsing error and keep fallback message.
+        }
+        throw new Error(errorMessage);
+      }
+
+      let successMessage = 'Edycja została odwołana.';
+      try {
+        const data = await res.json();
+        if (data?.detail) successMessage = data.detail;
+      } catch {
+        // Ignore parsing error and keep fallback message.
+      }
+
+      alert(successMessage);
+      await fetchEditions();
+      if (selectedEdition?.id === edition.id) resetEditionForm();
+    } catch (err) {
+      console.error('Cancel edition error:', err);
+      alert(`Nie udało się odwołać edycji. ${err.message ? `(${err.message})` : ''}`.trim());
+    } finally {
+      setCancellingEditionId(null);
+    }
+  };
+
   const handleEditionChange = (e) => {
     const { name, value } = e.target;
     setEditionFormData((prev) => ({ ...prev, [name]: value }));
@@ -486,13 +540,23 @@ export default function ManageStudiesEditions() {
                 {editions.map((edition) => (
                   <tr key={edition.id} className={selectedEdition?.id === edition.id ? 'selected-row' : ''}>
                     <td>{edition.name}</td>
-                    <td>{edition.status}</td>
+                    <td>{editionStatusLabels[edition.status] || edition.status}</td>
                     <td>
                       {canModifyEdition && (
                         <>
                           <button type="button" className="button-secondary" onClick={() => startEdit(edition)}>
                             Edytuj
                           </button>
+                          {edition.status !== 'CANCELLED' && edition.status !== 'CLOSED' && (
+                            <button
+                              type="button"
+                              className="button-warning"
+                              onClick={() => onCancelEdition(edition)}
+                              disabled={cancellingEditionId === edition.id}
+                            >
+                              {cancellingEditionId === edition.id ? 'Odwoływanie...' : 'Odwołaj'}
+                            </button>
+                          )}
                           <button type="button" className="button-danger" onClick={() => onDelete(edition)}>
                             Usuń
                           </button>
