@@ -846,14 +846,22 @@ export class serverApi {
 
     }
 
-    static async userPayment(token, paymentIds) {
+    static async userPayment(token, paymentIds, proofFile = null) {
         if (!Array.isArray(paymentIds) || paymentIds.length === 0) {
             return {success: false, errorMsg: "Brak ID płatności do opłacenia."};
         }
 
         const results = [];
         for (const feePk of paymentIds) {
-            const res = await serverApi.apiRequest(`/api/payments/${feePk}/pay/`, 'POST', null, token);
+            let body = null;
+            let useJson = true;
+            if (proofFile) {
+                const formData = new FormData();
+                formData.append('file', proofFile);
+                body = formData;
+                useJson = false;
+            }
+            const res = await serverApi.apiRequest(`/api/payments/${feePk}/pay/`, 'POST', body, token, useJson);
             results.push({id: feePk, success: !res.error, errorMsg: res.error ? res.errorMsg : ""});
         }
 

@@ -64,12 +64,21 @@ class AdminPaymentSerializer(serializers.ModelSerializer):
     fee_title = serializers.CharField(source='fee.title', read_only=True)
     amount = serializers.DecimalField(source='fee.amount', max_digits=10, decimal_places=2, read_only=True)
     student_name = serializers.SerializerMethodField()
+    file_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Payment
-        fields = ('id', 'fee', 'fee_title', 'amount', 'payment_method', 'reference_number', 'status', 'student_name')
+        fields = ('id', 'fee', 'fee_title', 'amount', 'payment_method', 'reference_number', 'status', 'student_name', 'file_url')
 
     def get_student_name(self, obj):
         if hasattr(obj.fee.enrollment, 'form'):
             return f"{obj.fee.enrollment.form.first_name} {obj.fee.enrollment.form.last_name}".strip()
         return obj.fee.enrollment.user.email
+
+    def get_file_url(self, obj):
+        if obj.file and obj.file.file:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.file.file.url)
+            return obj.file.file.url
+        return None
