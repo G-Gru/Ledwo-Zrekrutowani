@@ -6,6 +6,7 @@ import {
     saveMockAdminEnrollmentDecision,
 } from '../mocks/adminEnrollmentMocks';
 import { formatDateInWarsaw } from '../utils/dateTime';
+import { chooseLaterDate } from './dateUtility';
 import {BASE_URL} from "../api/client.js";
 
 const API_BASE_URL = BASE_URL.replace(/\/$/, '');
@@ -1331,5 +1332,9 @@ export class serverApi {
             errorMsg: '',
             errorDetail: ''
         };
+    }
+
+    static async getCurrentUser(token) {
+        return this.apiRequest('/api/auth/me', 'GET', null, token);
     }
 }

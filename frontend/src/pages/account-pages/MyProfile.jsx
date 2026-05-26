@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import AccountPageLeftMenu from '../../components/AccountPageLeftMenu'
 import LoginRedirectPage from '../../components/LoginRedirectPage';
-import { getUser, isLoggedIn, logout } from '../../services/authService';
+import { getUser, getAccessToken, isLoggedIn, logout } from '../../services/authService';
+import { serverApi } from '../../services/serverApi';
 import PasswordChangePanel from '../../components/PasswordChangePanel';
 import '../../styles/Profile.css'
 
@@ -21,6 +22,14 @@ export default function Profile({}) {
         if (currentUser) {
             setUser(currentUser);
         }
+        const token = getAccessToken();
+        serverApi.getCurrentUser(token).then(result => {
+            if (!result.error && result.data) {
+                const fresh = result.data;
+                setUser(prev => ({ ...prev, ...fresh }));
+                localStorage.setItem('user-data', JSON.stringify({ ...currentUser, ...fresh }));
+            }
+        });
     }, []);
 
     if (!userLoggedIn) {
