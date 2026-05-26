@@ -6,6 +6,7 @@ import {
     saveMockAdminEnrollmentDecision,
 } from '../mocks/adminEnrollmentMocks';
 import { formatDateInWarsaw } from '../utils/dateTime';
+import { chooseLaterDate } from './dateUtility';
 import {BASE_URL} from "../api/client.js";
 
 const API_BASE_URL = BASE_URL.replace(/\/$/, '');
@@ -87,6 +88,15 @@ export class serverApi {
 
             if (isBlob) {
                 return {data: response, error: false};
+            }
+
+            const contentLength = response.headers.get('Content-Length');
+            const contentType = response.headers.get('Content-Type') || '';
+
+            // Some successful endpoints (especially DELETE) return 204 or empty body.
+            // Avoid parsing JSON when there is no payload.
+            if (response.status === 204 || contentLength === '0' || !contentType.toLowerCase().includes('application/json')) {
+                return {data: null, error: false, errorMsg: ""};
             }
 
             const data = await response.json();
@@ -462,6 +472,43 @@ export class serverApi {
         };
     }
 
+    static async getPreviousApplicationForm(token) {
+        const result = await this.apiRequest(
+            `/api/enrollments/form/previous/`,
+            'GET',
+            null,
+            token
+        );
+
+        if (result.error) {
+            const status = result.status || result.errorStatus;
+
+            if (status === 404) {
+                return {
+                    data: null,
+                    error: false,
+                    errorMsg: '',
+                    errorDetail: ''
+                };
+            }
+
+            return {
+                data: null,
+                error: true,
+                errorMsg: result.errorMsg || 'Failed to fetch previous application form',
+                errorDetail: result.errorDetail || null
+            };
+        }
+
+        result.data.enrollment = undefined;
+        return {
+            data: result.data,
+            error: false,
+            errorMsg: '',
+            errorDetail: ''
+        };
+    }
+
     static async getEnrollmentDocuments(token, enrollmentId) {
         if (!enrollmentId) {
             return {
@@ -669,19 +716,6 @@ export class serverApi {
 
     /* Applications */
 
-    // dane: application { name: "", type: "", status: [""],  schedule: [title: "", startDate: "", endDate: "", flag: ""] }
-    static async getUserUnfinishedApplications(userToken) {
-        // let mock_schedule = await this.generateRecruitmentApplicationSchedule(null, null, false)
-        return {
-            applications: [
-                // { name: "Niewypełniony wniosek rekrutacyjny", type: "rekr", status: ["Oczekuje wypełnienia"],
-                // schedule: mock_schedule }
-            ],
-            error: true,
-            errorMsg: "" //"Pobieranie roboczych wniosków: Funkcjonalnosc niezaimplementowana: wyświetlane dane mock-owe."
-        }
-    }
-
     static async getUserApplications(token) {
 
         const res = await this.apiRequest('/api/enrollments/active/', 'GET', null, token);
@@ -702,7 +736,8 @@ export class serverApi {
 
         // Mapowanie danych z backendu na format frontendowy
         const mapped = await Promise.all(res.data.map(async item => {
-            const schedule = await serverApi.generateRecruitmentApplicationSchedule(token, item.id, true, formatDateInWarsaw(item.studies_edition.recruitment_end_date), item.status)
+            console.log(item)
+            const schedule = await serverApi.generateRecruitmentApplicationSchedule(item)
             let isPaymentComplete = schedule?.[1]?.flag === "complete"
             let isDocuementsComplete = schedule?.[2]?.flag === "complete"
             let statuses = [item.status]
@@ -720,6 +755,22 @@ export class serverApi {
         }));
 
         return {applications: mapped, error: false, errorMsg: ""};
+    }
+
+    static async resignFromEnrollment(token, enrollmentId) {
+        if (!enrollmentId) {
+            return {error: true, errorMsg: 'Brak identyfikatora zgłoszenia.'};
+        }
+
+        const res = await this.apiRequest(`/api/enrollments/${enrollmentId}/`, 'DELETE', null, token);
+        if (res.error) {
+            return {
+                error: true,
+                errorMsg: res.errorDetail || res.errorMsg || 'Nie udało się zrezygnować z rekrutacji.',
+            };
+        }
+
+        return {error: false, errorMsg: ''};
     }
 
     /* Payments */
@@ -796,14 +847,22 @@ export class serverApi {
 
     }
 
-    static async userPayment(token, paymentIds) {
+    static async userPayment(token, paymentIds, proofFile = null) {
         if (!Array.isArray(paymentIds) || paymentIds.length === 0) {
             return {success: false, errorMsg: "Brak ID płatności do opłacenia."};
         }
 
         const results = [];
         for (const feePk of paymentIds) {
-            const res = await serverApi.apiRequest(`/api/payments/${feePk}/pay/`, 'POST', null, token);
+            let body = null;
+            let useJson = true;
+            if (proofFile) {
+                const formData = new FormData();
+                formData.append('file', proofFile);
+                body = formData;
+                useJson = false;
+            }
+            const res = await serverApi.apiRequest(`/api/payments/${feePk}/pay/`, 'POST', body, token, useJson);
             results.push({id: feePk, success: !res.error, errorMsg: res.error ? res.errorMsg : ""});
         }
 
@@ -816,14 +875,41 @@ export class serverApi {
     }
 
     /* HELPER schedule generator for applications */
-    static async generateRecruitmentApplicationSchedule(userToken = null, application_id = null, isActive = true, recruitmentEndDate = "--/--/----", candidateStatus = "CANDIDATE") {
+    static async generateRecruitmentApplicationSchedule(applicationData) {
+
+        // parse required data
+        const application_id = applicationData.id
+        const isActive = !applicationData.is_draft_application
+        const recruitmentEndDate = formatDateInWarsaw(applicationData.studies_edition.recruitment_end_date) 
+        const paymentCompleted = applicationData.entry_payment_date !== null
+        const entryPaymentDate = paymentCompleted ? formatDateInWarsaw(applicationData.entry_payment_date) : "--/--/----"
+        const documentsCompleted = applicationData.all_documents_accepted_date !== null
+        const documentsAcceptedDate = documentsCompleted ? formatDateInWarsaw(applicationData.all_documents_accepted_date) : "--/--/----"
+        const candidateStatus = applicationData.status
+
+        /* application data format example */
+        // all_documents_accepted_date: null
+        // enrollment_date: null
+        // entry_payment_date: null
+        // id: 13
+        // is_draft_application: true
+        // status: "DRAFT"
+        // status_note: ""
+        // studies_edition: Object { id: 6, name: "Systemy ERP", price: "4200.00", … }
+        // end_date: "2027-01-26"
+        // id: 6
+        // name: "Systemy ERP"
+        // price: "4200.00"
+        // recruitment_end_date: "2026-06-04T00:00:00+02:00"
+        // start_date: "2026-06-20"
+        // status: "ACTIVE"
 
         /* general recruit schedule */
         const recruitmentSchedule = [
             {
                 title: "SKŁADANIE WNIOSKÓW",
-                startDate: "--/--/--",
-                endDate: recruitmentEndDate,
+                startDate: applicationData.studies_edition,
+                endDate: isActive ? formatDateInWarsaw(applicationData.enrollment_date) : recruitmentEndDate,
                 flag: isActive ? "complete" : "in-progress"
             },
             {
@@ -841,49 +927,28 @@ export class serverApi {
             {title: "DECYZJA KOMISJI", startDate: recruitmentEndDate, endDate: "--/--/--", flag: "upcoming"}
         ]
 
-        if (userToken == null || application_id == null) return recruitmentSchedule;
-
-        /* set recruitment end date for all steps */
-        // let recruitmentEndDateResponse = await serverApi.apiRequest(`/api/enrollment/${application_id}/recruitment_end_date/`, 'GET', null, userToken)
-        // if (recruitmentEndDateResponse) {
-        //     let recruitmentEndDate = recruitmentEndDateResponse["recruitment_end_date"]
-        //     if (recruitmentEndDate) {
-        //         recruitmentSchedule.forEach(step => step["endDate"] = recruitmentEndDate);
-        //     }
-        // }
-
         /* get recruitment payment data for application */
-        const paymentInfoResponse = await serverApi.apiRequest(`/api/enrollments/${application_id}/fees/`, 'GET', null, userToken);
-        const paymentData = !paymentInfoResponse.error && Array.isArray(paymentInfoResponse.data)
-            ? paymentInfoResponse.data
-            : [];
-
-        const paymentIsCompleted = paymentData.length === 0 || Boolean(paymentData[0]?.paid_date);
-        if (paymentIsCompleted) {
-            recruitmentSchedule[1].endDate = formatDateInWarsaw(paymentData[0]?.paid_date) || recruitmentEndDate;
+        if (paymentCompleted) {
+            recruitmentSchedule[1].endDate = entryPaymentDate;
             recruitmentSchedule[1].flag = "complete";
         }
 
         /* get recruitment document data for application */
-        const documentInfoResponse = await serverApi.apiRequest(`/api/enrollments/${application_id}/documents/`, 'GET', null, userToken);
-        const documentData = !documentInfoResponse.error && Array.isArray(documentInfoResponse.data)
-            ? documentInfoResponse.data
-            : [];
-        const documentsCompleted = documentData.length === 0 || Boolean(documentData[0]?.status == "ACCEPTED");
-
         if (documentsCompleted) {
-            recruitmentSchedule[2].endDate = formatDateInWarsaw(documentData[0]?.submitted_date) || recruitmentEndDate;
+            recruitmentSchedule[2].endDate = documentsAcceptedDate;
             recruitmentSchedule[2].flag = "complete";
         }
 
         /* ustaw decyzje komisji */
-        if (paymentIsCompleted && documentsCompleted) {
+        if (paymentCompleted && documentsCompleted) {
             recruitmentSchedule[3].flag = 'in-progress'
-            recruitmentSchedule[3].endDate = recruitmentSchedule[2].endDate
-        }
-        if (candidateStatus == 'STUDENT') {
-            recruitmentSchedule[3].flag = 'complete'
-            recruitmentSchedule[3].endDate = recruitmentSchedule[2].endDate
+            let finalizedDate = chooseLaterDate(entryPaymentDate, documentsAcceptedDate)
+            recruitmentSchedule[3].endDate = finalizedDate
+
+            if (candidateStatus == 'STUDENT') {
+                recruitmentSchedule[3].flag = 'complete'
+                recruitmentSchedule[3].endDate = finalizedDate
+            }
         }
 
         return recruitmentSchedule;
@@ -1267,5 +1332,9 @@ export class serverApi {
             errorMsg: '',
             errorDetail: ''
         };
+    }
+
+    static async getCurrentUser(token) {
+        return this.apiRequest('/api/auth/me', 'GET', null, token);
     }
 }

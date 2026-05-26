@@ -79,9 +79,16 @@
 
 .application-card-actions {
     display: flex;
-    justify-content:center;
-    gap: 1.5rem;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: nowrap;
     width: 100%;
+}
+
+.application-card-actions .docs-inline-link,
+.application-card-actions .application-resign-link {
+    white-space: nowrap;
 }
 
 .application-status {
@@ -186,4 +193,17 @@
 .docs-inline-link.faq {
     text-align: left;
     font-size: medium;
+}
+
+.application-resign-link {  
+    background: none; /* #da450040; */    
+    border: 2px solid var(--on-error-container);
+    width: auto;
+    color: var(--text-main);
+    border-radius: 10px;
+}
+
+.application-resign-link[disabled] {
+    cursor: not-allowed;
+    opacity: 0.7;
 }

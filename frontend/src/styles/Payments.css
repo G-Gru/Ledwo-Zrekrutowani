@@ -114,6 +114,11 @@
     width: 100%;
 }
 
+.history-section-wide .bg-panel {
+    width: 100%;
+    max-width: none;
+}
+
 .history-top-bar {
     display: flex;
     flex-direction: column;
@@ -124,7 +129,7 @@
 
 .history-list-container {
     padding: 0 !important;
-    width: 100%;
+    max-width: none;
 }
 
 .history-row-item {

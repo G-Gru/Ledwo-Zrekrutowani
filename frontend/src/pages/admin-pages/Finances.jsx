@@ -121,8 +121,8 @@ export default function Finances() {
     setApprovingId(transactionId);
     try {
       const token = getToken();
-      const res = await serverApi.apiRequest(`${API_BASE_URL}/api/admin/finances/transactions/${transactionId}/approve/`, 'POST', null, token);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const res = await serverApi.apiRequest(`/api/admin/finances/transactions/${transactionId}/approve/`, 'POST', null, token);
+      if (res.error) throw new Error(res.errorMsg || 'Błąd zatwierdzenia');
       /* refresh data */
       const [feesData, trxData, dashData] = await Promise.all([
         apiFetch('/api/admin/finances/fees/'),
@@ -452,7 +452,17 @@ function PendingTransfersTab({ transactions, fees, onApprove, approvingId }) {
                         {TRX_STATUS_LABELS[trx.status] || trx.status}
                       </span>
                     </td>
-                    <td>
+                    <td className="actions-cell">
+                      {trx.file_url && (
+                        <a
+                          href={trx.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-download-file"
+                        >
+                          Pobierz plik
+                        </a>
+                      )}
                       <button
                         className="btn-approve"
                         disabled={approvingId === trx.id}

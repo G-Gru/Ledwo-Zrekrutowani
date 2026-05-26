@@ -26,8 +26,13 @@ function getIconFromDocumentType(docType) {
 
 function getStatusPolishTranslation(status) {
     console.log
-    switch (status.toLowerCase()) {
-        case "candidate": return "Kandydat"
+    switch (status.toUpperCase()) {
+        case "CANDIDATE": return "Kandydat"
+        case "DRAFT": return 'Wniosek Niewysłany'
+        case "RESERVE": return 'Kandydat Rezerwowy'
+        case "STUDENT": return 'Student'
+        case "REJECTED": return 'Wniosek Odrzucony'
+        case "EXPELLED": return 'Student Wydalony'
         default: return status
     }
 }
@@ -48,13 +53,64 @@ export default function MyApplications({}) {
     const activeSchedule = activeApp ? activeApp.schedule : [];
 
     const [error, setError] = useState("");
+    const [resigningEnrollmentId, setResigningEnrollmentId] = useState(null);
 
     const navigate = useNavigate()
+
+    async function fetchApplicationData(token) {
+        const appsResponse = await serverApi.getUserApplications(token);
+
+        if (appsResponse != null && appsResponse.applications && !appsResponse.error) {
+            const draftApps = appsResponse.applications.filter(item => item.status.some(status => status.toLowerCase().includes("draft")));
+            setUnfinishedApplications(draftApps);
+            setUserHasUnfinishedApplications(draftApps.length > 0);
+
+            const activeApps = appsResponse.applications.filter(item => !item.status.some(status => status.toLowerCase().includes("draft")));
+            setUserHasActiveApplications(activeApps.length > 0);
+            setActiveApplications(activeApps);
+            setError("");
+        } else {
+            setError(appsResponse?.errorMsg || 'Nie udało się pobrać wniosków.');
+        }
+    }
+
+    const handleResignEnrollment = async (application) => {
+        const token = getAccessToken();
+        if (!token || !application?.id) {
+            setError('Brak uprawnień lub identyfikatora wniosku do rezygnacji.');
+            return;
+        }
+
+        const studyName = application?.studies_edition?.name || 'tego kierunku';
+        const shouldResign = window.confirm(
+            `Czy na pewno chcesz zrezygnować z rekrutacji/studiów dla: ${studyName}?\n\nTej operacji nie da się cofnąć.`
+        );
+        if (!shouldResign) return;
+
+        setResigningEnrollmentId(application.id);
+        setError('');
+
+        try {
+            const result = await serverApi.resignFromEnrollment(token, application.id);
+            if (result.error) {
+                setError(result.errorMsg || 'Nie udało się zrezygnować ze zgłoszenia.');
+                return;
+            }
+
+            if (activeCardId !== null) {
+                setActiveCardId(null);
+            }
+
+            await fetchApplicationData(token);
+        } finally {
+            setResigningEnrollmentId(null);
+        }
+    };
 
 
     /* Karta na wyswietlenie jednego wniosku */
     const ApplicationCard = ({ 
-        id, keyId, documentName, type, studies_edition, statuses=[], unfinished=false, isPaymentComplete=false
+        id, keyId, documentName, type, studies_edition, statuses=[], unfinished=false, isPaymentComplete=false, onResign, isResigning=false
     }) => {
         return (
             <div 
@@ -106,23 +162,40 @@ export default function MyApplications({}) {
                 </div>
 
                 {/* Linki do platnosci i dokumentow */}
-                { !studies_edition || unfinished ? null : (
+                { !studies_edition ? null : (
                     <div className="application-card-actions">
-                        { isPaymentComplete ? null : (
+                        { !unfinished && !isPaymentComplete ? (
                             <div className="docs-inline-link" 
                                 onClick={ () => { navigate(`/my-payments`) }}
                             >
                                 Przejdź do strony płatności
                             </div>
-                        )}
+                        ) : null}
                         
-                        <div className="docs-inline-link" 
-                            onClick={ () => { navigate(`/my-documents?enrollment_id=${id}`) }}
-                        >
-                            Przejdź do dokumentów tego wniosku
-                        </div>
+                        { !unfinished ? (
+                            <div className="docs-inline-link" 
+                                onClick={ () => { navigate(`/my-documents?enrollment_id=${id}`) }}
+                            >
+                                Przejdź do dokumentów tego wniosku
+                            </div>
+                        ) : null}
+
                     </div>
                 )}
+
+                <div>
+                    <button
+                        type="button"
+                        className="docs-inline-link application-resign-link"
+                        disabled={isResigning}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onResign?.();
+                        }}
+                        >
+                        {isResigning ? 'Rezygnacja...' : 'Rezygnuj z kierunku'}
+                    </button>
+                </div>
             </div>
         )
     };
@@ -138,24 +211,7 @@ export default function MyApplications({}) {
 
         setUserLoggedIn(true);
 
-        async function fetchApplicationData() {
-            /* get user applications */
-            let appsResponse = await serverApi.getUserApplications(token)
-            console.log(appsResponse)
-            if (appsResponse != null && appsResponse.applications && !appsResponse.error) {
-                let draftApps = appsResponse.applications.filter(item => item.status.some(status => status.toLowerCase().includes("draft")))
-                setUnfinishedApplications(draftApps)
-                setUserHasUnfinishedApplications(draftApps.length > 0)
-                
-                let activeApps = appsResponse.applications.filter(item => !item.status.some(status => status.toLowerCase().includes("draft")))
-                setUserHasActiveApplications(activeApps.length > 0)
-                setActiveApplications(activeApps)
-
-            } else {
-                setError(appsResponse["errorMsg"]);
-            }
-        }
-        fetchApplicationData();
+        fetchApplicationData(token);
 
         const watchInterval = setInterval(() => {
             if (!isLoggedIn()) {
@@ -196,6 +252,8 @@ export default function MyApplications({}) {
                                     studies_edition={app.studies_edition}
                                     statuses={app.status}
                                     unfinished={true}
+                                    isResigning={resigningEnrollmentId === app.id}
+                                    onResign={() => handleResignEnrollment(app)}
                                 />
                             ))
                         )
@@ -219,6 +277,8 @@ export default function MyApplications({}) {
                                     studies_edition={app.studies_edition}
                                     statuses={app.status}
                                     isPaymentComplete={app.isPaymentComplete}
+                                    isResigning={resigningEnrollmentId === app.id}
+                                    onResign={() => handleResignEnrollment(app)}
                                 />
                             ))
                         )}   

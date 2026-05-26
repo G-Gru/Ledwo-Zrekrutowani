@@ -180,6 +180,56 @@
   color: var(--text-muted);
 }
 
+.submit-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.submit-buttons button {
+  flex: 1 1 0;
+  width: 100%;
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.submit-buttons .btn-save,
+.submit-buttons .btn-submit {
+  margin: 0;
+}
+
+.enrollment-result-banner {
+  width: min(840px, 92%);
+  margin: 0.75rem 0 1.25rem;
+  padding: 14px 16px;
+  border-radius: 10px;
+  text-align: left;
+  border: 1px solid transparent;
+  background: var(--surface-container-low);
+}
+
+.enrollment-result-banner h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.enrollment-result-banner p {
+  margin: 0;
+}
+
+.enrollment-result-banner.candidate {
+  border-color: #2f8f4e;
+  background: #eef9f1;
+}
+
+.enrollment-result-banner.reserve {
+  border-color: #a66f00;
+  background: #fff7e6;
+}
+
 .input-error {
     border: 2px solid #ff4d4d !important;
     background-color: #fff5f5;

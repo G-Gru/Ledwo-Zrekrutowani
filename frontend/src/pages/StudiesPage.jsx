@@ -18,6 +18,15 @@ const CARD_IMAGES = [
 const PAGE_BG_IMAGE = 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1920&q=60';
 const API_BASE_URL = BASE_URL.replace(/\/$/, '');
 
+const getRecruitmentStatusLabel = (status) => {
+  const normalizedStatus = String(status || '').toLowerCase();
+
+  if (normalizedStatus === 'active') return 'Otwarta rekrutacja';
+  if (normalizedStatus === 'closed') return 'Rekrutacja zamknięta';
+
+  return status || '-';
+};
+
 const sampleOffers = [
   { id: 1, name: 'Informatyka', price: '5000.00', start_date: '2024-10-01', status: 'ACTIVE' },
   { id: 2, name: 'Analiza Danych', price: '4800.00', start_date: '2024-11-01', status: 'ACTIVE' },
@@ -76,7 +85,7 @@ export default function StudiesPage() {
                   <h3>{offer.name}</h3>
                   <p><strong>Cena:</strong> {offer.price} PLN</p>
                   <p><strong>Rozpoczęcie:</strong> {offer.start_date}</p>
-                  <p><strong>Status:</strong> {offer.status}</p>
+                  <p><strong>Status:</strong> {getRecruitmentStatusLabel(offer.status)}</p>
                   <span className="study-link-text">Zobacz szczegóły</span>
                 </div>
               </div>

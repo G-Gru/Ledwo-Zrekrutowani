@@ -679,6 +679,26 @@ button:hover {
     background-color: var(--surface-border);
 }
 
+.button-warning {
+  background-color: #f59e0b;
+  color: #1f1300;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+}
+
+.button-warning:hover:not(:disabled) {
+  background-color: #d97706;
+  color: #1f1300;
+}
+
+.button-warning:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
@@ -700,8 +720,10 @@ button:hover {
 }
 #account-page-column-left {
   background-color: var(--surface-container);
-  max-width: 25%;
-  min-width: 25%;
+  flex: 0 0 290px;
+  width: 290px;
+  min-width: 290px;
+  max-width: 290px;
   align-items: left;
   text-align: left;
 }

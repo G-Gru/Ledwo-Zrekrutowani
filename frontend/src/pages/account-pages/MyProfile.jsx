@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import AccountPageLeftMenu from '../../components/AccountPageLeftMenu'
 import LoginRedirectPage from '../../components/LoginRedirectPage';
-import { getUser, isLoggedIn, logout } from '../../services/authService';
+import { getUser, getAccessToken, isLoggedIn, logout } from '../../services/authService';
+import { serverApi } from '../../services/serverApi';
+import PasswordChangePanel from '../../components/PasswordChangePanel';
 import '../../styles/Profile.css'
 
 export default function Profile({}) {
     const [user, setUser] = useState({ firstName: '', lastName: '', email: '' , type: ''});
     const [userLoggedIn, setUserLoggedIn] = useState(true);
+    const [showPasswordChange, setShowPasswordChange] = useState(false)
 
     useEffect(() => {
-        setUserLoggedIn(isLoggedIn());
+        setUserLoggedIn(isLoggedIn());      
         const interval = setInterval(() => setUserLoggedIn(isLoggedIn()), 30000);
         return () => clearInterval(interval);
     }, []);
@@ -19,6 +22,14 @@ export default function Profile({}) {
         if (currentUser) {
             setUser(currentUser);
         }
+        const token = getAccessToken();
+        serverApi.getCurrentUser(token).then(result => {
+            if (!result.error && result.data) {
+                const fresh = result.data;
+                setUser(prev => ({ ...prev, ...fresh }));
+                localStorage.setItem('user-data', JSON.stringify({ ...currentUser, ...fresh }));
+            }
+        });
     }, []);
 
     if (!userLoggedIn) {
@@ -86,9 +97,17 @@ export default function Profile({}) {
                 </div>
             </div>
 
-            <button onClick={() => logout()}> 
-                Wyloguj się
-            </button>
+            { showPasswordChange && <PasswordChangePanel onPasswordSuccessfullyChanged={()=>{setShowPasswordChange(false)}} />}
+
+            <div className='account-buttons'>
+                <button onClick={() => setShowPasswordChange(!showPasswordChange)}> 
+                    {showPasswordChange ? "Wyłącz zmiane hasła" : "Zmień Hasło" }
+                </button>
+
+                <button onClick={() => logout()}> 
+                    Wyloguj się
+                </button>
+            </div>
         </div>
 
     </div>

@@ -555,7 +555,7 @@ export default function DataExport() {
             <p>Ladowanie szczegolow dla podgladu szablonu...</p>
           ) : (
             <div className='admin-export-table-wrap'>
-              <table className='styled-table'>
+              <table className='styled-table admin-export-preview-table'>
                 <thead>
                   <tr>
                     {previewTable.headers.map((header) => (

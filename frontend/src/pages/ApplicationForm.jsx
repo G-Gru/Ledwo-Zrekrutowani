@@ -7,12 +7,25 @@ import DocumentUploadCard from '../components/DocumentUploadCard'
 import LoginRedirectPage from '../components/LoginRedirectPage';
 import * as authService from "../services/authService.js";
 import AddressTile from '../components/AddressTile.jsx';
+import app from "../App.jsx";
+
+const ENROLLMENT_STATUS_CODES = new Set(['DRAFT', 'CANDIDATE', 'RESERVE', 'STUDENT', 'REJECTED', 'EXPELLED']);
+
+const normalizeStatusCode = (status) => String(status || '').trim().toUpperCase();
+
+const getKnownStatusCodes = (status) => {
+    const rawStatuses = Array.isArray(status) ? status : [status];
+    return rawStatuses
+        .map(normalizeStatusCode)
+        .filter((code) => ENROLLMENT_STATUS_CODES.has(code));
+};
 
 export default function ApplicationForm() {
     // Pobieranie danych uzytkownika
     const [isUserLoggedIn, setUserLoggedIn] = useState(true)
     const [userToken, setUserToken] = useState(null)
     const [isUserAlreadyEnrolled, setUserAlreadyEnrolled] = useState(false)
+    const [blockingEnrollmentStatus, setBlockingEnrollmentStatus] = useState('')
     const [enrollmentId, setEnrollmentId] = useState(null)
 
     const navigate = useNavigate();
@@ -69,6 +82,15 @@ export default function ApplicationForm() {
         }));
     };
 
+    const removeEmergencyContact = () => {
+        setFormData(prev => ({
+            ...prev,
+            emergencyName: "",
+            emergencyLastName: "",
+            emergencyPhone: ""
+        }));
+    }
+
     useEffect(() => {
         const token = getAccessToken();
         if (!token) {
@@ -90,12 +112,27 @@ export default function ApplicationForm() {
             };
 
             const existingApplication = await serverApi.getExistingApplicationForm(token, courseId);
+            
+            let applicationData = null;
+            let matchedStatusCodes = [];
+
             if (!existingApplication.error && existingApplication.data) {
-                setEnrollmentId(existingApplication.data.enrollment)
+                // Filled form previously
+                applicationData = existingApplication.data;
+            } else {
+                // Try to get other form data
+                const previousApplication = await serverApi.getPreviousApplicationForm(token);
+                if (!previousApplication.error && previousApplication.data) {
+                    applicationData = previousApplication.data;
+                }
+            }
+
+            if (applicationData) {
+                matchedStatusCodes = getKnownStatusCodes(applicationData.status);
 
                 const mappedExistingData = await serverApi.mapExistingApplicationToFormData(
                     token,
-                    existingApplication.data
+                    applicationData
                 );
 
                 mergedFormData = {
@@ -104,9 +141,9 @@ export default function ApplicationForm() {
                 };
 
                 const hasDifferentCorrespondence =
-                    existingApplication.data.registered_address &&
-                    existingApplication.data.residential_address &&
-                    String(existingApplication.data.registered_address) !== String(existingApplication.data.residential_address);
+                    applicationData.registered_address &&
+                    applicationData.residential_address &&
+                    String(applicationData.registered_address) !== String(applicationData.residential_address);
                 setHasDifferentCorrespondenceAddress(hasDifferentCorrespondence);
 
 
@@ -115,23 +152,24 @@ export default function ApplicationForm() {
                     !!mappedExistingData.emergencyLastName ||
                     !!mappedExistingData.emergencyPhone;
                 setHasEmergencyContact(hasEmergency);
-            }
 
-            if (existingApplication.data?.enrollment) {
-                const docsRes = await serverApi.getEnrollmentDocuments(
-                    token,
-                    existingApplication.data.enrollment
-                );
+                if (applicationData.enrollment) {
+                    setEnrollmentId(applicationData.enrollment)
 
-                if (!docsRes.error && Array.isArray(docsRes.data)) {
-                    const mapped = {};
+                    const docsRes = await serverApi.getEnrollmentDocuments(
+                        token,
+                        applicationData.enrollment
+                    );
 
-                    docsRes.data.forEach(doc => {
-                        mapped[doc.studies_document.id] = doc;
-                    });
+                    if (!docsRes.error && Array.isArray(docsRes.data)) {
+                        const mapped = {};
 
-                    setExistingDocuments(mapped);
-                    console.log(mapped)
+                        docsRes.data.forEach(doc => {
+                            mapped[doc.studies_document.id] = doc;
+                        });
+
+                        setExistingDocuments(mapped);
+                    }
                 }
             }
 
@@ -143,15 +181,19 @@ export default function ApplicationForm() {
 
             const otherEnrollmentData = await serverApi.getUserApplications(token);
             if (otherEnrollmentData && Array.isArray(otherEnrollmentData.applications)) {
-                const alreadyEnrolled = otherEnrollmentData.applications.some(application => {
+                const matchingApplication = otherEnrollmentData.applications.find(application => {
                     const editionId = application?.studies_edition?.id ?? application?.studies_edition;
-                    const statusCode = application?.status?.[0];
-
-                    return String(editionId) === String(courseId) && String(statusCode) !== "DRAFT";
+                    return String(editionId) === String(courseId);
                 });
 
-                setUserAlreadyEnrolled(alreadyEnrolled);
+                if (matchingApplication) {
+                    matchedStatusCodes = getKnownStatusCodes(matchingApplication.status);
+                }
             }
+
+            const hasBlockingStatus = matchedStatusCodes.some((code) => code !== 'DRAFT');
+            setUserAlreadyEnrolled(hasBlockingStatus);
+            setBlockingEnrollmentStatus(hasBlockingStatus ? matchedStatusCodes.find((code) => code !== 'DRAFT') || '' : '');
 
             const docsResult = await serverApi.getStudiesEditionDocuments(token, courseId);
             if (!docsResult.error && Array.isArray(docsResult.data)) {
@@ -189,7 +231,7 @@ export default function ApplicationForm() {
             setAddrError( `Error getting user addresses, returning empty (${addressesResponse.errorMsg})` )
         } else {
             setAddressData(addressesResponse.data || [])
-            // setAddrError("")
+            setAddResidenceAddressExpanded(addressesResponse.data.length === 0)
         }
     }
 
@@ -275,7 +317,7 @@ export default function ApplicationForm() {
     const handleSubmit = async (actionType) => {
         setError(null);
 
-        if (actionType === "ENROLL" && isUserAlreadyEnrolled) {
+        if (isUserAlreadyEnrolled) {
             setError('Jesteś już zapisany na ten sam kierunek. Nie możesz wysłać kolejnego wniosku.');
             return false;
         }
@@ -533,6 +575,9 @@ export default function ApplicationForm() {
                         <div className="error-banner-text">
                             <strong>Już uczestniczysz w rekrutacji do tego kierunku.</strong>
                             <p>Nie możesz wysłać kolejnego wniosku dla tej samej edycji studiów.</p>
+                            {blockingEnrollmentStatus && (
+                                <p>Aktualny status zgłoszenia: {blockingEnrollmentStatus}.</p>
+                            )}
                         </div>
                     </div>
                 )}
@@ -841,7 +886,16 @@ export default function ApplicationForm() {
             </div>
 
             <label className="checkbox-container">
-                <input type="checkbox" checked={hasEmergencyContact} onChange={(e) => setHasEmergencyContact(e.target.checked)} />
+                <input type="checkbox" checked={hasEmergencyContact}
+                       onChange={(e) => {
+                           const checked = e.target.checked
+                           setHasEmergencyContact(checked)
+
+                           if (!checked) {
+                               removeEmergencyContact()
+                           }
+                       }}
+                />
                 Chcę dodać kontakt awaryjny
             </label>
 
@@ -980,6 +1034,7 @@ export default function ApplicationForm() {
                     name="action"
                     value=""
                     onClick={handleSaveForm}
+                    disabled={isUserAlreadyEnrolled}
                     style={{
                         background: applicationFormRecentlySaved ? "lightgrey" : ""
                     }}

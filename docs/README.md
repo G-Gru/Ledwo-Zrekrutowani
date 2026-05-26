@@ -1,138 +1,138 @@
-﻿# đź“š Dokumentacja - Ledwo Zrekrutowani
+﻿# Dokumentacja - Ledwo Zrekrutowani
 
-Witaj w kompletnej dokumentacji projektu **Ledwo Zrekrutowani**. Ta dokumentacja zawiera wszelkie informacje niezbÄ™dne do zrozumienia, instalacji, wdraĹĽania i administrowania systemem.
+Witaj w kompletnej dokumentacji projektu Ledwo Zrekrutowani. Ta dokumentacja zawiera wszelkie informacje niezbedne do zrozumienia, instalacji, wdrazania i administrowania systemem.
 
 ---
 
-## đź“– Spis DokumentĂłw
+## Spis Dokumentow
 
-### 1. đźŹ—ď¸Ź **[ARCHITEKTURA_TECHNICZNA.md](ARCHITEKTURA_TECHNICZNA.md)**
-PrzeglÄ…d architektury systemu, warstw aplikacji i stosu technologicznego.
+### 1. [ARCHITEKTURA_TECHNICZNA.md](ARCHITEKTURA_TECHNICZNA.md)
+Przeglad architektury systemu, warstw aplikacji i stosu technologicznego.
 
-**Zawiera:**
-- OgĂłlny diagram architektury
+Zawiera:
+- Ogolny diagram architektury
 - Warstwy: Frontend (React), Backend (Django), Database (PostgreSQL)
-- 6 Aplikacji Django z odpowiedzialnoĹ›ciami
-- PrzepĹ‚yw komunikacji Backend-Frontend
+- 6 aplikacji Django z odpowiedzialnosciami
+- Przeplyw komunikacji Backend-Frontend
 - Stack technologiczny (React, Django, Vite, TailwindCSS, etc.)
-- PorĂłwnanie technologii i alternatywy
-- BezpieczeĹ„stwo i Autentykacja JWT
+- Porownanie technologii i alternatywy
+- Bezpieczenstwo i autentykacja JWT
 
-**Dla kogo:** Architekci, DevOps, Developers (overview)
+Dla kogo: Architekci, DevOps, Developers (overview)
 
 ---
 
-### 2. âš™ď¸Ź **[INSTALACJA_KONFIGURACJA_WDROZENIE.md](INSTALACJA_KONFIGURACJA_WDROZENIE.md)**
-Instrukcje instalacji, konfiguracji i wdraĹĽania na produkcjÄ™.
+### 2. [INSTALACJA_KONFIGURACJA_WDROZENIE.md](INSTALACJA_KONFIGURACJA_WDROZENIE.md)
+Instrukcje instalacji, konfiguracji i wdrazania na produkcje.
 
-**Zawiera:**
+Zawiera:
 - Wymagania systemowe
-- Setup Backend'u (Python, PostgreSQL, venv)
-- Setup Frontend'u (Node.js, npm, Vite)
-- Konfiguracja zmiennych Ĺ›rodowiska (.env)
+- Setup backendu (Python, PostgreSQL, venv)
+- Setup frontendu (Node.js, npm, Vite)
+- Konfiguracja zmiennych srodowiska (.env)
 - Migracje bazy danych
-- WdraĹĽanie z Docker
-- WdraĹĽanie na VPS (AWS, DigitalOcean, Ubuntu)
-- Nginx Reverse Proxy
+- Wdrazanie z Docker
+- Wdrazanie na VPS (AWS, DigitalOcean, Ubuntu)
+- Nginx reverse proxy
 - SSL/TLS z Let's Encrypt
-- Systemd Services
-- NajczÄ™stsze polecenia
+- Systemd services
+- Najczestsze polecenia
 - Troubleshooting
 
-**Dla kogo:** DevOps, System Administrators, Deployment Engineers
+Dla kogo: DevOps, System Administrators, Deployment Engineers
 
 ---
 
-### 3. đź“ˇ **[API_REFERENCE.md](API_REFERENCE.md)**
-Kompletna dokumentacja API, interfejsĂłw i integracji.
+### 3. [API_REFERENCE.md](API_REFERENCE.md)
+Kompletna dokumentacja API, interfejsow i integracji.
 
-**Zawiera:**
-- PrzeglÄ…d API (Base URL, wersjonowanie, konwencje)
-- JWT Autentykacja & Token Lifecycle
-- Konwencje HTTP (Methods, Status Codes, Pagination)
-- Wszystkie Endpoint'y:
+Zawiera:
+- Przeglad API (base URL, wersjonowanie, konwencje)
+- JWT autentykacja i token lifecycle
+- Konwencje HTTP (methods, status codes, pagination)
+- Wszystkie endpointy:
   - Authentication (Register, Login, Refresh)
   - Studies (List, Retrieve, Staff, Documents)
   - Enrollments (Create, Update, Upload, Status)
   - Payments (History, Upcoming, Pay)
   - Files (Download)
   - Notifications (Send)
-  - Admin Endpoints
-- Kody BĹ‚Ä™dĂłw z rozwiÄ…zaniami
-- Rate Limiting
-- Integracje ZewnÄ™trzne (Payment Gateway, Email, Documents)
-- Best Practices dla Frontend
-- Testing Endpoints (Postman, cURL)
+  - Admin endpoints
+- Kody bledow z rozwiazaniami
+- Rate limiting
+- Integracje zewnetrzne (payment gateway, email, documents)
+- Best practices dla frontend
+- Testing endpoints (Postman, cURL)
 
-**Dla kogo:** Frontend Developers, Backend Developers, Integration Specialists
-
----
-
-### 4. đź‘¨â€Ťđź’Ľ **[ADMINISTRACJA_I_UZYTKOWNIK.md](ADMINISTRACJA_I_UZYTKOWNIK.md)**
-Instrukcje administracyjne i guide'y dla uĹĽytkownikĂłw.
-
-**Zawiera:**
-
-**CzÄ™Ĺ›Ä‡ I - Administracja & Utrzymanie:**
-- Panel Django Admin (dostÄ™p, struktura)
-- ZarzÄ…dzanie UĹĽytkownikami (typy, tworzenie, role)
-- ZarzÄ…dzanie Kierunkami & Edycjami
-- ZarzÄ…dzanie RekrutacjÄ… (aplikacje, dokumenty, statusy)
-- ZarzÄ…dzanie OpĹ‚atami & Finansami
-- Backupy & Disaster Recovery
-- Monitoring & Performance
-- Logowanie & Audyt
-- Troubleshooting (najczÄ™stsze problemy)
-
-**CzÄ™Ĺ›Ä‡ II - User Guide:**
-- Instrukcja dla KandydatĂłw (Rejestracja, aplikacja, pĹ‚atnoĹ›ci)
-- Instrukcja dla PracownikĂłw (Review, zarzÄ…dzanie, finansy)
-- FAQ & Support
-
-**Dla kogo:** Administratorzy, Pracownicy Uczelni, Kandydaci/Studenci
+Dla kogo: Frontend Developers, Backend Developers, Integration Specialists
 
 ---
 
-### 5. ďż˝ **[ZALEZNOSCI_I_PROCEDURY.md](ZALEZNOSCI_I_PROCEDURY.md)**
-Dokumentacja zaleĹĽnoĹ›ci technologicznych, procedur uruchomienia i odtwarzania systemu.
+### 4. [ADMINISTRACJA_I_UZYTKOWNIK.md](ADMINISTRACJA_I_UZYTKOWNIK.md)
+Instrukcje administracyjne i guide dla uzytkownikow.
 
-**Zawiera:**
-- ZaleĹĽnoĹ›ci Backend'u (Django, DRF, PostgreSQL, SimpleJWT, docxtpl, etc.)
-- ZaleĹĽnoĹ›ci Frontend'u (React, Vite, TailwindCSS, ESLint, etc.)
-- Wymagania systemowe (CPU, RAM, Dysk dla rĂłĹĽnych Ĺ›rodowisk)
-- Wersje narzÄ™dzi (Python, Node.js, PostgreSQL, Docker, Git)
-- Procedury Uruchomienia (dev, produkcja, Docker)
-- Procedury Aktualizacji (pip, npm, migracje)
-- Procedury Backupu (PostgreSQL, media files, full backup)
-- Procedury Odtwarzania (z SQL, z Docker, od zera)
-- Disaster Recovery (kroki dla awarii systemu)
-- CI/CD Pipelines (GitHub Actions example)
+Zawiera:
 
-**Dla kogo:** DevOps, System Administrators, Maintenance Engineers
+Czesc I - Administracja i utrzymanie:
+- Panel Django Admin (dostep, struktura)
+- Zarzadzanie uzytkownikami (typy, tworzenie, role)
+- Zarzadzanie kierunkami i edycjami
+- Zarzadzanie rekrutacja (aplikacje, dokumenty, statusy)
+- Zarzadzanie oplatami i finansami
+- Backupy i disaster recovery
+- Monitoring i performance
+- Logowanie i audyt
+- Troubleshooting (najczestsze problemy)
+
+Czesc II - User guide:
+- Instrukcja dla kandydatow (rejestracja, aplikacja, platnosci)
+- Instrukcja dla pracownikow (review, zarzadzanie, finanse)
+- FAQ i support
+
+Dla kogo: Administratorzy, Pracownicy Uczelni, Kandydaci/Studenci
 
 ---
 
-### 6. ďż˝đź“‹ **[WORKFLOW_PROCESY.md](WORKFLOW_PROCESY.md)** (TODO)
-Procesy biznesowe i przepĹ‚ywy systemu.
+### 5. [ZALEZNOSCI_I_PROCEDURY.md](ZALEZNOSCI_I_PROCEDURY.md)
+Dokumentacja zaleznosci technologicznych, procedur uruchomienia i odtwarzania systemu.
 
-**BÄ™dzie zawieraÄ‡:**
+Zawiera:
+- Zaleznosci backendu (Django, DRF, PostgreSQL, SimpleJWT, docxtpl, etc.)
+- Zaleznosci frontendu (React, Vite, TailwindCSS, ESLint, etc.)
+- Wymagania systemowe (CPU, RAM, dysk dla roznych srodowisk)
+- Wersje narzedzi (Python, Node.js, PostgreSQL, Docker, Git)
+- Procedury uruchomienia (dev, produkcja, Docker)
+- Procedury aktualizacji (pip, npm, migracje)
+- Procedury backupu (PostgreSQL, media files, full backup)
+- Procedury odtwarzania (z SQL, z Docker, od zera)
+- Disaster recovery (kroki dla awarii systemu)
+- CI/CD pipelines (GitHub Actions example)
+
+Dla kogo: DevOps, System Administrators, Maintenance Engineers
+
+---
+
+### 6. [WORKFLOW_PROCESY.md](WORKFLOW_PROCESY.md)
+Procesy biznesowe i przeplywy systemu.
+
+Bedzie zawierac:
 - Workflow rekrutacji (od aplikacji do decyzji)
-- Workflow pĹ‚atnoĹ›ci
-- Workflow obsĹ‚ugi dokumentĂłw
-- State machines (statusy i przejĹ›cia)
-- Diagramy procesĂłw
+- Workflow platnosci
+- Workflow obslugi dokumentow
+- State machines (statusy i przejscia)
+- Diagramy procesow
 - Notyfikacje i komunikacja
 
 ---
 
-### 7. đź’» **[KODOWANIE_KONWENCJE.md](KODOWANIE_KONWENCJE.md)** (TODO)
+### 7. [KODOWANIE_KONWENCJE.md](KODOWANIE_KONWENCJE.md)
 Konwencje kodowania i best practices.
 
-**BÄ™dzie zawieraÄ‡:**
-- Style Guide Python (Backend)
-- Style Guide JavaScript/React (Frontend)
+Bedzie zawierac:
+- Style guide Python (backend)
+- Style guide JavaScript/React (frontend)
 - Nazewnictwo zmiennych, funkcji, klas
-- Struktura folderĂłw
+- Struktura folderow
 - Import/Export conventions
 - Testing guidelines
 - Git commit messages
@@ -140,164 +140,154 @@ Konwencje kodowania i best practices.
 
 ---
 
-## đźš€ Quick Start
+## Quick Start
 
-### Dla Nowych DeweloperĂłw
+### Dla nowych deweloperow
 
-1. **Zapoznaj siÄ™ z architekturÄ…:**
-   - Przeczytaj [ARCHITEKTURA_TECHNICZNA.md](ARCHITEKTURA_TECHNICZNA.md) - sekcja 1 & 2
-
-2. **Zainstaluj Ĺ›rodowisko:**
-   - ĹšledĹş [INSTALACJA_KONFIGURACJA_WDROZENIE.md](INSTALACJA_KONFIGURACJA_WDROZENIE.md) - sekcja 1
-
-3. **Naucz siÄ™ API:**
+1. Zapoznaj sie z architektura:
+   - Przeczytaj [ARCHITEKTURA_TECHNICZNA.md](ARCHITEKTURA_TECHNICZNA.md) - sekcja 1 i 2
+2. Zainstaluj srodowisko:
+   - Sledz [INSTALACJA_KONFIGURACJA_WDROZENIE.md](INSTALACJA_KONFIGURACJA_WDROZENIE.md) - sekcja 1
+3. Naucz sie API:
    - Przeczytaj [API_REFERENCE.md](API_REFERENCE.md) - sekcje 1-4
+4. Zrozum zaleznosci i procedury:
+   - Przeczytaj [ZALEZNOSCI_I_PROCEDURY.md](ZALEZNOSCI_I_PROCEDURY.md)
+5. Zapoznaj sie z procesami biznesowymi:
+   - Przeczytaj [WORKFLOW_PROCESY.md](WORKFLOW_PROCESY.md) (gdy bedzie dostepny)
+6. Koduj zgodnie z konwencjami:
+   - Stosuj [KODOWANIE_KONWENCJE.md](KODOWANIE_KONWENCJE.md) (gdy bedzie dostepny)
 
-4. **Zrozum zaleĹĽnoĹ›ci i procedury:**
-   - Przeczytaj [ZALEZNOSCI_I_PROCEDURY.md](ZALEZNOSCI_I_PROCEDURY.md) - dla informacji o wersjonowaniu i procedurach
+### Dla administratorow
 
-5. **Zapoznaj siÄ™ z procesami biznesowymi:**
-   - Przeczytaj [WORKFLOW_PROCESY.md](WORKFLOW_PROCESY.md) (gdy bÄ™dzie dostÄ™pny)
-
-6. **Koduj zgodnie z konwencjami:**
-   - Stosuj [KODOWANIE_KONWENCJE.md](KODOWANIE_KONWENCJE.md) (gdy bÄ™dzie dostÄ™pny)
-
-### Dla AdministratorĂłw
-
-1. Przeczytaj [ADMINISTRACJA_I_UZYTKOWNIK.md](ADMINISTRACJA_I_UZYTKOWNIK.md) - CzÄ™Ĺ›Ä‡ I
+1. Przeczytaj [ADMINISTRACJA_I_UZYTKOWNIK.md](ADMINISTRACJA_I_UZYTKOWNIK.md) - Czesc I
 2. Skonfiguruj Django Admin
-3. Przejrzyj Backupy & Monitoring
+3. Przejrzyj backupy i monitoring
 
-### Dla UĹĽytkownikĂłw KoĹ„cowych
+### Dla uzytkownikow koncowych
 
-1. Przeczytaj [ADMINISTRACJA_I_UZYTKOWNIK.md](ADMINISTRACJA_I_UZYTKOWNIK.md) - CzÄ™Ĺ›Ä‡ II
-2. Zaloguj siÄ™ i zapoznaj siÄ™ z UI
-3. JeĹ›li potrzebujesz pomocy â†’ FAQ & Support
+1. Przeczytaj [ADMINISTRACJA_I_UZYTKOWNIK.md](ADMINISTRACJA_I_UZYTKOWNIK.md) - Czesc II
+2. Zaloguj sie i zapoznaj sie z UI
+3. Jesli potrzebujesz pomocy, sprawdz FAQ i support
 
 ---
 
-## đź“Š Struktura Projektu
+## Struktura Projektu
 
-```
+```text
 Ledwo-Zrekrutowani/
-â”śâ”€â”€ backend/                              # Django Backend
-â”‚   â”śâ”€â”€ core/                             # Konfiguracja Django
-â”‚   â”‚   â”śâ”€â”€ settings.py
-â”‚   â”‚   â”śâ”€â”€ urls.py
-â”‚   â”‚   â”śâ”€â”€ wsgi.py
-â”‚   â”‚   â””â”€â”€ asgi.py
-â”‚   â”śâ”€â”€ users/                            # Users App
-â”‚   â”śâ”€â”€ studies/                          # Studies App
-â”‚   â”śâ”€â”€ enrollments/                      # Enrollments App
-â”‚   â”śâ”€â”€ payments/                         # Payments App
-â”‚   â”śâ”€â”€ files/                            # Files App
-â”‚   â”śâ”€â”€ notifications/                    # Notifications App
-â”‚   â”śâ”€â”€ manage.py
-â”‚   â”śâ”€â”€ requirements.txt
-â”‚   â””â”€â”€ docker-compose.yml
-â”‚
-â”śâ”€â”€ frontend/                             # React Frontend
-â”‚   â”śâ”€â”€ src/
-â”‚   â”‚   â”śâ”€â”€ components/
-â”‚   â”‚   â”śâ”€â”€ pages/
-â”‚   â”‚   â”śâ”€â”€ hooks/
-â”‚   â”‚   â”śâ”€â”€ services/
-â”‚   â”‚   â”śâ”€â”€ api/
-â”‚   â”‚   â””â”€â”€ styles/
-â”‚   â”śâ”€â”€ vite.config.js
-â”‚   â”śâ”€â”€ eslint.config.js
-â”‚   â”śâ”€â”€ tailwind.config.js
-â”‚   â”śâ”€â”€ package.json
-â”‚   â””â”€â”€ index.html
-â”‚
-â”śâ”€â”€ docs/                                 # đź“Ť Dokumentacja
-â”‚   â”śâ”€â”€ README.md                         # Ten plik
-â”‚   â”śâ”€â”€ ARCHITEKTURA_TECHNICZNA.md
-â”‚   â”śâ”€â”€ INSTALACJA_KONFIGURACJA_WDROZENIE.md
-â”‚   â”śâ”€â”€ API_REFERENCE.md
-â”‚   â”śâ”€â”€ ADMINISTRACJA_I_UZYTKOWNIK.md
-â”‚   â”śâ”€â”€ ZALEZNOSCI_I_PROCEDURY.md
-â”‚   â”śâ”€â”€ WORKFLOW_PROCESY.md              # TODO
-â”‚   â””â”€â”€ KODOWANIE_KONWENCJE.md           # TODO
-â”‚
-â””â”€â”€ README.md                             # GĹ‚Ăłwny README projektu
+|- backend/
+|  |- core/
+|  |  |- settings.py
+|  |  |- urls.py
+|  |  |- wsgi.py
+|  |  \- asgi.py
+|  |- users/
+|  |- studies/
+|  |- enrollments/
+|  |- payments/
+|  |- files/
+|  |- notifications/
+|  |- manage.py
+|  |- requirements.txt
+|  \- docker-compose.yml
+|- frontend/
+|  |- src/
+|  |  |- components/
+|  |  |- pages/
+|  |  |- hooks/
+|  |  |- services/
+|  |  |- api/
+|  |  \- styles/
+|  |- vite.config.js
+|  |- eslint.config.js
+|  |- tailwind.config.js
+|  |- package.json
+|  \- index.html
+|- docs/
+|  |- README.md
+|  |- ARCHITEKTURA_TECHNICZNA.md
+|  |- INSTALACJA_KONFIGURACJA_WDROZENIE.md
+|  |- API_REFERENCE.md
+|  |- ADMINISTRACJA_I_UZYTKOWNIK.md
+|  |- ZALEZNOSCI_I_PROCEDURY.md
+|  |- WORKFLOW_PROCESY.md
+|  \- KODOWANIE_KONWENCJE.md
+\- README.md
 ```
 
 ---
 
-## đź”— Linki do DokumentĂłw
+## Linki do Dokumentow
 
-| Dokument | ĹšcieĹĽka | Status |
-|----------|--------|--------|
-| Architektura | [ARCHITEKTURA_TECHNICZNA.md](ARCHITEKTURA_TECHNICZNA.md) | âś… Gotowy |
-| Instalacja & Deployment | [INSTALACJA_KONFIGURACJA_WDROZENIE.md](INSTALACJA_KONFIGURACJA_WDROZENIE.md) | âś… Gotowy |
-| API Reference | [API_REFERENCE.md](API_REFERENCE.md) | âś… Gotowy |
-| Admin & User Guide | [ADMINISTRACJA_I_UZYTKOWNIK.md](ADMINISTRACJA_I_UZYTKOWNIK.md) | âś… Gotowy |
-| ZaleĹĽnoĹ›ci & Procedury | [ZALEZNOSCI_I_PROCEDURY.md](ZALEZNOSCI_I_PROCEDURY.md) | âś… Gotowy |
-| Procesy Biznesowe | [WORKFLOW_PROCESY.md](WORKFLOW_PROCESY.md) | âŹł TODO |
-| Konwencje Kodowania | [KODOWANIE_KONWENCJE.md](KODOWANIE_KONWENCJE.md) | âŹł TODO |
+| Dokument | Sciezka |
+|----------|---------|
+| Architektura | [ARCHITEKTURA_TECHNICZNA.md](ARCHITEKTURA_TECHNICZNA.md) |
+| Instalacja i deployment | [INSTALACJA_KONFIGURACJA_WDROZENIE.md](INSTALACJA_KONFIGURACJA_WDROZENIE.md) |
+| API Reference | [API_REFERENCE.md](API_REFERENCE.md) |
+| Admin i User Guide | [ADMINISTRACJA_I_UZYTKOWNIK.md](ADMINISTRACJA_I_UZYTKOWNIK.md) |
+| Zaleznosci i procedury | [ZALEZNOSCI_I_PROCEDURY.md](ZALEZNOSCI_I_PROCEDURY.md) |
 
 ---
 
-## đź› ď¸Ź GĹ‚Ăłwne NarzÄ™dzia & Technologie
+## Glowne Narzedzia i Technologie
 
 ### Backend
-- **Framework:** Django 6.0.3
-- **API:** Django REST Framework 3.17.1
-- **Database:** PostgreSQL 18
-- **Authentication:** JWT (SimpleJWT)
-- **Language:** Python 3.10+
+- Framework: Django 6.0.3
+- API: Django REST Framework 3.17.1
+- Database: PostgreSQL 18
+- Authentication: JWT (SimpleJWT)
+- Language: Python 3.10+
 
 ### Frontend
-- **Framework:** React 19.2.4
-- **Build Tool:** Vite 8.0.2
-- **Styling:** TailwindCSS 4.2.2
-- **Routing:** React Router DOM 7.13.1
-- **Linting:** ESLint 9.39.4
-- **Language:** JavaScript (ES2024+)
+- Framework: React 19.2.4
+- Build tool: Vite 8.0.2
+- Styling: TailwindCSS 4.2.2
+- Routing: React Router DOM 7.13.1
+- Linting: ESLint 9.39.4
+- Language: JavaScript (ES2024+)
 
 ### Deployment
-- **Container:** Docker & Docker Compose
-- **Server:** Gunicorn (Django), Nginx (Reverse Proxy)
-- **SSL:** Let's Encrypt
+- Container: Docker i Docker Compose
+- Server: Gunicorn (Django), Nginx (reverse proxy)
+- SSL: Let's Encrypt
 
 ---
 
-## âť“ NajczÄ™stsze Pytania
+## Najczestsze Pytania
 
-**P: Gdzie znaleĹşÄ‡ informacje o API?**
+P: Gdzie znalezc informacje o API?
 O: [API_REFERENCE.md](API_REFERENCE.md)
 
-**P: Jak zainstalowaÄ‡ projekt?**
+P: Jak zainstalowac projekt?
 O: [INSTALACJA_KONFIGURACJA_WDROZENIE.md](INSTALACJA_KONFIGURACJA_WDROZENIE.md) - Sekcja 1
 
-**P: Jak zarzÄ…dzaÄ‡ uĹĽytkownikami?**
-O: [ADMINISTRACJA_I_UZYTKOWNIK.md](ADMINISTRACJA_I_UZYTKOWNIK.md) - Sekcja "ZarzÄ…dzanie UĹĽytkownikami"
+P: Jak zarzadzac uzytkownikami?
+O: [ADMINISTRACJA_I_UZYTKOWNIK.md](ADMINISTRACJA_I_UZYTKOWNIK.md) - Sekcja Zarzadzanie Uzytkownikami
 
-**P: Jak wdraĹĽaÄ‡ na produkcjÄ™?**
+P: Jak wdrazac na produkcje?
 O: [INSTALACJA_KONFIGURACJA_WDROZENIE.md](INSTALACJA_KONFIGURACJA_WDROZENIE.md) - Sekcja 3
 
-**P: Jakie sÄ… wymagania systemowe i wersje zaleĹĽnoĹ›ci?**
-O: [ZALEZNOSCI_I_PROCEDURY.md](ZALEZNOSCI_I_PROCEDURY.md) - Sekcja "Wymagania Systemowe" i "Wersje NarzÄ™dzi"
+P: Jakie sa wymagania systemowe i wersje zaleznosci?
+O: [ZALEZNOSCI_I_PROCEDURY.md](ZALEZNOSCI_I_PROCEDURY.md) - Sekcje Wymagania Systemowe i Wersje Narzedzi
 
-**P: Jak wykonaÄ‡ backup lub odtworzyÄ‡ system?**
-O: [ZALEZNOSCI_I_PROCEDURY.md](ZALEZNOSCI_I_PROCEDURY.md) - Sekcje "Procedury Backupu" i "Procedury Odtwarzania"
+P: Jak wykonac backup lub odtworzyc system?
+O: [ZALEZNOSCI_I_PROCEDURY.md](ZALEZNOSCI_I_PROCEDURY.md) - Sekcje Procedury Backupu i Procedury Odtwarzania
 
-**P: Gdzie sa konwencje kodowania?**
+P: Gdzie sa konwencje kodowania?
 O: [KODOWANIE_KONWENCJE.md](KODOWANIE_KONWENCJE.md) (w przygotowaniu)
 
 ---
 
-## đź“ž Support & Kontakt
+## Support i Kontakt
 
-- **Email:** support@ledwo.edu
-- **Bug Reports:** GitHub Issues
-- **Documentation Issues:** [UtwĂłrz Issue](https://github.com/yourorg/Ledwo-Zrekrutowani/issues)
-- **Chat:** Discord/Slack (jeĹ›li dostÄ™pny)
+- Email: support@ledwo.edu
+- Bug reports: GitHub Issues
+- Documentation issues: [Utworz Issue](https://github.com/yourorg/Ledwo-Zrekrutowani/issues)
+- Chat: Discord/Slack (jesli dostepny)
 
 ---
 
-## đź“ť Historia Zmian
+## Historia Zmian
 
 | Data | Zmiany | Autor |
 |------|--------|-------|
@@ -306,13 +296,13 @@ O: [KODOWANIE_KONWENCJE.md](KODOWANIE_KONWENCJE.md) (w przygotowaniu)
 
 ---
 
-## đź“„ Licencja
+## Licencja
 
-Projekt dostÄ™pny na licencji MIT (lub inna - do uzupeĹ‚nienia)
+All Rights Reserved.
 
 ---
 
-## âś¨ Przydatne Linki
+## Przydatne Linki
 
 - [Django Documentation](https://docs.djangoproject.com/)
 - [React Documentation](https://react.dev/)
@@ -322,7 +312,6 @@ Projekt dostÄ™pny na licencji MIT (lub inna - do uzupeĹ‚nienia)
 
 ---
 
-**Ostatnia aktualizacja:** 20.05.2026  
-**Wersja dokumentacji:** 1.0  
-**Status:** Production-Ready âś…
-
+Ostatnia aktualizacja: 20.05.2026
+Wersja dokumentacji: 1.0
+Status: Production-Ready

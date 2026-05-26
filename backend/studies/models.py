@@ -12,17 +12,31 @@ class Studies(models.Model):
     description = models.TextField()
 
 class StudiesEdition(models.Model):
-    class StatusChoices(models.TextChoices):
+    class Status(models.TextChoices):
         HIDDEN = 'HIDDEN'
         ACTIVE = 'ACTIVE'
         CLOSED = 'CLOSED'
+        CANCELLED = 'CANCELLED'
+
+        @classmethod
+        def public_visible(cls):
+            return {
+                cls.ACTIVE,
+                cls.CLOSED,
+            }
+
+        @classmethod
+        def enrollable(cls):
+            return {
+                cls.ACTIVE,
+            }
 
     studies = models.ForeignKey(Studies, on_delete=models.RESTRICT)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     start_date = models.DateField()
     end_date = models.DateField()
     max_participants = models.PositiveIntegerField()
-    status = models.CharField(max_length=50, choices=StatusChoices.choices, default=StatusChoices.HIDDEN)
+    status = models.CharField(max_length=50, choices=Status.choices, default=Status.HIDDEN)
     syllabus_url = models.URLField()
     recruitment_start_date = models.DateTimeField()
     recruitment_end_date = models.DateTimeField()
@@ -50,15 +64,6 @@ class StudiesEdition(models.Model):
                 name='price_positive',
             )
         ]
-
-STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES = [
-    StudiesEdition.StatusChoices.ACTIVE,
-    StudiesEdition.StatusChoices.CLOSED,
-]
-
-STUDIES_EDITION_ENROLLABLE_STATUSES = [
-    StudiesEdition.StatusChoices.ACTIVE,
-]
 
 class StudiesDocument(models.Model):
     studies_edition = models.ForeignKey(StudiesEdition, on_delete=models.CASCADE)

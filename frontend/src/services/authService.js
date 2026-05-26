@@ -1,4 +1,5 @@
 import {apiClient, BASE_URL} from "../api/client";
+import { serverApi } from "./serverApi"
 
 const decodeBase64Url = (value) => {
   try {
@@ -143,3 +144,41 @@ export const refreshAccessToken = async () => {
     return null;
   }
 };
+
+export const changeUserPassword = async (oldPassword, newPassword) => {
+    let token = getAccessToken()
+    let body = {
+        "old_password": oldPassword,
+        "new_password": newPassword
+    }
+    const response = await serverApi.apiRequest("/api/auth/change-password", "POST", body, token)
+
+    console.log(response)
+
+    // on response error
+    if (!response || response.error || !response.data) {
+        // on wrong old password
+        if (response.errorDetail?.includes("Niepoprawne hasło")) {
+            return {
+                data: null,
+                error: true,
+                errorMsg: `Niepoprawne stare hasło`
+            }
+        }    
+        // comms error
+        else {
+            return {
+                data: null,  
+                error: true,
+                errorMsg: `Blad komunikacji z serwerem: ${response.errorMsg} (${response.errorDetail})`
+            }  
+        }    
+    }    
+
+    // success
+    return {
+        data: null,
+        error: false,
+        errorMsg: ""
+    }
+}

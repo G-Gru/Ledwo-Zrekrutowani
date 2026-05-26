@@ -82,6 +82,7 @@ export default function AccountPageLeftMenu() {
             <div className="sub-menu">
               <NavLink to='/manage-studies/offers' icon='school' label='Kierunki studiów' indent />
               <NavLink to='/manage-studies/editions' icon='calendar_month' label='Edycje studiów' indent />
+              <NavLink to='/manage-studies/employees' icon='person' label='Pracownicy' indent />
             </div>
           </>
         )}

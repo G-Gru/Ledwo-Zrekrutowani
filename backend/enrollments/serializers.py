@@ -3,7 +3,7 @@ from rest_framework import serializers
 from files.models import File
 from studies.models import StudiesEdition, StudiesDocument
 from studies.serializers import StudiesEditionListSerializer, StudiesDocumentSerializer
-from .models import Enrollment, SubmittedDocument, FormData, Address
+from .models import Enrollment, SubmittedDocument, FormData, Address, DocumentHistory
 from .validators import is_valid_pesel, pesel_to_birthdate, is_valid_phone, is_valid_education_year, is_at_least_18
 
 
@@ -197,9 +197,47 @@ class StudiesEditionForCandidateSerializer(serializers.ModelSerializer):
 class ActiveEnrollmentSerializer(serializers.ModelSerializer):
     studies_edition = StudiesEditionForCandidateSerializer(read_only=True)
 
+    entry_payment_date = serializers.DateField(read_only=True)
+    is_draft_application = serializers.BooleanField(read_only=True)
+    all_documents_accepted_date = serializers.SerializerMethodField()
+
     class Meta:
         model = Enrollment
         exclude = ('user', )
+
+    def get_all_documents_accepted_date(self, obj):
+        confirmed_statuses = SubmittedDocument.Status.confirmed()
+
+        # All required (non-read-only) docs must be in ACCEPTED or VERIFIED state
+        missing_confirmed = StudiesDocument.objects.filter(
+            studies_edition=obj.studies_edition,
+            required=True,
+            is_read_only=False,
+        ).exclude(
+            submitted_documents__enrollment=obj,
+            submitted_documents__status__in=confirmed_statuses,
+        )
+        if missing_confirmed.exists():
+            return None
+
+        # Try to get the date from history (ACCEPTED or VERIFIED)
+        last_history = DocumentHistory.objects.filter(
+            submitted_document__enrollment=obj,
+            new_status__in=confirmed_statuses,
+        ).order_by('-modified_date').first()
+
+        if last_history:
+            return str(last_history.modified_date.date())
+
+        # Fallback for seeded data where history records don't exist:
+        # use the latest submitted_date of a confirmed document
+        latest_doc = obj.submitteddocument_set.filter(
+            status__in=confirmed_statuses,
+        ).order_by('-submitted_date').first()
+        if latest_doc:
+            return str(latest_doc.submitted_date.date())
+
+        return None
 
 class AdminFormDataSerializer(serializers.ModelSerializer):
     residential_address = AddressSerializer(read_only=True)

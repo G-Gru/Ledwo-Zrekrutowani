@@ -6,15 +6,14 @@ from uuid import uuid4
 
 from django.core.files import File as DjangoFile
 from django.db import IntegrityError, transaction
+from django.http import Http404
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from docxtpl import DocxTemplate
 
 from core import settings
-from enrollments.exceptions import UserAlreadyEnrolledException, NoPlacesAvailableException, MissingDocumentsException, \
+from enrollments.exceptions import UserAlreadyEnrolledException, MissingDocumentsException, \
     UserNotRecruitingException
-from enrollments.models import Enrollment, FormData, ENROLLMENT_TAKING_UP_PLACE_STATUSES, SubmittedDocument, \
-    SUBMITTED_DOCUMENT_CONFIRMED_STATUSES, ENROLLMENT_ACTIVE_STATUSES
+from enrollments.models import Enrollment, FormData, SubmittedDocument
 from files.models import File
 from notifications.exceptions import NotificationSendFailedException
 from notifications.services import send_notif_to
@@ -82,7 +81,7 @@ def enroll(edition_id, enrollment_id):
 
         total = Enrollment.objects.filter(
             studies_edition=edition,
-            status__in=ENROLLMENT_TAKING_UP_PLACE_STATUSES
+            status__in=Enrollment.Status.taking_up_place()
         ).count()
 
         if total >= edition.max_participants:
@@ -209,7 +208,7 @@ def _check_student_promotion_available(enrollment):
     )
     unconfirmed = required_docs.exclude(
         submitted_documents__enrollment=enrollment,
-        submitted_documents__status__in=SUBMITTED_DOCUMENT_CONFIRMED_STATUSES
+        submitted_documents__status__in=SubmittedDocument.Status.confirmed()
     )
     if unconfirmed.exists():
         return False
@@ -226,11 +225,11 @@ def _check_and_promote_to_student(enrollment):
 def resign(enrollment: Enrollment):
     with transaction.atomic():
         current_status = enrollment.status
-        if current_status not in ENROLLMENT_ACTIVE_STATUSES:
+        if current_status not in Enrollment.Status.active():
             raise UserNotRecruitingException()
 
         studies_edition = enrollment.studies_edition
-        is_recruitment_closed = studies_edition.status == StudiesEdition.StatusChoices.CLOSED
+        is_recruitment_closed = studies_edition.status == StudiesEdition.Status.CLOSED
 
         status = Enrollment.Status.EXPELLED if is_recruitment_closed else Enrollment.Status.REJECTED
         enrollment.status = status
@@ -239,7 +238,7 @@ def resign(enrollment: Enrollment):
         if is_recruitment_closed:
             return
 
-        if current_status in ENROLLMENT_TAKING_UP_PLACE_STATUSES:
+        if current_status in Enrollment.Status.taking_up_place():
             _promote_single_reservist(studies_edition)
 
 def _promote_single_reservist(studies_edition):
@@ -295,3 +294,14 @@ def change_enrollment_status(enrollment, new_status):
             )
 
     transaction.on_commit(send_notification)
+
+def get_previous_form(user):
+    enrollment = Enrollment.objects.filter(
+        user=user,
+        status__in=Enrollment.Status.strict_active()
+    ).order_by("enrollment_date").first()
+
+    if not enrollment:
+        raise Http404("Enrollment not found")
+
+    return enrollment.form

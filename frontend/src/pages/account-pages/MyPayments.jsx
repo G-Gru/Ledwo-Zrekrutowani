@@ -110,17 +110,25 @@ export default function Payments() {
         setPaymentProofFile(null);
     };
 
-    const userPayment = async () => {
-        const res = await serverApi.userPayment(userToken, selectedIds);
+    const userPayment = async (proofFile = null) => {
+        const res = await serverApi.userPayment(userToken, selectedIds, proofFile);
         setPaymentSuccess(res.success);
-        setPaymentMessage(res.success ? "Płatność została pomyślnie zrealizowana!" : res.errorMsg);
-
-        // Odśwież dane po krótkim opóźnieniu, żeby użytkownik zobaczył zrealizowana platnosc
         if (res.success) {
-            setTimeout(() => {
-                fetchPaymentData(userToken);
-                setShowPaymentOptions(false)
-            }, 700);
+            if (proofFile) {
+                setPaymentMessage("Przelew wysłany. Oczekuje na zatwierdzenie przez finansistę.");
+                setTimeout(() => {
+                    fetchPaymentData(userToken);
+                    setShowPaymentOptions(false);
+                }, 1500);
+            } else {
+                setPaymentMessage("Płatność została pomyślnie zrealizowana!");
+                setTimeout(() => {
+                    fetchPaymentData(userToken);
+                    setShowPaymentOptions(false);
+                }, 700);
+            }
+        } else {
+            setPaymentMessage(res.errorMsg);
         }
     };
 
@@ -258,7 +266,7 @@ export default function Payments() {
                                             <button 
                                                 className='btn-primary-large'
                                                 onClick={async () => {
-                                                    userPayment()
+                                                    userPayment(paymentProofFile)
                                                     handlePaymentProofFileRemove()
                                                 }}
                                                 style={{ marginTop: '16px', width: '100%' }}

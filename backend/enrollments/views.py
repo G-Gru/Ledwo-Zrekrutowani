@@ -1,4 +1,4 @@
-from django.db.models import Count
+from django.db.models import Count, Subquery, OuterRef, Q, BooleanField, ExpressionWrapper
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
@@ -11,8 +11,7 @@ from payments.serializers import FeeSerializer
 from studies.models import StudiesEdition, StudiesEditionStaff, StudiesDocument
 from users.permissions import IsObjectOwner, IsStudent, CanViewDocument, IsEmployee
 from . import services
-from .models import Enrollment, FormData, Address, SubmittedDocument, DocumentHistory, ENROLLMENT_ACTIVE_STATUSES, \
-    ENROLLMENT_NON_ACTIVE_STATUSES
+from .models import Enrollment, FormData, Address, SubmittedDocument, DocumentHistory
 from .serializers import AdminEnrollmentSerializer, AdminEnrollmentDetailSerializer, FormDataSerializer, \
     AddressSerializer, EnrollmentSerializer, ActiveEnrollmentSerializer, \
     EnrollmentRecruitmentEndDateSerializer, SubmittedDocumentsCreateSerializer, SubmittedDocumentsListSerializer
@@ -61,6 +60,13 @@ class EnrollmentFormRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
         get_enrollable_edition(edition_pk)
         services.update_enrollment_form(edition_pk, self.request.user, serializer)
 
+class EnrollmentPreviousFormRetrieveAPIView(generics.RetrieveAPIView):
+    serializer_class = FormDataSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_object(self):
+        return services.get_previous_form(self.request.user)
+
 class AddressListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = AddressSerializer
     permission_classes = [IsAuthenticated, IsStudent]
@@ -97,9 +103,23 @@ class ActiveEnrollmentListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsStudent, IsObjectOwner]
 
     def get_queryset(self):
+        entry_fee_subquery = Fee.objects.filter(
+            enrollment=OuterRef('pk'),
+            title__icontains='Opłata rekrutacyjna'
+        ).order_by('-id').values('paid_date')[:1]
+
         return Enrollment.objects.filter(
             user=self.request.user,
-            status__in=ENROLLMENT_ACTIVE_STATUSES
+            status__in=Enrollment.Status.active()
+        ).annotate(
+            entry_payment_date=Subquery(entry_fee_subquery),
+            is_draft_application=ExpressionWrapper(
+                Q(status=Enrollment.Status.DRAFT),
+                output_field=BooleanField()
+            )
+        ).prefetch_related(
+            'studies_edition__studiesdocument_set',
+            'submitteddocument_set'
         )
 
 class EnrollmentRetrieveDestroyAPIView(generics.RetrieveDestroyAPIView):
@@ -155,7 +175,7 @@ class FeeListAPIView(generics.ListAPIView):
 
 class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
     # W przyszłości dodać permission_classes = [IsAdminUser]
-    permission_classes = [IsEmployee]
+    permission_classes = [IsEmployee, IsAuthenticated]
     serializer_class = AdminEnrollmentSerializer
 
     def get_serializer_class(self):
@@ -164,15 +184,17 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
         return AdminEnrollmentSerializer
 
     def get_queryset(self):
+        base_qs = Enrollment.objects.exclude(status=Enrollment.Status.DRAFT)
+
         if self.action in ['retrieve', 'decide', 'get_details', 'get_documents', 'get_fees', 'accept', 'reject', 'send_payment_reminder']:
-            base_qs = Enrollment.objects.all().select_related(
+            qs = base_qs.select_related(
                 'user',
                 'studies_edition',
                 'form', 'form__residential_address', 'form__registered_address',
             ).prefetch_related('fees', 'submitteddocument_set')
-            return _scope_enrollments_queryset_for_user(base_qs, self.request.user)
+            return _scope_enrollments_queryset_for_user(qs, self.request.user)
 
-        qs = Enrollment.objects.all().select_related('user', 'studies_edition').prefetch_related('fees', 'submitteddocument_set')
+        qs = base_qs.select_related('user', 'studies_edition').prefetch_related('fees', 'submitteddocument_set')
         qs = _scope_enrollments_queryset_for_user(qs, self.request.user)
         
         # Filtrowanie po nieopłaconych, jeśli w URL pojawi się ?unpaid_only=true
@@ -402,7 +424,7 @@ class AdminRecruitmentStatsAPIView(generics.GenericAPIView):
 
             if enrollment.status == Enrollment.Status.STUDENT:
                 row['statuses']['student'] += 1
-            elif enrollment.status in ENROLLMENT_NON_ACTIVE_STATUSES:
+            elif enrollment.status in Enrollment.Status.non_active():
                 row['statuses']['expelled'] += 1
             else:
                 row['statuses']['candidate'] += 1
@@ -414,7 +436,9 @@ class AdminUsosExportAPIView(generics.GenericAPIView):
     permission_classes = [IsEmployee]
 
     def get(self, request):
-        enrollments_qs = Enrollment.objects.select_related(
+        enrollments_qs = Enrollment.objects.exclude(
+            status=Enrollment.Status.DRAFT
+        ).select_related(
             'user',
             'studies_edition__studies',
             'form',

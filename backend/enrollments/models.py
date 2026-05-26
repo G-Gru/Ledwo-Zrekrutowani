@@ -21,6 +21,45 @@ class Enrollment(models.Model):
         STUDENT = 'STUDENT'
         REJECTED = 'REJECTED'
         EXPELLED = 'EXPELLED'
+        CANCELLED = 'CANCELLED'
+
+        @classmethod
+        def taking_up_place(cls):
+            return {
+                cls.CANDIDATE,
+                cls.STUDENT,
+            }
+
+        @classmethod
+        def recruiting(cls):
+            return {
+                cls.CANDIDATE,
+                cls.RESERVE,
+            }
+
+        @classmethod
+        def active(cls):
+            return {
+                cls.DRAFT,
+                cls.CANDIDATE,
+                cls.RESERVE,
+                cls.STUDENT,
+            }
+
+        @classmethod
+        def strict_active(cls):
+            return {
+                cls.CANDIDATE,
+                cls.RESERVE,
+                cls.STUDENT,
+            }
+
+        @classmethod
+        def non_active(cls):
+            return {
+                cls.REJECTED,
+                cls.EXPELLED,
+            }
 
     user = models.ForeignKey(User, on_delete=models.RESTRICT)
     studies_edition = models.ForeignKey(StudiesEdition, on_delete=models.RESTRICT)
@@ -37,32 +76,10 @@ class Enrollment(models.Model):
 
         missing = required_documents.exclude(
             submitted_documents__enrollment=self,
-            submitted_documents__status__in=SUBMITTED_DOCUMENT_ACCEPT_ENROLLMENT_STATUSES
+            submitted_documents__status__in=SubmittedDocument.Status.accept_enrollment()
         )
 
         return not missing.exists()
-
-ENROLLMENT_TAKING_UP_PLACE_STATUSES = [
-    Enrollment.Status.CANDIDATE,
-    Enrollment.Status.STUDENT,
-]
-
-ENROLLMENT_RECRUITING_STATUSES = [
-    Enrollment.Status.CANDIDATE,
-    Enrollment.Status.RESERVE,
-]
-
-ENROLLMENT_ACTIVE_STATUSES = [
-    Enrollment.Status.DRAFT,
-    Enrollment.Status.CANDIDATE,
-    Enrollment.Status.RESERVE,
-    Enrollment.Status.STUDENT,
-]
-
-ENROLLMENT_NON_ACTIVE_STATUSES = [
-    Enrollment.Status.REJECTED,
-    Enrollment.Status.EXPELLED
-]
 
 class SubmittedDocument(models.Model):
     class Status(models.TextChoices):
@@ -72,22 +89,27 @@ class SubmittedDocument(models.Model):
         REJECTED = 'REJECTED'
         DELIVERY = 'SIGN & DELIVER'
 
+        @classmethod
+        def accept_enrollment(cls):
+            return {
+                cls.SUBMITTED,
+                cls.ACCEPTED,
+                cls.VERIFIED,
+            }
+
+        @classmethod
+        def confirmed(cls):
+            return {
+                cls.ACCEPTED,
+                cls.VERIFIED,
+            }
+
+
     studies_document = models.ForeignKey(StudiesDocument, on_delete=models.RESTRICT, related_name='submitted_documents')
     enrollment = models.ForeignKey(Enrollment, on_delete=models.RESTRICT)
     file = models.OneToOneField(File, on_delete=models.RESTRICT, related_name="submitted_document")
     status = models.CharField(max_length=50, choices=Status.choices, default=Status.SUBMITTED)
     submitted_date = models.DateTimeField(auto_now_add=True)
-
-SUBMITTED_DOCUMENT_ACCEPT_ENROLLMENT_STATUSES = [
-    SubmittedDocument.Status.SUBMITTED,
-    SubmittedDocument.Status.ACCEPTED,
-    SubmittedDocument.Status.VERIFIED,
-]
-
-SUBMITTED_DOCUMENT_CONFIRMED_STATUSES = [
-    SubmittedDocument.Status.ACCEPTED,
-    SubmittedDocument.Status.VERIFIED,
-]
 
 class DocumentHistory(models.Model):
     staff = models.ForeignKey(StudiesEditionStaff, on_delete=models.RESTRICT)

@@ -1,5 +1,6 @@
 .admin-export-layout #account-page-column-middle {
   width: 75%;
+  min-width: 0;
   align-items: center;
 }
 
@@ -16,6 +17,7 @@
 
 .admin-export-panel {
   width: 90%;
+  min-width: 0;
   margin: 0 0 18px;
   padding: 20px;
   border: 1px solid var(--surface-border);
@@ -64,7 +66,24 @@
 
 .admin-export-table-wrap {
   width: 100%;
-  overflow-x: auto;
+  max-width: 100%;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
+}
+
+.admin-export-preview-table {
+  width: max-content !important;
+  min-width: 100%;
+  table-layout: auto;
+}
+
+.admin-export-preview-table th,
+.admin-export-preview-table td {
+  white-space: nowrap !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  width: max-content;
 }
 
 .admin-export-template-note {

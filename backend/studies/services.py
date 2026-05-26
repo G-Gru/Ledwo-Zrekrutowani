@@ -4,7 +4,7 @@ from rest_framework.generics import get_object_or_404
 
 from enrollments.models import Enrollment
 from studies import tasks
-from studies.models import StudiesEdition, STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES, STUDIES_EDITION_ENROLLABLE_STATUSES, \
+from studies.models import StudiesEdition, \
     StudiesDocument
 
 
@@ -24,12 +24,12 @@ def get_user_editions_queryset(user):
 
 def get_public_visible_editions_queryset():
     return StudiesEdition.objects.filter(
-        status__in=STUDIES_EDITION_PUBLIC_VISIBLE_STATUSES
+        status__in=StudiesEdition.Status.public_visible()
     )
 
 def get_enrollable_editions_queryset():
     return StudiesEdition.objects.filter(
-        status__in=STUDIES_EDITION_ENROLLABLE_STATUSES
+        status__in=StudiesEdition.Status.enrollable()
     )
 
 def add_to_edition(edition_id, user, serializer):
@@ -95,10 +95,10 @@ def open_recruitment(studies_edition_id):
         pk=studies_edition_id
     )
 
-    if edition.status != StudiesEdition.StatusChoices.HIDDEN:
+    if edition.status != StudiesEdition.Status.HIDDEN:
         return
 
-    edition.status = StudiesEdition.StatusChoices.ACTIVE
+    edition.status = StudiesEdition.Status.ACTIVE
     edition.save(update_fields=["status"])
 
 @transaction.atomic
@@ -109,10 +109,10 @@ def close_recruitment(studies_edition_id):
         pk=studies_edition_id
     )
 
-    if edition.status != StudiesEdition.StatusChoices.ACTIVE:
+    if edition.status != StudiesEdition.Status.ACTIVE:
         return
 
-    edition.status = StudiesEdition.StatusChoices.CLOSED
+    edition.status = StudiesEdition.Status.CLOSED
     edition.save(update_fields=["status"])
 
     # All candidates left are to be rejected and replaced
@@ -134,3 +134,59 @@ def close_recruitment(studies_edition_id):
 
     for enrollment in remaining_list:
         change_enrollment_status(enrollment, Enrollment.Status.REJECTED)
+
+
+@transaction.atomic
+def cancel_edition(edition_id):
+    from notifications.services import send_notif_to
+    from notifications.exceptions import NotificationSendFailedException
+    import logging
+    logger = logging.getLogger(__name__)
+
+    edition = (StudiesEdition.objects
+               .select_for_update()
+               .select_related("studies")
+               .get(pk=edition_id))
+
+    if edition.status != StudiesEdition.Status.ACTIVE:
+        raise ValueError("Można anulować tylko aktywne edycje.")
+
+    edition_name = f"{edition.studies.name} ({edition.academic_year})"
+
+    candidates = (Enrollment.objects
+                  .filter(studies_edition=edition, status=Enrollment.Status.CANDIDATE)
+                  .select_related("user")
+                  .prefetch_related("fees"))
+
+    for enrollment in candidates:
+        has_paid = enrollment.fees.filter(paid_date__isnull=False).exists()
+
+        if has_paid:
+            body = (
+                f"Informujemy, że edycja studiów podyplomowych \"{edition_name}\" "
+                f"została odwołana z powodu niewystarczającej liczby zgłoszeń.\n\n"
+                f"Ze względu na dokonaną przez Państwa wpłatę, nasz zespół skontaktuje się "
+                f"z Państwem w celu ustalenia szczegółów zwrotu środków.\n\n"
+                f"Przepraszamy za utrudnienia i liczymy na Państwa wyrozumiałość."
+            )
+        else:
+            body = (
+                f"Informujemy, że edycja studiów podyplomowych \"{edition_name}\" "
+                f"została odwołana z powodu niewystarczającej liczby zgłoszeń.\n\n"
+                f"Przepraszamy za utrudnienia i liczymy na Państwa wyrozumiałość."
+            )
+
+        try:
+            send_notif_to(
+                enrollment.user,
+                subject=f"Odwołanie edycji studiów: {edition_name}",
+                body=body,
+            )
+        except NotificationSendFailedException:
+            logger.warning(f"Failed to send cancellation email to {enrollment.user.email}")
+
+        enrollment.status = Enrollment.Status.CANCELLED
+        enrollment.save(update_fields=["status"])
+
+    edition.status = StudiesEdition.Status.CANCELLED
+    edition.save(update_fields=["status"])
