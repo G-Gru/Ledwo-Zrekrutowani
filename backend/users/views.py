@@ -77,6 +77,20 @@ class LoginAPIView(generics.CreateAPIView):
             }
         })
 
+class MeAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            "id": user.id,
+            "email": user.email,
+            "phone": user.phone,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "role": _resolve_login_role(user),
+        })
+
 class ChangePasswordAPIView(APIView):
     permission_classes = [IsAuthenticated]
 

@@ -149,20 +149,43 @@
   background: var(--surface-container-low);
 }
 
-.btn-approve {
-  padding: 0.3rem 0.75rem;
-  border: none;
+.btn-approve,
+.btn-download-file {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.85rem;
+  height: 32px;
   border-radius: 6px;
-  background: #1565c0;
-  color: #fff;
   font-size: 0.8rem;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background 0.15s;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: background 0.15s, color 0.15s;
 }
 
+.btn-approve {
+  border: none;
+  background: #1565c0;
+  color: #fff;
+}
 .btn-approve:hover { background: #0d47a1; }
 .btn-approve:disabled { background: #90a4ae; cursor: not-allowed; }
+
+.btn-download-file {
+  border: 1.5px solid #1565c0;
+  background: transparent;
+  color: #1565c0;
+}
+.btn-download-file:hover { background: #e3f2fd; }
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 
 /* ─── Status badges ───────────────────────────────────── */
 .status-badge {

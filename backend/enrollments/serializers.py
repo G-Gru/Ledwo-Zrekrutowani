@@ -206,17 +206,37 @@ class ActiveEnrollmentSerializer(serializers.ModelSerializer):
         exclude = ('user', )
 
     def get_all_documents_accepted_date(self, obj):
-        if not obj.has_all_documents():
+        confirmed_statuses = SubmittedDocument.Status.confirmed()
+
+        # All required (non-read-only) docs must be in ACCEPTED or VERIFIED state
+        missing_confirmed = StudiesDocument.objects.filter(
+            studies_edition=obj.studies_edition,
+            required=True,
+            is_read_only=False,
+        ).exclude(
+            submitted_documents__enrollment=obj,
+            submitted_documents__status__in=confirmed_statuses,
+        )
+        if missing_confirmed.exists():
             return None
-            
-        last_accepted_history = DocumentHistory.objects.filter(
+
+        # Try to get the date from history (ACCEPTED or VERIFIED)
+        last_history = DocumentHistory.objects.filter(
             submitted_document__enrollment=obj,
-            new_status='ACCEPTED'
+            new_status__in=confirmed_statuses,
         ).order_by('-modified_date').first()
 
-        if last_accepted_history:
-            return str(last_accepted_history.modified_date.date())
-            
+        if last_history:
+            return str(last_history.modified_date.date())
+
+        # Fallback for seeded data where history records don't exist:
+        # use the latest submitted_date of a confirmed document
+        latest_doc = obj.submitteddocument_set.filter(
+            status__in=confirmed_statuses,
+        ).order_by('-submitted_date').first()
+        if latest_doc:
+            return str(latest_doc.submitted_date.date())
+
         return None
 
 class AdminFormDataSerializer(serializers.ModelSerializer):

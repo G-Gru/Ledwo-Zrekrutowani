@@ -6,6 +6,7 @@ import {
     saveMockAdminEnrollmentDecision,
 } from '../mocks/adminEnrollmentMocks';
 import { formatDateInWarsaw } from '../utils/dateTime';
+import { chooseLaterDate } from './dateUtility';
 import {BASE_URL} from "../api/client.js";
 
 const API_BASE_URL = BASE_URL.replace(/\/$/, '');
@@ -846,14 +847,22 @@ export class serverApi {
 
     }
 
-    static async userPayment(token, paymentIds) {
+    static async userPayment(token, paymentIds, proofFile = null) {
         if (!Array.isArray(paymentIds) || paymentIds.length === 0) {
             return {success: false, errorMsg: "Brak ID płatności do opłacenia."};
         }
 
         const results = [];
         for (const feePk of paymentIds) {
-            const res = await serverApi.apiRequest(`/api/payments/${feePk}/pay/`, 'POST', null, token);
+            let body = null;
+            let useJson = true;
+            if (proofFile) {
+                const formData = new FormData();
+                formData.append('file', proofFile);
+                body = formData;
+                useJson = false;
+            }
+            const res = await serverApi.apiRequest(`/api/payments/${feePk}/pay/`, 'POST', body, token, useJson);
             results.push({id: feePk, success: !res.error, errorMsg: res.error ? res.errorMsg : ""});
         }
 
@@ -1323,5 +1332,9 @@ export class serverApi {
             errorMsg: '',
             errorDetail: ''
         };
+    }
+
+    static async getCurrentUser(token) {
+        return this.apiRequest('/api/auth/me', 'GET', null, token);
     }
 }
