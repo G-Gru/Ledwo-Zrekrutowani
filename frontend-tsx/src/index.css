@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #ffffff;
+  --color-surface: #fcf9f8;
+  --color-surface-low: #f6f3f2;
+  --color-surface-container: #f0edec;
+  --color-surface-high: #ebe7e7;
+  --color-border: #d0c6ab;
+
+  --color-primary: #705d00;
+  --color-primary-container: #ffd600;
+  --color-on-primary: #ffffff;
+
+  --color-header: #4c545c;
+
+  --color-secondary: #4c616c;
+  --color-secondary-container: #cfe6f2;
+
+  --color-text: #1c1b1b;
+  --color-text-muted: #526772;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+
+  --color-warning: #f59e0b;
+  --color-success: #15803d;
+  --color-success-container: #dcfce7;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+p {
+  margin: 0;
+  color: var(--color-text);
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-text) !important;
+  box-shadow: 0 0 0px 1000px var(--color-surface-low) inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}

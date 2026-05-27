@@ -26,9 +26,15 @@ class User(AbstractUser):
         return self.email
 
 class Employee(models.Model):
+    class GlobalRole(models.TextChoices):
+        ADMINISTRATIVE_COORDINATOR = 'ADMINISTRATIVE_COORDINATOR', 'Koordynator administracyjny'
+        FINANCE_COORDINATOR = 'FINANCE_COORDINATOR', 'Koordynator finansowy'
+        STUDIES_DIRECTOR = 'STUDIES_DIRECTOR', 'Kierownik studiów'
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="employee", primary_key=True)
     academic_title = models.CharField(max_length=100, blank=True)
     office = models.CharField(max_length=100, blank=True)
+    role = models.CharField(max_length=50, blank=True, choices=GlobalRole.choices)
 
 class WorkPhoneNumber(models.Model):
     employee = models.ForeignKey(Employee, related_name="work_phones", on_delete=models.CASCADE)

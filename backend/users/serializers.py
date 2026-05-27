@@ -25,11 +25,12 @@ class WorkPhoneNumberSerializer(serializers.ModelSerializer):
 
 class EmployeeSerializer(serializers.ModelSerializer):
     academic_title = serializers.CharField(source='employee.academic_title', read_only=True)
+    role = serializers.CharField(source='employee.role', read_only=True)
     work_phones = WorkPhoneNumberSerializer(source='employee.work_phones', many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'academic_title', 'work_phones')
+        fields = ('id', 'email', 'first_name', 'last_name', 'academic_title', 'role', 'work_phones')
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
@@ -65,6 +66,14 @@ class CreateEmployeeSerializer(serializers.Serializer):
     email = serializers.EmailField()
     phone = serializers.CharField(required=False, allow_blank=True, default='')
     password = serializers.CharField(write_only=True)
+    role = serializers.ChoiceField(
+        choices=['ADMINISTRATIVE_COORDINATOR', 'FINANCE_COORDINATOR', 'STUDIES_DIRECTOR', 'ADMIN'],
+        required=False, allow_blank=True, default=''
+    )
+    work_phones = serializers.ListField(
+        child=serializers.CharField(), required=False, default=list
+    )
+    academic_title = serializers.CharField(required=False, allow_blank=True, default='')
 
     def validate_email(self, value):
         value = value.lower()
@@ -74,10 +83,22 @@ class CreateEmployeeSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         password = validated_data.pop("password")
-        user = User(**validated_data, is_employee=True)
+        role = validated_data.pop("role", "")
+        work_phones = validated_data.pop("work_phones", [])
+        academic_title = validated_data.pop("academic_title", "")
+
+        is_staff = role == "ADMIN"
+        user = User(**validated_data, is_employee=True, is_staff=is_staff)
         user.set_password(password)
         user.save()
-        Employee.objects.create(user=user)
+
+        employee_role = role if role and role != "ADMIN" else ""
+        employee = Employee.objects.create(user=user, academic_title=academic_title, role=employee_role)
+
+        for phone_number in work_phones:
+            if phone_number.strip():
+                WorkPhoneNumber.objects.create(employee=employee, phone=phone_number.strip())
+
         return user
 
 

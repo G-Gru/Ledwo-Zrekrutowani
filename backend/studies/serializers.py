@@ -69,10 +69,11 @@ class StudiesEditionCreateSerializer(serializers.ModelSerializer):
 
 class StudiesEditionListSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='studies.name', read_only=True)
+    studies_id = serializers.IntegerField(source='studies.id', read_only=True)
 
     class Meta:
         model = StudiesEdition
-        fields = ('id', 'name', 'price', 'start_date', 'status', 'academic_year')
+        fields = ('id', 'studies_id', 'name', 'price', 'start_date', 'status', 'academic_year')
 
 class StudiesEditionDetailsSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='studies.name', read_only=True)
