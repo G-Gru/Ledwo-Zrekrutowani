@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
 import { toDateTimeLocal } from '@/utils/dateTime'
+import { parseFieldErrors } from '@/utils/validation'
 import { Plus, Pencil, Trash2, X, UserPlus, ChevronRight } from 'lucide-react'
 
 const STATUS_LABELS: Record<string, string> = { ACTIVE: 'Aktywna', HIDDEN: 'Ukryta', CANCELLED: 'Anulowana', CLOSED: 'Zamknięta' }
@@ -17,6 +18,7 @@ const ROLE_OPTIONS = [
   { value: 'ADMINISTRATIVE_COORDINATOR', label: 'Koordynator administracyjny' },
   { value: 'FINANCE_COORDINATOR', label: 'Koordynator finansowy' },
 ]
+
 
 const emptyEditionForm = {
   studies_id: '', price: '', start_date: '', end_date: '',
@@ -36,6 +38,7 @@ export default function ManageEditionsPage() {
   const [staffForm, setStaffForm] = useState({ user_id: '', role: 'STUDIES_DIRECTOR' })
   const [editMode, setEditMode] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -65,6 +68,7 @@ export default function ManageEditionsPage() {
       academic_year: edition.academic_year || '',
     })
     setEditMode(true)
+    setFieldErrors({})
     fetchStaff(edition.id)
   }
 
@@ -73,6 +77,7 @@ export default function ManageEditionsPage() {
     setEditionForm({ ...emptyEditionForm, studies_id: String(selectedStudy?.id || '') })
     setEditMode(true)
     setStaff([])
+    setFieldErrors({})
   }
 
   async function fetchStaff(editionId: number) {
@@ -83,6 +88,13 @@ export default function ManageEditionsPage() {
   async function handleEditionSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    const fe: Record<string, string> = {}
+    if (editionForm.start_date && editionForm.end_date && editionForm.start_date >= editionForm.end_date)
+      fe.end_date = 'Data zakończenia musi być późniejsza niż data rozpoczęcia.'
+    if (editionForm.recruitment_start_date && editionForm.recruitment_end_date && editionForm.recruitment_start_date >= editionForm.recruitment_end_date)
+      fe.recruitment_end_date = 'Koniec rekrutacji musi być późniejszy niż jej rozpoczęcie.'
+    if (Object.keys(fe).length) { setFieldErrors(fe); return }
+    setFieldErrors({})
     setSaving(true)
     try {
       const payload: Partial<AdminEdition> = {
@@ -102,7 +114,16 @@ export default function ManageEditionsPage() {
         ? await api.updateAdminEdition(selectedEdition.id, payload)
         : await api.createAdminEdition(payload)
 
-      if (res.error) { setError(res.msg); return }
+      if (res.error) {
+        if (res.fieldErrors) {
+          const translated = parseFieldErrors(res.fieldErrors)
+          setFieldErrors(translated)
+          if (translated.non_field_errors) setError(translated.non_field_errors)
+        } else {
+          setError(res.msg)
+        }
+        return
+      }
 
       const elist = await api.getAdminEditions()
       if (!elist.error) setEditions(Array.isArray(elist.data) ? elist.data : [])
@@ -234,17 +255,18 @@ export default function ManageEditionsPage() {
                     <div className="md:col-span-2">
                       <label className="block text-xs font-medium mb-1">Kierunek studiów *</label>
                       <select value={editionForm.studies_id} onChange={e => setEditionForm(p => ({ ...p, studies_id: e.target.value }))} required
-                        className="w-full border border-outline rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+                        className={`w-full border rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 ${fieldErrors.studies_id ? 'border-error focus:ring-error' : 'border-outline focus:ring-[var(--color-primary)]'}`}>
                         <option value="">Wybierz kierunek...</option>
                         {studies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
+                      {fieldErrors.studies_id && <p className="text-xs text-error mt-1">{fieldErrors.studies_id}</p>}
                     </div>
                   )}
-                  <div><label className="block text-xs font-medium mb-1">Rok akademicki *</label><Input value={editionForm.academic_year} onChange={e => setEditionForm(p => ({ ...p, academic_year: e.target.value }))} placeholder="np. 2024/2025" required /></div>
-                  <div><label className="block text-xs font-medium mb-1">Cena (zł) *</label><Input type="number" step="0.01" value={editionForm.price} onChange={e => setEditionForm(p => ({ ...p, price: e.target.value }))} required /></div>
-                  <div><label className="block text-xs font-medium mb-1">Data rozpoczęcia *</label><Input type="date" value={editionForm.start_date} onChange={e => setEditionForm(p => ({ ...p, start_date: e.target.value }))} required /></div>
-                  <div><label className="block text-xs font-medium mb-1">Data zakończenia *</label><Input type="date" value={editionForm.end_date} onChange={e => setEditionForm(p => ({ ...p, end_date: e.target.value }))} required /></div>
-                  <div><label className="block text-xs font-medium mb-1">Maks. uczestników *</label><Input type="number" value={editionForm.max_participants} onChange={e => setEditionForm(p => ({ ...p, max_participants: e.target.value }))} required /></div>
+                  <div><label className="block text-xs font-medium mb-1">Rok akademicki *</label><Input value={editionForm.academic_year} onChange={e => setEditionForm(p => ({ ...p, academic_year: e.target.value }))} placeholder="np. 2024/2025" required error={fieldErrors.academic_year} /></div>
+                  <div><label className="block text-xs font-medium mb-1">Cena (zł) *</label><Input type="number" step="0.01" value={editionForm.price} onChange={e => setEditionForm(p => ({ ...p, price: e.target.value }))} required error={fieldErrors.price} /></div>
+                  <div><label className="block text-xs font-medium mb-1">Data rozpoczęcia *</label><Input type="date" value={editionForm.start_date} onChange={e => setEditionForm(p => ({ ...p, start_date: e.target.value }))} required error={fieldErrors.start_date} /></div>
+                  <div><label className="block text-xs font-medium mb-1">Data zakończenia *</label><Input type="date" value={editionForm.end_date} onChange={e => setEditionForm(p => ({ ...p, end_date: e.target.value }))} required error={fieldErrors.end_date} /></div>
+                  <div><label className="block text-xs font-medium mb-1">Maks. uczestników *</label><Input type="number" value={editionForm.max_participants} onChange={e => setEditionForm(p => ({ ...p, max_participants: e.target.value }))} required error={fieldErrors.max_participants} /></div>
                   <div>
                     <label className="block text-xs font-medium mb-1">Status</label>
                     <select value={editionForm.status} onChange={e => setEditionForm(p => ({ ...p, status: e.target.value }))}
@@ -252,9 +274,9 @@ export default function ManageEditionsPage() {
                       {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                     </select>
                   </div>
-                  <div><label className="block text-xs font-medium mb-1">Rekrutacja od</label><Input type="datetime-local" value={editionForm.recruitment_start_date} onChange={e => setEditionForm(p => ({ ...p, recruitment_start_date: e.target.value }))} /></div>
-                  <div><label className="block text-xs font-medium mb-1">Rekrutacja do</label><Input type="datetime-local" value={editionForm.recruitment_end_date} onChange={e => setEditionForm(p => ({ ...p, recruitment_end_date: e.target.value }))} /></div>
-                  <div className="md:col-span-2"><label className="block text-xs font-medium mb-1">URL sylabusa</label><Input value={editionForm.syllabus_url} onChange={e => setEditionForm(p => ({ ...p, syllabus_url: e.target.value }))} placeholder="https://..." /></div>
+                  <div><label className="block text-xs font-medium mb-1">Rekrutacja od</label><Input type="datetime-local" value={editionForm.recruitment_start_date} onChange={e => setEditionForm(p => ({ ...p, recruitment_start_date: e.target.value }))} error={fieldErrors.recruitment_start_date} /></div>
+                  <div><label className="block text-xs font-medium mb-1">Rekrutacja do</label><Input type="datetime-local" value={editionForm.recruitment_end_date} onChange={e => setEditionForm(p => ({ ...p, recruitment_end_date: e.target.value }))} error={fieldErrors.recruitment_end_date} /></div>
+                  <div className="md:col-span-2"><label className="block text-xs font-medium mb-1">URL sylabusa</label><Input value={editionForm.syllabus_url} onChange={e => setEditionForm(p => ({ ...p, syllabus_url: e.target.value }))} placeholder="https://..." error={fieldErrors.syllabus_url} /></div>
                   <div className="md:col-span-2">
                     <Button type="submit" disabled={saving}>{saving ? 'Zapisywanie...' : (selectedEdition ? 'Aktualizuj edycję' : 'Utwórz edycję')}</Button>
                   </div>

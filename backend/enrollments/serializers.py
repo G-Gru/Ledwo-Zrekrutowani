@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from files.models import File
+from payments.serializers import FeeSerializer
 from studies.models import StudiesEdition, StudiesDocument
 from studies.serializers import StudiesEditionListSerializer, StudiesDocumentSerializer
 from .models import Enrollment, SubmittedDocument, FormData, Address, DocumentHistory
@@ -250,9 +251,10 @@ class AdminFormDataSerializer(serializers.ModelSerializer):
 class AdminEnrollmentDetailSerializer(AdminEnrollmentSerializer):
     form_data = serializers.SerializerMethodField()
     documents = serializers.SerializerMethodField()
+    payments = FeeSerializer(source='fees', many=True, read_only=True)
 
     class Meta(AdminEnrollmentSerializer.Meta):
-        fields = AdminEnrollmentSerializer.Meta.fields + ['form_data', 'documents']
+        fields = AdminEnrollmentSerializer.Meta.fields + ['form_data', 'documents', 'payments']
 
     def get_form_data(self, obj):
         try:

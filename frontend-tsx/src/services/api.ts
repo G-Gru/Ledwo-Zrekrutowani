@@ -3,7 +3,7 @@ import { getAccessToken, isTokenExpired, refreshAccessToken } from './auth'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-type ApiResult<T> = { data: T; error: false } | { data: null; error: true; msg: string }
+type ApiResult<T> = { data: T; error: false } | { data: null; error: true; msg: string; fieldErrors?: Record<string, string[]> }
 
 async function request<T>(
   endpoint: string,
@@ -32,11 +32,20 @@ async function request<T>(
 
     if (!res.ok) {
       let msg = `HTTP ${res.status}`
+      let fieldErrors: Record<string, string[]> | undefined
       try {
         const err = await res.json() as Record<string, unknown>
-        msg = (err.detail as string) || Object.values(err).flat().join(', ') || msg
+        if (err.detail) {
+          msg = err.detail as string
+        } else {
+          fieldErrors = {}
+          for (const [key, val] of Object.entries(err)) {
+            fieldErrors[key] = Array.isArray(val) ? val.map(String) : [String(val)]
+          }
+          msg = Object.values(fieldErrors).flat().join(', ')
+        }
       } catch {}
-      return { data: null, error: true, msg }
+      return { data: null, error: true, msg, fieldErrors }
     }
 
     if (res.status === 204) return { data: null as unknown as T, error: false }
@@ -258,6 +267,16 @@ export interface AdminUser {
   work_phones?: { phone: string }[]
 }
 
+export interface StaffAssignment {
+  id: number
+  user_id: number
+  role: string
+  edition_id: number
+  edition_academic_year?: string
+  edition_status: string
+  studies_name: string
+}
+
 // ── public ────────────────────────────────────────────────────────────────────
 
 export const api = {
@@ -395,6 +414,7 @@ export const api = {
   // Admin — users
   getAdminUsers: () => request<AdminUser[]>('/api/admin/users/', 'GET', undefined, tok()),
   getAdminEmployeesList: () => request<AdminUser[]>('/api/admin/users/employees/', 'GET', undefined, tok()),
+  getAllStaffAssignments: () => request<StaffAssignment[]>('/api/admin/studies/editions/staff/all/', 'GET', undefined, tok()),
   createAdminEmployee: (data: {
     first_name: string; last_name: string; email: string; password: string
     role?: string; work_phones?: string[]; academic_title?: string; phone?: string

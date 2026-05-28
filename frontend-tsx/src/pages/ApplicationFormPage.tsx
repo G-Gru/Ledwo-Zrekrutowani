@@ -328,7 +328,15 @@ export default function ApplicationFormPage() {
             {alreadyEnrolled && (
               <Alert variant="warning" className="mb-4">
                 <strong>Już uczestniczysz w rekrutacji do tego kierunku.</strong>
-                {blockingStatus && <span className="ml-1">Status: {blockingStatus}</span>}
+                {blockingStatus && (
+                  <span className="ml-1">Status: <strong>{{
+                    CANDIDATE: 'Kandydat',
+                    STUDENT: 'Student',
+                    RESERVE: 'Kandydat rezerwowy',
+                    REJECTED: 'Odrzucony',
+                    EXPELLED: 'Wydalony',
+                  }[blockingStatus] ?? blockingStatus}</strong></span>
+                )}
               </Alert>
             )}
 

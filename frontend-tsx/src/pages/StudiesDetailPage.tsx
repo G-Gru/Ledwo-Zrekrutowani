@@ -186,7 +186,10 @@ export default function StudiesDetailPage() {
             </p>
           ) : !canApply ? (
             <p className="text-[var(--color-text-muted)] border border-[var(--color-surface-high)] rounded-lg px-5 py-3 text-sm">
-              Masz już złożony wniosek dla tej edycji.{blockingStatus ? ` Status: ${blockingStatus}.` : ''}
+              {(() => {
+                const label: Record<string, string> = { CANDIDATE: 'Kandydat', STUDENT: 'Student', RESERVE: 'Kandydat rezerwowy', REJECTED: 'Odrzucony', EXPELLED: 'Wydalony' }
+                return `Masz już złożony wniosek dla tej edycji.${blockingStatus ? ` Status: ${label[blockingStatus] ?? blockingStatus}.` : ''}`
+              })()}
             </p>
           ) : (
             <Button

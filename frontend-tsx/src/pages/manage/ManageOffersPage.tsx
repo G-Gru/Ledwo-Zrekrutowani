@@ -7,6 +7,7 @@ import { Alert } from '@/components/ui/Alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { Plus, Pencil, Trash2, X } from 'lucide-react'
+import { parseFieldErrors } from '@/utils/validation'
 
 const emptyForm = { name: '', terms_count: '', description: '', organizational_unit: '' }
 
@@ -17,6 +18,7 @@ export default function ManageOffersPage() {
   const [form, setForm] = useState<typeof emptyForm>(emptyForm)
   const [showForm, setShowForm] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
 
   async function fetchStudies() {
@@ -31,25 +33,37 @@ export default function ManageOffersPage() {
   function openNew() {
     setSelected(null)
     setForm(emptyForm)
+    setFieldErrors({})
     setShowForm(true)
   }
 
   function openEdit(study: AdminStudy) {
     setSelected(study)
     setForm({ name: study.name, terms_count: String(study.terms_count), description: study.description || '', organizational_unit: study.organizational_unit || '' })
+    setFieldErrors({})
     setShowForm(true)
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    setFieldErrors({})
     setSaving(true)
     try {
       const payload: Partial<AdminStudy> = { name: form.name, terms_count: Number(form.terms_count), description: form.description, organizational_unit: form.organizational_unit }
       const res = selected
         ? await api.updateAdminStudy(selected.id, payload)
         : await api.createAdminStudy(payload)
-      if (res.error) { setError(res.msg); return }
+      if (res.error) {
+        if (res.fieldErrors) {
+          const translated = parseFieldErrors(res.fieldErrors)
+          setFieldErrors(translated)
+          if (translated.non_field_errors) setError(translated.non_field_errors)
+        } else {
+          setError(res.msg)
+        }
+        return
+      }
       await fetchStudies()
       setShowForm(false)
       setSelected(null)
@@ -84,19 +98,19 @@ export default function ManageOffersPage() {
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-xs font-medium mb-1">Nazwa kierunku *</label>
-                <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
+                <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required error={fieldErrors.name} />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1">Liczba semestrów *</label>
-                <Input type="number" value={form.terms_count} onChange={e => setForm(p => ({ ...p, terms_count: e.target.value }))} required min={1} />
+                <Input type="number" value={form.terms_count} onChange={e => setForm(p => ({ ...p, terms_count: e.target.value }))} required min={1} error={fieldErrors.terms_count} />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1">Jednostka organizacyjna</label>
-                <Input value={form.organizational_unit} onChange={e => setForm(p => ({ ...p, organizational_unit: e.target.value }))} placeholder="np. INF" />
+                <Input value={form.organizational_unit} onChange={e => setForm(p => ({ ...p, organizational_unit: e.target.value }))} placeholder="np. INF" error={fieldErrors.organizational_unit} />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs font-medium mb-1">Opis</label>
-                <Input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
+                <Input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} error={fieldErrors.description} />
               </div>
               <div className="md:col-span-2 flex gap-2">
                 <Button type="submit" disabled={saving}>{saving ? 'Zapisywanie...' : (selected ? 'Aktualizuj kierunek' : 'Stwórz kierunek')}</Button>

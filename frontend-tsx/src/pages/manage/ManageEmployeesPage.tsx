@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { api, type AdminUser } from '@/services/api'
+import { api, type AdminUser, type StaffAssignment } from '@/services/api'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Alert } from '@/components/ui/Alert'
@@ -45,6 +45,7 @@ const emptyForm = {
 export default function ManageEmployeesPage() {
   usePageTitle('Zarządzaj Pracownikami')
   const [employees, setEmployees] = useState<AdminUser[]>([])
+  const [assignments, setAssignments] = useState<StaffAssignment[]>([])
   const [form, setForm] = useState<typeof emptyForm>(emptyForm)
   const [phones, setPhones] = useState<string[]>([''])
   const [autoEmail, setAutoEmail] = useState(true)
@@ -54,9 +55,13 @@ export default function ManageEmployeesPage() {
 
   async function fetchEmployees() {
     setLoading(true)
-    const res = await api.getAdminEmployeesList()
-    if (!res.error) setEmployees(res.data)
-    else setError(res.msg)
+    const [empRes, assignRes] = await Promise.all([
+      api.getAdminEmployeesList(),
+      api.getAllStaffAssignments(),
+    ])
+    if (!empRes.error) setEmployees(empRes.data)
+    else setError(empRes.msg)
+    if (!assignRes.error) setAssignments(assignRes.data)
     setLoading(false)
   }
 
@@ -226,34 +231,50 @@ export default function ManageEmployeesPage() {
                 <TableHead>Rola</TableHead>
                 <TableHead>Tytuł</TableHead>
                 <TableHead>Telefony</TableHead>
+                <TableHead>Przypisane edycje</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {employees.length === 0 && !loading && (
-                <TableRow><TableCell colSpan={5} className="text-center text-[var(--color-text-muted)]">Brak pracowników do wyświetlenia.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-[var(--color-text-muted)]">Brak pracowników do wyświetlenia.</TableCell></TableRow>
               )}
-              {employees.map(emp => (
-                <TableRow key={emp.id}>
-                  <TableCell className="font-medium">
-                    {emp.academic_title && <span className="text-[var(--color-text-muted)] mr-1">{emp.academic_title}</span>}
-                    {emp.first_name} {emp.last_name}
-                  </TableCell>
-                  <TableCell>{emp.email || '-'}</TableCell>
-                  <TableCell>
-                    {emp.role ? (
-                      <Badge variant={ROLE_VARIANT[emp.role] as 'info' | 'warning' | 'success' | 'danger'}>
-                        {ROLE_LABEL[emp.role] || emp.role}
-                      </Badge>
-                    ) : <span className="text-[var(--color-text-muted)] text-xs">Brak roli</span>}
-                  </TableCell>
-                  <TableCell>{emp.academic_title || '-'}</TableCell>
-                  <TableCell>
-                    {Array.isArray(emp.work_phones) && emp.work_phones.length > 0
-                      ? emp.work_phones.map(w => w.phone).join(', ')
-                      : '-'}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {employees.map(emp => {
+                const empAssignments = assignments.filter(a => a.user_id === emp.id)
+                return (
+                  <TableRow key={emp.id}>
+                    <TableCell className="font-medium">
+                      {emp.academic_title && <span className="text-[var(--color-text-muted)] mr-1">{emp.academic_title}</span>}
+                      {emp.first_name} {emp.last_name}
+                    </TableCell>
+                    <TableCell>{emp.email || '-'}</TableCell>
+                    <TableCell>
+                      {emp.role ? (
+                        <Badge variant={ROLE_VARIANT[emp.role] as 'info' | 'warning' | 'success' | 'danger'}>
+                          {ROLE_LABEL[emp.role] || emp.role}
+                        </Badge>
+                      ) : <span className="text-[var(--color-text-muted)] text-xs">Brak roli</span>}
+                    </TableCell>
+                    <TableCell>{emp.academic_title || '-'}</TableCell>
+                    <TableCell>
+                      {Array.isArray(emp.work_phones) && emp.work_phones.length > 0
+                        ? emp.work_phones.map(w => w.phone).join(', ')
+                        : '-'}
+                    </TableCell>
+                    <TableCell>
+                      {empAssignments.length === 0
+                        ? <span className="text-text-muted text-xs">Brak</span>
+                        : <div className="flex flex-col gap-1">
+                            {empAssignments.map(a => (
+                              <span key={a.id} className="text-xs leading-tight">
+                                {a.studies_name}{a.edition_academic_year ? ` (${a.edition_academic_year})` : ''}
+                              </span>
+                            ))}
+                          </div>
+                      }
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </CardContent>

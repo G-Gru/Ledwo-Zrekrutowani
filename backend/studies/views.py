@@ -7,7 +7,7 @@ from studies import services
 from studies.models import Studies, StudiesEditionStaff, StudiesDocument
 from studies.serializers import StudiesSerializer, StudiesEditionDetailsSerializer, StudiesEditionCreateSerializer, \
     StudiesEditionListSerializer, StudiesEditionStaffWriteSerializer, \
-    StudiesEditionStaffReadSerializer, StudiesDocumentSerializer
+    StudiesEditionStaffReadSerializer, StudiesDocumentSerializer, StaffAssignmentSerializer
 from users.permissions import IsDirectorOrAdministrativeCoordinator, \
     IsDirectorOrCoordinator, IsEmployee
 
@@ -180,6 +180,16 @@ class StudiesDocumentsDestroyAdminAPIView(generics.DestroyAPIView):
         return (StudiesDocument.objects
                 .filter(studies_edition_id=pk)
                 .filter(studies_edition__in=user_editions))
+
+
+class AllStaffAssignmentsAdminAPIView(generics.ListAPIView):
+    serializer_class = StaffAssignmentSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return (StudiesEditionStaff.objects
+                .select_related('user', 'studies_edition', 'studies_edition__studies')
+                .order_by('user_id', 'studies_edition__academic_year'))
 
 
 class CancelEditionAPIView(APIView):
