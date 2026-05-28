@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { getAccessToken } from '@/services/auth'
 import { BASE_URL } from '@/api/client'
 import { Badge } from '@/components/ui/Badge'
@@ -60,6 +61,7 @@ const STATUS_OPTIONS = [
 type ActiveTab = 'payments' | 'transfers'
 
 export default function AdminFinancesPage() {
+  usePageTitle('Finanse')
   const [fees, setFees] = useState<Fee[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [dashboard, setDashboard] = useState<Dashboard | null>(null)

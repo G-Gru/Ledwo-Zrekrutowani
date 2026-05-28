@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
 const FAQ_DATA = [
@@ -21,6 +22,7 @@ const FAQ_DATA = [
 ]
 
 export default function FAQPage() {
+  usePageTitle('FAQ')
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   return (

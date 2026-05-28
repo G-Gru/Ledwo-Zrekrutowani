@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { api } from '@/services/api'
 import { Alert } from '@/components/ui/Alert'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -35,6 +36,7 @@ function StatCard({ icon: Icon, label, value, color = 'text-[var(--color-text)]'
 }
 
 export default function AdminDashboardPage() {
+  usePageTitle('Panel Administracyjny')
   const [rows, setRows] = useState<StatRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useNavigate, Link } from 'react-router-dom'
 import { register } from '@/services/auth'
 import { Button } from '@/components/ui/Button'
@@ -11,6 +12,7 @@ interface FormData {
 }
 
 export default function RegisterPage() {
+  usePageTitle('Rejestracja')
   const navigate = useNavigate()
   const [form, setForm] = useState<FormData>({
     first_name: '', last_name: '', email: '', phone: '', password: '', confirmPassword: '',

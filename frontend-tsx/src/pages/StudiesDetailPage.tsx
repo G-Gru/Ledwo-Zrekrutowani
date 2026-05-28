@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api, type StudiesEdition, type StaffMember } from '@/services/api'
 import { useAuth } from '@/context/AuthContext'
@@ -28,6 +29,7 @@ function statusBadge(status: string) {
 }
 
 export default function StudiesDetailPage() {
+  usePageTitle('Szczegóły Studiów')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()

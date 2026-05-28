@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { api, type AdminEnrollment } from '@/services/api'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -20,6 +21,7 @@ const TEMPLATES = {
 }
 
 export default function AdminNotificationsPage() {
+  usePageTitle('Powiadomienia')
   const [enrollments, setEnrollments] = useState<AdminEnrollment[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, type EditionDocument, type UserAddress, type DocItem } from '@/services/api'
 import { useAuth } from '@/context/AuthContext'
@@ -53,6 +54,7 @@ function FieldErr({ msg }: { msg?: string }) {
 }
 
 export default function ApplicationFormPage() {
+  usePageTitle('Formularz Aplikacji')
   const { user } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()

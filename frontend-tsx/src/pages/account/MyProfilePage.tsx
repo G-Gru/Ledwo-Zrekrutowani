@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useAuth } from '@/context/AuthContext'
 import { changePassword } from '@/services/auth'
 import { Button } from '@/components/ui/Button'
@@ -18,6 +19,7 @@ const ROLE_LABELS: Record<string, string> = {
 }
 
 export default function MyProfilePage() {
+  usePageTitle('Mój Profil')
   const { user, logout } = useAuth()
   const [showPwChange, setShowPwChange] = useState(false)
   const [oldPw, setOldPw] = useState('')

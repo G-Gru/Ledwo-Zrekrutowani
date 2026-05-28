@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { api, type AdminUser } from '@/services/api'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -42,6 +43,7 @@ const emptyForm = {
 }
 
 export default function ManageEmployeesPage() {
+  usePageTitle('Zarządzaj Pracownikami')
   const [employees, setEmployees] = useState<AdminUser[]>([])
   const [form, setForm] = useState<typeof emptyForm>(emptyForm)
   const [phones, setPhones] = useState<string[]>([''])

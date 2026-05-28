@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useNavigate } from 'react-router-dom'
 import { api, type StudiesEdition } from '@/services/api'
 import { Badge } from '@/components/ui/Badge'
@@ -26,6 +27,7 @@ function statusBadge(status: string) {
 type Filter = 'all' | 'active' | 'closed'
 
 export default function StudiesPage() {
+  usePageTitle('Strona Główna')
   const navigate = useNavigate()
   const [editions, setEditions] = useState<StudiesEdition[]>([])
   const [loading, setLoading] = useState(true)

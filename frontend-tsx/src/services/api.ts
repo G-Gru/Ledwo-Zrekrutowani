@@ -106,8 +106,7 @@ export interface AdminEnrollment {
 }
 
 export interface AdminEnrollmentDetail extends AdminEnrollment {
-  personal: { first_name: string; second_name?: string; last_name: string; family_name?: string; pesel?: string; birth_date?: string; birth_place?: string; citizenship?: string; academic_title?: string }
-  contact: { email: string; phone?: string }
+  form_data: { first_name?: string; second_name?: string; last_name?: string; family_name?: string; pesel?: string; birth_date?: string; birth_place?: string; citizenship?: string; academic_title?: string; email?: string; phone?: string } | null
   residential_address?: Address | null
   registered_address?: Address | null
   education?: { description?: string; country?: string }

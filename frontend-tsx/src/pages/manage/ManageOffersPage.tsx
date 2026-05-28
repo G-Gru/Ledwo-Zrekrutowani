@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { api, type AdminStudy } from '@/services/api'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -10,6 +11,7 @@ import { Plus, Pencil, Trash2, X } from 'lucide-react'
 const emptyForm = { name: '', terms_count: '', description: '', organizational_unit: '' }
 
 export default function ManageOffersPage() {
+  usePageTitle('Zarządzaj Ofertami')
   const [studies, setStudies] = useState<AdminStudy[]>([])
   const [selected, setSelected] = useState<AdminStudy | null>(null)
   const [form, setForm] = useState<typeof emptyForm>(emptyForm)

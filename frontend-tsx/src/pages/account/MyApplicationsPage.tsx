@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { api, type Enrollment } from '@/services/api'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -33,6 +34,7 @@ function editionId(e: Enrollment) {
 }
 
 export default function MyApplicationsPage() {
+  usePageTitle('Moje Aplikacje')
   const navigate = useNavigate()
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
   const [loading, setLoading] = useState(true)

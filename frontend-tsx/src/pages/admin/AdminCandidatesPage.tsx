@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { api, type AdminEnrollment, type AdminEnrollmentDetail } from '@/services/api'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -41,6 +42,7 @@ function Field({ label, value }: { label: string; value?: string | null | number
 }
 
 export default function AdminCandidatesPage() {
+  usePageTitle('Kandydaci')
   const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
 
@@ -225,17 +227,17 @@ export default function AdminCandidatesPage() {
               <Card>
                 <CardHeader><CardTitle>Dane osobowe i kontaktowe</CardTitle></CardHeader>
                 <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <Field label="Imię" value={detail.personal?.first_name} />
-                  <Field label="Drugie imię" value={detail.personal?.second_name} />
-                  <Field label="Nazwisko" value={detail.personal?.last_name} />
-                  <Field label="Nazwisko rodowe" value={detail.personal?.family_name} />
-                  <Field label="Tytuł" value={detail.personal?.academic_title} />
-                  <Field label="PESEL" value={detail.personal?.pesel} />
-                  <Field label="Data urodzenia" value={fmt(detail.personal?.birth_date)} />
-                  <Field label="Miejsce urodzenia" value={detail.personal?.birth_place} />
-                  <Field label="Obywatelstwo" value={detail.personal?.citizenship} />
-                  <Field label="Email" value={detail.contact?.email} />
-                  <Field label="Telefon" value={detail.contact?.phone} />
+                  <Field label="Imię" value={detail.form_data?.first_name} />
+                  <Field label="Drugie imię" value={detail.form_data?.second_name} />
+                  <Field label="Nazwisko" value={detail.form_data?.last_name} />
+                  <Field label="Nazwisko rodowe" value={detail.form_data?.family_name} />
+                  <Field label="Tytuł" value={detail.form_data?.academic_title} />
+                  <Field label="PESEL" value={detail.form_data?.pesel} />
+                  <Field label="Data urodzenia" value={fmt(detail.form_data?.birth_date)} />
+                  <Field label="Miejsce urodzenia" value={detail.form_data?.birth_place} />
+                  <Field label="Obywatelstwo" value={detail.form_data?.citizenship} />
+                  <Field label="Email" value={detail.form_data?.email} />
+                  <Field label="Telefon" value={detail.form_data?.phone} />
                 </CardContent>
               </Card>
             )}
@@ -253,9 +255,6 @@ export default function AdminCandidatesPage() {
 
                 {!['STUDENT', 'REJECTED', 'EXPELLED'].includes(detail.status?.toUpperCase()) && (
                   <div className="flex gap-3">
-                    <Button onClick={() => { setDecisionNote(''); setDecisionModal('accept') }}>
-                      <CheckCircle2 size={15} /> Zaakceptuj (→ Student)
-                    </Button>
                     <Button variant="danger" onClick={() => { setDecisionNote(''); setDecisionModal('reject') }}>
                       <XCircle size={15} /> Odrzuć wniosek
                     </Button>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useSearchParams } from 'react-router-dom'
 import { api, type DocItem, type Enrollment } from '@/services/api'
 import { Badge } from '@/components/ui/Badge'
@@ -30,6 +31,7 @@ function docStatusIcon(status: string) {
 }
 
 export default function MyDocumentsPage() {
+  usePageTitle('Moje Dokumenty')
   const [searchParams] = useSearchParams()
   const enrollmentIdFromUrl = searchParams.get('enrollment_id')
 

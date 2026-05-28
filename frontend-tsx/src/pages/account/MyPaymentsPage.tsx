@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { api, type Payment } from '@/services/api'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -23,6 +24,7 @@ function payBadge(status: string) {
 }
 
 export default function MyPaymentsPage() {
+  usePageTitle('Moje Płatności')
   const { user } = useAuth()
   const [upcoming, setUpcoming] = useState<Payment[]>([])
   const [history, setHistory] = useState<Payment[]>([])

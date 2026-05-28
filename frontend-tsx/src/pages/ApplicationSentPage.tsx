@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 export default function ApplicationSentPage() {
+  usePageTitle('Aplikacja Wysłana')
   return (
     <div className="min-h-[calc(100vh-56px)] flex items-center justify-center bg-[var(--color-surface-low)] px-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-sm border border-[var(--color-surface-high)] p-10 text-center flex flex-col items-center gap-4">

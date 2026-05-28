@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { api } from '@/services/api'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
@@ -94,6 +95,7 @@ function FilterSelect({
 const ALL_KEYS = COLUMNS.map((c) => c.key)
 
 export default function AdminExportPage() {
+  usePageTitle('Eksport')
   const [rows, setRows] = useState<ExportRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')

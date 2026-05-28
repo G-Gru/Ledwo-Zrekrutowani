@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { api, type AdminStudy, type AdminEdition, type StaffMember, type AdminUser } from '@/services/api'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -24,6 +25,7 @@ const emptyEditionForm = {
 }
 
 export default function ManageEditionsPage() {
+  usePageTitle('Zarządzaj Edycjami')
   const [studies, setStudies] = useState<AdminStudy[]>([])
   const [editions, setEditions] = useState<AdminEdition[]>([])
   const [staff, setStaff] = useState<StaffMember[]>([])

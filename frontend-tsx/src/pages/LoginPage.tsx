@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { login } from '@/services/auth'
 import { useAuth } from '@/context/AuthContext'
@@ -7,6 +8,7 @@ import { Input } from '@/components/ui/Input'
 import { Alert } from '@/components/ui/Alert'
 
 export default function LoginPage() {
+  usePageTitle('Logowanie')
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { refreshUser } = useAuth()
