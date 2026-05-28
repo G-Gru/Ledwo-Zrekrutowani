@@ -106,7 +106,7 @@ export interface AdminEnrollment {
 }
 
 export interface AdminEnrollmentDetail extends AdminEnrollment {
-  form_data: { first_name?: string; second_name?: string; last_name?: string; family_name?: string; pesel?: string; birth_date?: string; birth_place?: string; citizenship?: string; academic_title?: string; email?: string; phone?: string } | null
+  form_data: { first_name?: string; second_name?: string; last_name?: string; family_name?: string; pesel?: string; birth_date?: string; birth_place?: string; citizenship?: string; academic_title?: string; email?: string; phone?: string; education_university?: string; education_year?: string; education_location?: string } | null
   residential_address?: Address | null
   registered_address?: Address | null
   education?: { description?: string; country?: string }
@@ -295,6 +295,8 @@ export const api = {
     request<unknown>(`/api/admin/enrollments/${id}/accept/`, 'POST', { status_note: note }, tok()),
   rejectEnrollment: (id: number, note = '') =>
     request<unknown>(`/api/admin/enrollments/${id}/reject/`, 'POST', { status_note: note }, tok()),
+  saveEnrollmentNote: (id: number, note: string) =>
+    request<{ status_note: string }>(`/api/admin/enrollments/${id}/save-note/`, 'POST', { note }, tok()),
 
   // Admin — documents
   acceptDocument: (enrollmentId: number, docId: number, note = '') =>

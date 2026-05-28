@@ -253,6 +253,14 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
             "message": f"Przypomnienie o płatności zostało wysłane do: {enrollment.user.email}"
         }, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['post'], url_path='save-note')
+    def save_note(self, request, pk=None):
+        enrollment = self.get_object()
+        note = request.data.get('note', '')
+        enrollment.status_note = note
+        enrollment.save(update_fields=['status_note'])
+        return Response({'status_note': enrollment.status_note})
+
     @action(detail=True, methods=['get'], url_path='details')
     def get_details(self, request, pk=None):
         enrollment = self.get_object()

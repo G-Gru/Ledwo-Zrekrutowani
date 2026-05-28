@@ -58,6 +58,9 @@ export default function AdminCandidatesPage() {
 
   const [decisionNote, setDecisionNote] = useState('')
   const [decisionModal, setDecisionModal] = useState<'accept' | 'reject' | null>(null)
+  const [noteText, setNoteText] = useState('')
+  const [noteSaving, setNoteSaving] = useState(false)
+  const [noteMsg, setNoteMsg] = useState('')
   const [docModal, setDocModal] = useState<{ id: number; action: 'accept' | 'reject' } | null>(null)
   const [docNote, setDocNote] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
@@ -79,8 +82,9 @@ export default function AdminCandidatesPage() {
     navigate(`/admin/candidates/${selectedId}`, { replace: true })
     setDetailLoading(true)
     setDetail(null)
+    setNoteMsg('')
     api.getAdminEnrollmentDetail(selectedId).then((res) => {
-      if (!res.error) setDetail(res.data)
+      if (!res.error) { setDetail(res.data); setNoteText(res.data.status_note ?? '') }
       else setError('Nie udało się pobrać szczegółów.')
       setDetailLoading(false)
     })
@@ -110,6 +114,17 @@ export default function AdminCandidatesPage() {
       if (!fresh.error) setDetail(fresh.data)
     } else setActionMsg(res.msg)
     setActionLoading(false)
+  }
+
+  const doSaveNote = async () => {
+    if (!selectedId) return
+    setNoteSaving(true); setNoteMsg('')
+    const res = await api.saveEnrollmentNote(selectedId, noteText)
+    if (!res.error) {
+      setDetail((prev) => prev ? { ...prev, status_note: res.data.status_note } : prev)
+      setNoteMsg('Notatka zapisana.')
+    } else setNoteMsg('Błąd zapisu notatki.')
+    setNoteSaving(false)
   }
 
   const doDocAction = async () => {
@@ -249,7 +264,61 @@ export default function AdminCandidatesPage() {
                   <CardContent className="grid grid-cols-2 gap-4">
                     <Field label="Status" value={STATUS_LABELS[detail.status?.toUpperCase()] ?? detail.status} />
                     <Field label="Data zapisu" value={fmt(detail.enrollment_date)} />
-                    <Field label="Notatka" value={detail.status_note} />
+                    {detail.status_note && <Field label="Notatka" value={detail.status_note} />}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader><CardTitle>Wymagania do przyjęcia</CardTitle></CardHeader>
+                  <CardContent className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      {detail.is_fully_paid
+                        ? <CheckCircle2 size={16} className="text-success shrink-0" />
+                        : <XCircle size={16} className="text-error shrink-0" />}
+                      <span>Opłaty — {detail.is_fully_paid ? 'wszystkie opłacone' : 'brakujące płatności'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      {!detail.missing_documents
+                        ? <CheckCircle2 size={16} className="text-success shrink-0" />
+                        : <XCircle size={16} className="text-error shrink-0" />}
+                      <span>Dokumenty — {!detail.missing_documents ? 'wszystkie dostarczone i zaakceptowane' : 'brakujące lub odrzucone dokumenty'}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {(detail.form_data?.education_university || detail.form_data?.education_year || detail.form_data?.education_location) && (
+                  <Card>
+                    <CardHeader><CardTitle>Wykształcenie</CardTitle></CardHeader>
+                    <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      <Field label="Uczelnia" value={detail.form_data?.education_university} />
+                      <Field label="Rok ukończenia" value={detail.form_data?.education_year} />
+                      <Field label="Miejscowość" value={detail.form_data?.education_location} />
+                    </CardContent>
+                  </Card>
+                )}
+
+                <Card>
+                  <CardHeader><CardTitle>Notatka administratora</CardTitle></CardHeader>
+                  <CardContent className="flex flex-col gap-3">
+                    <textarea
+                      value={noteText}
+                      onChange={(e) => setNoteText(e.target.value)}
+                      rows={3}
+                      maxLength={200}
+                      placeholder="Wpisz notatkę wewnętrzną (max 200 znaków)..."
+                      className="w-full rounded-lg border border-surface-high bg-surface-low px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <div className="flex items-center gap-3">
+                      <Button size="sm" onClick={doSaveNote} disabled={noteSaving}>
+                        {noteSaving ? 'Zapisywanie...' : 'Zapisz notatkę'}
+                      </Button>
+                      {noteMsg && (
+                        <span className={`text-xs ${noteMsg.startsWith('Błąd') ? 'text-error' : 'text-success'}`}>
+                          {noteMsg}
+                        </span>
+                      )}
+                      <span className="ml-auto text-xs text-text-muted">{noteText.length}/200</span>
+                    </div>
                   </CardContent>
                 </Card>
 
