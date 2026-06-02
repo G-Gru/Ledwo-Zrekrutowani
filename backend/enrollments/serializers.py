@@ -10,6 +10,7 @@ from .validators import is_valid_pesel, pesel_to_birthdate, is_valid_phone, is_v
 
 class AdminEnrollmentSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
     is_fully_paid = serializers.SerializerMethodField()
     missing_documents = serializers.SerializerMethodField()
     system_status = serializers.SerializerMethodField()
@@ -19,13 +20,16 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enrollment
         fields = [
-            'id', 'student_name', 'status', 'status_note', 'enrollment_date',
+            'id', 'student_name', 'email', 'status', 'status_note', 'enrollment_date',
             'is_fully_paid', 'missing_documents', 'system_status',
             'studies_name', 'edition_name'
         ]
 
     def get_student_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}"
+
+    def get_email(self, obj):
+        return obj.user.email
 
     def get_is_fully_paid(self, obj):
         # Weryfikacja opłat

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useNavigate, Link } from 'react-router-dom'
 import { register } from '@/services/auth'
@@ -52,19 +52,19 @@ export default function RegisterPage() {
   }
 
   const section = (title: string) => (
-    <div className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] border-b border-[var(--color-surface-high)] pb-1 mt-6 mb-3">
+    <div className="text-xs font-semibold uppercase tracking-wider text-text-muted border-b border-surface-high pb-1 mt-6 mb-3">
       {title}
     </div>
   )
 
   return (
-    <div className="min-h-[calc(100vh-56px)] flex items-center justify-center bg-[var(--color-surface-low)] px-4 py-8">
-      <div className="w-full max-w-xl bg-white rounded-xl shadow-sm border border-[var(--color-surface-high)] p-8">
+    <div className="min-h-[calc(100vh-56px)] flex items-center justify-center bg-surface-low px-4 py-8">
+      <div className="w-full max-w-xl bg-white rounded-xl shadow-sm border border-surface-high p-8">
         <div className="mb-4 text-center">
           <img src="/assets/logo.png" alt="AGH" className="h-12 mx-auto mb-3"
             onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} />
           <h1 className="text-2xl font-bold">Rejestracja</h1>
-          <p className="text-sm text-[var(--color-text-muted)] mt-1">Utwórz konto w systemie rekrutacji AGH</p>
+          <p className="text-sm text-text-muted mt-1">Utwórz konto w systemie rekrutacji AGH</p>
         </div>
 
         <form onSubmit={onSubmit}>
@@ -97,23 +97,23 @@ export default function RegisterPage() {
             <label className="flex gap-3 cursor-pointer">
               <input type="checkbox" name="infoClause" checked={consents.infoClause} onChange={handleChange}
                 className="mt-0.5 shrink-0" />
-              <span className="text-[var(--color-text)]">
-                <span className="text-[var(--color-error)]">* </span>
+              <span className="text-text">
+                <span className="text-error">* </span>
                 Potwierdzam, że zapoznałem(am) się z treścią klauzuli informacyjnej i przyjmuję do wiadomości informacje w niej zawarte.
               </span>
             </label>
             <label className="flex gap-3 cursor-pointer">
               <input type="checkbox" name="gdpr" checked={consents.gdpr} onChange={handleChange}
                 className="mt-0.5 shrink-0" />
-              <span className="text-[var(--color-text)]">
-                <span className="text-[var(--color-error)]">* </span>
+              <span className="text-text">
+                <span className="text-error">* </span>
                 Wyrażam zgodę na przetwarzanie moich danych osobowych w ramach procesu rekrutacji zgodnie z RODO.
               </span>
             </label>
             <label className="flex gap-3 cursor-pointer">
               <input type="checkbox" name="updates" checked={consents.updates} onChange={handleChange}
                 className="mt-0.5 shrink-0" />
-              <span className="text-[var(--color-text-muted)]">
+              <span className="text-text-muted">
                 Chcę otrzymywać wiadomości o szkoleniach i studiach podyplomowych AGH (opcjonalne).
               </span>
             </label>
@@ -126,9 +126,9 @@ export default function RegisterPage() {
           </Button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-[var(--color-text-muted)]">
+        <p className="mt-4 text-center text-sm text-text-muted">
           Masz już konto?{' '}
-          <Link to="/login" className="font-semibold text-[var(--color-primary)] hover:underline">
+          <Link to="/login" className="font-semibold text-primary hover:underline">
             Zaloguj się
           </Link>
         </p>

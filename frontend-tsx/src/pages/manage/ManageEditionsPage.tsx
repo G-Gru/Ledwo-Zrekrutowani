@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { api, type AdminStudy, type AdminEdition, type StaffMember, type AdminUser } from '@/services/api'
 import { Button } from '@/components/ui/Button'
@@ -189,7 +189,7 @@ export default function ManageEditionsPage() {
             {studies.length === 0 && <p className="p-4 text-sm text-text-muted">Brak kierunków</p>}
             {studies.map(study => (
               <button key={study.id} onClick={() => { setSelectedStudy(study); setEditMode(false); setSelectedEdition(null) }}
-                className={`w-full text-left px-4 py-3 text-sm border-b border-outline flex items-center justify-between transition-colors ${selectedStudy?.id === study.id ? 'bg-primary-container' : 'hover:bg-surface-low'}`}>
+                className={`w-full text-left px-4 py-3 text-sm border-b border-surface-high flex items-center justify-between transition-colors ${selectedStudy?.id === study.id ? 'bg-primary-container' : 'hover:bg-surface-low'}`}>
                 <span className="font-medium">{study.name}</span>
                 <ChevronRight size={14} className="text-text-muted" />
               </button>
@@ -255,7 +255,7 @@ export default function ManageEditionsPage() {
                     <div className="md:col-span-2">
                       <label className="block text-xs font-medium mb-1">Kierunek studiów *</label>
                       <select value={editionForm.studies_id} onChange={e => setEditionForm(p => ({ ...p, studies_id: e.target.value }))} required
-                        className={`w-full border rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 ${fieldErrors.studies_id ? 'border-error focus:ring-error' : 'border-outline focus:ring-[var(--color-primary)]'}`}>
+                        className={`w-full border rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 ${fieldErrors.studies_id ? 'border-error focus:ring-error' : 'border-surface-high focus:ring-primary'}`}>
                         <option value="">Wybierz kierunek...</option>
                         {studies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
@@ -270,7 +270,7 @@ export default function ManageEditionsPage() {
                   <div>
                     <label className="block text-xs font-medium mb-1">Status</label>
                     <select value={editionForm.status} onChange={e => setEditionForm(p => ({ ...p, status: e.target.value }))}
-                      className="w-full border border-outline rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+                      className="w-full border border-surface-high rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary">
                       {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                     </select>
                   </div>
@@ -303,7 +303,7 @@ export default function ManageEditionsPage() {
                             <TableCell>{ROLE_OPTIONS.find(r => r.value === s.role)?.label || s.role}</TableCell>
                             <TableCell>{s.user.email}</TableCell>
                             <TableCell>
-                              <button onClick={() => handleRemoveStaff(s)} className="text-[var(--color-error)] hover:opacity-70"><Trash2 size={14} /></button>
+                              <button onClick={() => handleRemoveStaff(s)} className="text-error hover:opacity-70"><Trash2 size={14} /></button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -312,12 +312,12 @@ export default function ManageEditionsPage() {
 
                     <form onSubmit={handleAddStaff} className="flex gap-2 mt-3 flex-wrap">
                       <select value={staffForm.user_id} onChange={e => setStaffForm(p => ({ ...p, user_id: e.target.value }))}
-                        className="border border-outline rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] flex-1 min-w-[180px]">
+                        className="border border-surface-high rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary flex-1 min-w-[180px]">
                         <option value="">Wybierz pracownika...</option>
                         {allUsers.map(u => <option key={u.id} value={u.id}>{u.first_name} {u.last_name} ({u.email})</option>)}
                       </select>
                       <select value={staffForm.role} onChange={e => setStaffForm(p => ({ ...p, role: e.target.value }))}
-                        className="border border-outline rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+                        className="border border-surface-high rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary">
                         {ROLE_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                       </select>
                       <Button type="submit" size="sm"><Plus size={14} className="mr-1" />Dodaj</Button>

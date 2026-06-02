@@ -25,19 +25,25 @@ type ColKey = (typeof COLUMNS)[number]['key']
 type ExportRow = Record<ColKey, string | number | boolean>
 
 const STATUS_LABEL: Record<string, string> = {
+  DRAFT:     'Wniosek niewysłany',
   CANDIDATE: 'Kandydat',
-  STUDENT: 'Student',
-  EXPELLED: 'Skreślony',
-  RESIGNED: 'Zrezygnował',
-  FINISHED: 'Ukończył',
+  STUDENT:   'Student',
+  RESERVE:   'Kandydat rezerwowy',
+  REJECTED:  'Odrzucony',
+  EXPELLED:  'Skreślony',
+  RESIGNED:  'Zrezygnował',
+  FINISHED:  'Ukończył',
 }
 
 const STATUS_CLASS: Record<string, string> = {
+  DRAFT:     'text-gray-400',
   CANDIDATE: 'text-blue-600',
-  STUDENT: 'text-green-600',
-  EXPELLED: 'text-red-600',
-  RESIGNED: 'text-orange-500',
-  FINISHED: 'text-gray-500',
+  STUDENT:   'text-green-600',
+  RESERVE:   'text-amber-500',
+  REJECTED:  'text-red-600',
+  EXPELLED:  'text-red-600',
+  RESIGNED:  'text-orange-500',
+  FINISHED:  'text-gray-500',
 }
 
 function CellValue({ row, col }: { row: ExportRow; col: ColKey }) {

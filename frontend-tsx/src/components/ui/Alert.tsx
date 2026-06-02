@@ -1,4 +1,4 @@
-import { cn } from '@/lib/cn'
+﻿import { cn } from '@/lib/cn'
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react'
 
 interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -8,10 +8,10 @@ interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const config = {
-  error:   { icon: AlertCircle,     bg: 'bg-[var(--color-error-container)]',   text: 'text-[var(--color-error)]',   border: 'border-red-200' },
-  success: { icon: CheckCircle2,    bg: 'bg-[var(--color-success-container)]', text: 'text-[var(--color-success)]', border: 'border-green-200' },
+  error:   { icon: AlertCircle,     bg: 'bg-error-container',   text: 'text-error',   border: 'border-red-200' },
+  success: { icon: CheckCircle2,    bg: 'bg-success-container', text: 'text-success', border: 'border-green-200' },
   warning: { icon: AlertCircle,     bg: 'bg-amber-50',                          text: 'text-amber-800',              border: 'border-amber-200' },
-  info:    { icon: Info,            bg: 'bg-[var(--color-secondary-container)]',text: 'text-[var(--color-secondary)]',border: 'border-blue-200' },
+  info:    { icon: Info,            bg: 'bg-secondary-container',text: 'text-secondary',border: 'border-blue-200' },
 }
 
 export function Alert({ variant = 'error', title, children, className, onClose, ...props }: AlertProps) {

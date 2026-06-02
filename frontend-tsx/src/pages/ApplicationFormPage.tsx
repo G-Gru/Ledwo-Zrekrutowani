@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, type EditionDocument, type UserAddress, type DocItem } from '@/services/api'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/Button'
@@ -9,8 +9,15 @@ import { Alert } from '@/components/ui/Alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { User, Mail, Home, GraduationCap, Phone, Upload, FileCheck } from 'lucide-react'
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 interface AddrFields {
-  street: string; house: string; apartment: string; city: string; country: string; postalCode: string
+  street: string
+  house: string
+  apartment: string
+  city: string
+  country: string
+  postalCode: string
 }
 
 interface FormFields {
@@ -24,7 +31,12 @@ interface FormFields {
   consents: { data: boolean; rules: boolean; rodo: boolean }
 }
 
-const emptyAddr = (): AddrFields => ({ street: '', house: '', apartment: '', city: '', country: 'Polska', postalCode: '' })
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const emptyAddr = (): AddrFields => ({
+  street: '', house: '', apartment: '', city: '', country: 'Polska', postalCode: '',
+})
+
 const emptyForm = (): FormFields => ({
   firstName: '', secondName: '', lastName: '', familyName: '', title: '',
   birthdate: '', birthplace: '', pesel: '', citizenship: 'Polska',
@@ -36,10 +48,16 @@ const emptyForm = (): FormFields => ({
 })
 
 const TITLE_OPTIONS = [
-  { value: '', label: 'Wybierz...' }, { value: 'lic', label: 'Licencjat' },
-  { value: 'inz', label: 'Inżynier' }, { value: 'mgr', label: 'Magister' },
-  { value: 'mgr_inz', label: 'Magister Inżynier' }, { value: 'dr', label: 'Doktor' },
+  { value: '', label: 'Wybierz...' },
+  { value: 'lic', label: 'Licencjat' },
+  { value: 'inz', label: 'Inżynier' },
+  { value: 'mgr', label: 'Magister' },
+  { value: 'mgr_inz', label: 'Magister Inżynier' },
+  { value: 'dr', label: 'Doktor' },
 ]
+
+
+// ─── Small UI helpers ─────────────────────────────────────────────────────────
 
 function SectionHead({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
@@ -53,12 +71,59 @@ function FieldErr({ msg }: { msg?: string }) {
   return msg ? <p className="text-error text-xs mt-1">{msg}</p> : null
 }
 
-export default function ApplicationFormPage() {
-  usePageTitle('Formularz Aplikacji')
+// ─── AddressBlock — reusable address form section ─────────────────────────────
+
+function AddressBlock({
+  label, fields, savedAddresses, selectedId, postalCodeError, onChange, onSelect,
+}: {
+  label: string
+  fields: AddrFields
+  savedAddresses: UserAddress[]
+  selectedId: number | null
+  postalCodeError?: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onSelect: (addr: UserAddress) => void
+}) {
+  return (
+    <>
+      <SectionHead icon={<Home size={14} />} label={label} />
+      {savedAddresses.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {savedAddresses.map(a => (
+            <button
+              key={a.id} type="button" onClick={() => onSelect(a)}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                selectedId === a.id
+                  ? 'bg-primary-container border-primary text-primary'
+                  : 'border-(--color-outline) hover:bg-surface-low'
+              }`}
+            >
+              {a.street} {a.house_number}, {a.city}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label className="block text-xs font-medium mb-1">Ulica *</label><Input name="street" value={fields.street} onChange={onChange} /></div>
+        <div><label className="block text-xs font-medium mb-1">Numer domu *</label><Input name="house" value={fields.house} onChange={onChange} /></div>
+        <div><label className="block text-xs font-medium mb-1">Numer mieszkania</label><Input name="apartment" value={fields.apartment} onChange={onChange} /></div>
+        <div>
+          <label className="block text-xs font-medium mb-1">Kod pocztowy *</label>
+          <Input name="postalCode" value={fields.postalCode} onChange={onChange} inputMode="numeric" maxLength={6} className={postalCodeError ? 'border-error' : ''} />
+          <FieldErr msg={postalCodeError} />
+        </div>
+        <div><label className="block text-xs font-medium mb-1">Miasto *</label><Input name="city" value={fields.city} onChange={onChange} /></div>
+        <div><label className="block text-xs font-medium mb-1">Kraj *</label><Input name="country" value={fields.country} onChange={onChange} /></div>
+      </div>
+    </>
+  )
+}
+
+// ─── useApplicationForm hook ───────────────────────────────────────────────────
+
+function useApplicationForm(editionId: string | null) {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const editionId = searchParams.get('edition_id')
 
   const [form, setForm] = useState<FormFields>(emptyForm())
   const [files, setFiles] = useState<Record<number, File | null>>({})
@@ -68,8 +133,8 @@ export default function ApplicationFormPage() {
   const [courseName, setCourseName] = useState('Nieznany kierunek')
   const [savedAddresses, setSavedAddresses] = useState<UserAddress[]>([])
   const [selectedResAddrId, setSelectedResAddrId] = useState<number | null>(null)
-  const [hasDiffCorr, setHasDiffCorr] = useState(false)
   const [selectedCorrAddrId, setSelectedCorrAddrId] = useState<number | null>(null)
+  const [hasDiffCorr, setHasDiffCorr] = useState(false)
   const [hasEmergency, setHasEmergency] = useState(false)
   const [alreadyEnrolled, setAlreadyEnrolled] = useState(false)
   const [blockingStatus, setBlockingStatus] = useState('')
@@ -81,9 +146,16 @@ export default function ApplicationFormPage() {
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({})
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (editionId) bootstrap() }, [editionId])
+  useEffect(() => { if (editionId) load() }, [editionId])
 
-  async function bootstrap() {
+  async function resolveAddrFields(addrId: number, addresses: UserAddress[]): Promise<AddrFields | null> {
+    const saved = addresses.find(a => a.id === addrId)
+    const a = saved ?? (await api.getAddressById(addrId)).data
+    if (!a) return null
+    return { street: a.street, house: a.house_number, apartment: a.flat_number || '', city: a.city, country: a.country, postalCode: a.postal_code }
+  }
+
+  async function load() {
     setLoading(true)
     try {
       const [editionRes, existingRes, prevRes, docsRes, addrRes] = await Promise.all([
@@ -94,17 +166,21 @@ export default function ApplicationFormPage() {
         api.getAddresses(),
       ])
 
+      const addresses: UserAddress[] = addrRes.error ? [] : addrRes.data
       if (!editionRes.error) setCourseName(editionRes.data.name)
-      if (!addrRes.error) setSavedAddresses(addrRes.data)
+      setSavedAddresses(addresses)
       if (!docsRes.error) setDocuments(docsRes.data.filter((d: EditionDocument) => !d.is_read_only))
 
-      let merged = emptyForm()
-      if (user) {
-        merged = { ...merged, firstName: user.first_name || '', lastName: user.last_name || '', email: user.email || '' }
-      }
-
-      const src = !existingRes.error && existingRes.data ? existingRes.data
+      const src = (!existingRes.error && existingRes.data)
+        ? existingRes.data
         : (!prevRes.error && prevRes.data ? { ...prevRes.data, enrollment: undefined } : null)
+
+      let merged: FormFields = {
+        ...emptyForm(),
+        firstName: user?.first_name || '',
+        lastName: user?.last_name || '',
+        email: user?.email || '',
+      }
 
       if (src) {
         merged = {
@@ -127,28 +203,20 @@ export default function ApplicationFormPage() {
           emergencyName: src.emergency_name || '',
           emergencyLastName: src.emergency_last_name || '',
           emergencyPhone: src.emergency_phone || '',
-          consents: merged.consents,
+          consents: emptyForm().consents,
           residenceAddress: emptyAddr(),
           correspondenceAddress: emptyAddr(),
         }
 
         if (src.emergency_name || src.emergency_last_name || src.emergency_phone) setHasEmergency(true)
 
-        const resolveAddrFields = async (addrId: number): Promise<AddrFields | null> => {
-          const saved = !addrRes.error ? addrRes.data.find((a: UserAddress) => a.id === addrId) : null
-          const a = saved || (!addrRes.error ? null : (await api.getAddressById(addrId)).data)
-          if (!a) return null
-          return { street: a.street, house: a.house_number, apartment: a.flat_number || '', city: a.city, country: a.country, postalCode: a.postal_code }
-        }
-
         if (src.residential_address) {
-          const fields = await resolveAddrFields(src.residential_address as number)
+          const fields = await resolveAddrFields(src.residential_address as number, addresses)
           if (fields) { merged.residenceAddress = fields; setSelectedResAddrId(src.residential_address as number) }
         }
-
         if (src.registered_address && src.registered_address !== src.residential_address) {
           setHasDiffCorr(true)
-          const fields = await resolveAddrFields(src.registered_address as number)
+          const fields = await resolveAddrFields(src.registered_address as number, addresses)
           if (fields) { merged.correspondenceAddress = fields; setSelectedCorrAddrId(src.registered_address as number) }
         }
 
@@ -165,7 +233,7 @@ export default function ApplicationFormPage() {
 
       const enrollRes = await api.getMyEnrollments()
       if (!enrollRes.error) {
-        const match = enrollRes.data.find(e => {
+        const match = enrollRes.data.find((e: { studies_edition: number | { id: number }; status: string }) => {
           const eid = typeof e.studies_edition === 'object' ? e.studies_edition.id : e.studies_edition
           return String(eid) === String(editionId)
         })
@@ -183,21 +251,24 @@ export default function ApplicationFormPage() {
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
-    section?: 'residenceAddress' | 'correspondenceAddress' | 'consents'
+    section?: 'residenceAddress' | 'correspondenceAddress' | 'consents',
   ) {
     const { name, type } = e.target
-    const newValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value
+    const value = type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value
     setSaved(false)
-    if (section) {
-      setForm(prev => ({ ...prev, [section]: { ...(prev[section] as object), [name]: newValue } }))
-    } else {
-      setForm(prev => ({ ...prev, [name]: newValue }))
-    }
+    setForm(prev =>
+      section
+        ? { ...prev, [section]: { ...(prev[section] as object), [name]: value } }
+        : { ...prev, [name]: value }
+    )
     if (errors[name]) setErrors(prev => { const n = { ...prev }; delete n[name]; return n })
   }
 
   function selectSavedAddress(type: 'res' | 'corr', addr: UserAddress) {
-    const fields: AddrFields = { street: addr.street, house: addr.house_number, apartment: addr.flat_number || '', city: addr.city, country: addr.country, postalCode: addr.postal_code }
+    const fields: AddrFields = {
+      street: addr.street, house: addr.house_number, apartment: addr.flat_number || '',
+      city: addr.city, country: addr.country, postalCode: addr.postal_code,
+    }
     if (type === 'res') {
       setSelectedResAddrId(addr.id!)
       setForm(prev => ({ ...prev, residenceAddress: fields, ...(!hasDiffCorr ? { correspondenceAddress: fields } : {}) }))
@@ -207,10 +278,10 @@ export default function ApplicationFormPage() {
     }
   }
 
-  function isValidPesel(pesel: string): boolean {
-    const w = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3]
-    const d = pesel.split('').map(Number)
-    return ((10 - (w.reduce((acc, wi, i) => acc + wi * d[i], 0) % 10)) % 10) === d[10]
+  function isValidPesel(pesel: string) {
+    const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3]
+    const digits = pesel.split('').map(Number)
+    return ((10 - (weights.reduce((acc, w, i) => acc + w * digits[i], 0) % 10)) % 10) === digits[10]
   }
 
   function validate(isFinal: boolean): boolean {
@@ -221,8 +292,10 @@ export default function ApplicationFormPage() {
     }
     if (form.phone && form.phone.length < 9) errs.phone = 'Numer telefonu jest za krótki.'
     if (form.educationYear && !/^\d{4}$/.test(form.educationYear)) errs.educationYear = 'Rok zakończenia jest niepoprawny.'
-    if (form.residenceAddress.postalCode && !/^\d{2}-\d{3}$/.test(form.residenceAddress.postalCode)) errs.residenceAddress_postalCode = 'Błędny kod pocztowy.'
-    if (hasDiffCorr && form.correspondenceAddress.postalCode && !/^\d{2}-\d{3}$/.test(form.correspondenceAddress.postalCode)) errs.correspondenceAddress_postalCode = 'Błędny kod pocztowy.'
+    if (form.residenceAddress.postalCode && !/^\d{2}-\d{3}$/.test(form.residenceAddress.postalCode))
+      errs.residenceAddress_postalCode = 'Błędny kod pocztowy.'
+    if (hasDiffCorr && form.correspondenceAddress.postalCode && !/^\d{2}-\d{3}$/.test(form.correspondenceAddress.postalCode))
+      errs.correspondenceAddress_postalCode = 'Błędny kod pocztowy.'
     if (isFinal) {
       if (!form.consents.data) errs.data = 'Musisz potwierdzić poprawność danych.'
       if (!form.consents.rules) errs.rules = 'Musisz zaakceptować regulamin.'
@@ -239,11 +312,14 @@ export default function ApplicationFormPage() {
     const payload: UserAddress = {
       street: fields.street || 'Brak danych', house_number: fields.house || '0',
       flat_number: fields.apartment || '', city: fields.city || 'Brak danych',
-      country: fields.country || 'Polska', postal_code: fields.postalCode || '00-000'
+      country: fields.country || 'Polska', postal_code: fields.postalCode || '00-000',
     }
     const existing = await api.getAddresses()
     if (!existing.error) {
-      const match = existing.data.find(a => a.street === payload.street && a.house_number === payload.house_number && a.city === payload.city && a.postal_code === payload.postal_code)
+      const match = existing.data.find((a: UserAddress) =>
+        a.street === payload.street && a.house_number === payload.house_number &&
+        a.city === payload.city && a.postal_code === payload.postal_code
+      )
       if (match?.id) return match.id
     }
     const created = await api.addAddress(payload)
@@ -252,9 +328,7 @@ export default function ApplicationFormPage() {
 
   async function submitForm(action: 'SAVE' | 'ENROLL') {
     setError(null)
-    if (alreadyEnrolled) { setError('Jesteś już zapisany na ten kierunek.'); return }
     if (!validate(action === 'ENROLL')) return
-
     setSaving(true)
     try {
       const resId = await resolveAddr(form.residenceAddress)
@@ -288,7 +362,6 @@ export default function ApplicationFormPage() {
 
       const res = await api.submitEnrollmentForm(editionId!, fd, enrollmentId === null)
       if (res.error) { setError(`Błąd: ${res.msg}`); return }
-
       if (res.data?.enrollment) setEnrollmentId(res.data.enrollment)
       if (action === 'ENROLL') navigate(`/applicationSent?edition_id=${editionId}`)
       else { setSaved(true); setTimeout(() => setSaved(false), 3000) }
@@ -299,22 +372,42 @@ export default function ApplicationFormPage() {
     }
   }
 
+  return {
+    form, setForm, files, setFiles, documents, existingDocs,
+    courseName, savedAddresses, selectedResAddrId, selectedCorrAddrId,
+    hasDiffCorr, setHasDiffCorr, hasEmergency, setHasEmergency,
+    alreadyEnrolled, blockingStatus, errors, error, saving, saved, loading,
+    fileInputRefs, handleChange, selectSavedAddress, submitForm,
+  }
+}
+
+// ─── Page component ───────────────────────────────────────────────────────────
+
+export default function ApplicationFormPage() {
+  usePageTitle('Formularz Aplikacji')
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const editionId = searchParams.get('edition_id')
+
+  const f = useApplicationForm(editionId)
+
   if (!user) return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="max-w-md w-full"><CardContent className="pt-6">
         <Alert variant="warning">Musisz być zalogowany, żeby złożyć wniosek.</Alert>
-        <Button className="mt-4 w-full" onClick={() => navigate(`/login?redirect=${encodeURIComponent(window.location.href)}`)}>Zaloguj się</Button>
+        <Button className="mt-4 w-full" onClick={() => navigate(`/login?redirect=${encodeURIComponent(window.location.href)}`)}>
+          Zaloguj się
+        </Button>
       </CardContent></Card>
     </div>
   )
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-text-muted">Ładowanie formularza...</p>
-    </div>
-  )
+  if (user.is_employee) return <Navigate to="/studies" replace />
+  if (f.loading) return <div className="min-h-screen flex items-center justify-center"><p className="text-text-muted">Ładowanie formularza...</p></div>
+  if (f.alreadyEnrolled) return <Navigate to="/my-applications" replace />
 
-  const errList = Object.values(errors)
+  const errList = Object.values(f.errors)
 
   return (
     <div className="min-h-screen bg-surface-low py-8 px-4">
@@ -322,131 +415,89 @@ export default function ApplicationFormPage() {
         <Card>
           <CardHeader>
             <CardTitle>Wniosek o rekrutację na studia podyplomowe</CardTitle>
-            <p className="text-sm text-text-muted font-medium uppercase tracking-wide mt-1">{courseName}</p>
+            <p className="text-sm text-text-muted font-medium uppercase tracking-wide mt-1">{f.courseName}</p>
           </CardHeader>
           <CardContent>
-            {alreadyEnrolled && (
-              <Alert variant="warning" className="mb-4">
-                <strong>Już uczestniczysz w rekrutacji do tego kierunku.</strong>
-                {blockingStatus && (
-                  <span className="ml-1">Status: <strong>{{
-                    CANDIDATE: 'Kandydat',
-                    STUDENT: 'Student',
-                    RESERVE: 'Kandydat rezerwowy',
-                    REJECTED: 'Odrzucony',
-                    EXPELLED: 'Wydalony',
-                  }[blockingStatus] ?? blockingStatus}</strong></span>
-                )}
-              </Alert>
-            )}
 
             {/* DANE OSOBOWE */}
             <SectionHead icon={<User size={14} />} label="Dane osobowe" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label className="block text-xs font-medium mb-1">Imię *</label><Input name="firstName" value={form.firstName} onChange={handleChange} autoComplete="given-name" /></div>
-              <div><label className="block text-xs font-medium mb-1">Drugie imię</label><Input name="secondName" value={form.secondName} onChange={handleChange} /></div>
-              <div><label className="block text-xs font-medium mb-1">Nazwisko *</label><Input name="lastName" value={form.lastName} onChange={handleChange} autoComplete="family-name" /></div>
-              <div><label className="block text-xs font-medium mb-1">Nazwisko rodowe *</label><Input name="familyName" value={form.familyName} onChange={handleChange} /></div>
+              <div><label className="block text-xs font-medium mb-1">Imię *</label><Input name="firstName" value={f.form.firstName} onChange={f.handleChange} autoComplete="given-name" /></div>
+              <div><label className="block text-xs font-medium mb-1">Drugie imię</label><Input name="secondName" value={f.form.secondName} onChange={f.handleChange} /></div>
+              <div><label className="block text-xs font-medium mb-1">Nazwisko *</label><Input name="lastName" value={f.form.lastName} onChange={f.handleChange} autoComplete="family-name" /></div>
+              <div><label className="block text-xs font-medium mb-1">Nazwisko rodowe *</label><Input name="familyName" value={f.form.familyName} onChange={f.handleChange} /></div>
               <div>
                 <label className="block text-xs font-medium mb-1">Tytuł *</label>
-                <select name="title" value={form.title} onChange={handleChange} className="w-full border border-(--color-outline) rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary">
+                <select name="title" value={f.form.title} onChange={f.handleChange} className="w-full border border-(--color-outline) rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary">
                   {TITLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
-              <div><label className="block text-xs font-medium mb-1">Obywatelstwo *</label><Input name="citizenship" value={form.citizenship} onChange={handleChange} /></div>
-              <div><label className="block text-xs font-medium mb-1">Data urodzenia *</label><Input type="date" name="birthdate" value={form.birthdate} onChange={handleChange} autoComplete="bday" /></div>
-              <div><label className="block text-xs font-medium mb-1">Miejsce urodzenia *</label><Input name="birthplace" value={form.birthplace} onChange={handleChange} /></div>
+              <div><label className="block text-xs font-medium mb-1">Obywatelstwo *</label><Input name="citizenship" value={f.form.citizenship} onChange={f.handleChange} /></div>
+              <div><label className="block text-xs font-medium mb-1">Data urodzenia *</label><Input type="date" name="birthdate" value={f.form.birthdate} onChange={f.handleChange} autoComplete="bday" /></div>
+              <div><label className="block text-xs font-medium mb-1">Miejsce urodzenia *</label><Input name="birthplace" value={f.form.birthplace} onChange={f.handleChange} /></div>
               <div>
                 <label className="block text-xs font-medium mb-1">PESEL *</label>
-                <Input name="pesel" value={form.pesel} onChange={handleChange} inputMode="numeric" maxLength={11} className={errors.pesel ? 'border-error' : ''} />
-                <FieldErr msg={errors.pesel} />
+                <Input name="pesel" value={f.form.pesel} onChange={f.handleChange} inputMode="numeric" maxLength={11} className={f.errors.pesel ? 'border-error' : ''} />
+                <FieldErr msg={f.errors.pesel} />
               </div>
             </div>
 
-            {/* KONTAKTOWE */}
+            {/* DANE KONTAKTOWE */}
             <SectionHead icon={<Mail size={14} />} label="Dane kontaktowe" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label className="block text-xs font-medium mb-1">Email *</label><Input type="email" name="email" value={form.email} onChange={handleChange} autoComplete="email" /></div>
+              <div><label className="block text-xs font-medium mb-1">Email *</label><Input type="email" name="email" value={f.form.email} onChange={f.handleChange} autoComplete="email" /></div>
               <div>
                 <label className="block text-xs font-medium mb-1">Telefon *</label>
-                <Input type="tel" name="phone" value={form.phone} onChange={handleChange} autoComplete="tel" className={errors.phone ? 'border-error' : ''} />
-                <FieldErr msg={errors.phone} />
+                <Input type="tel" name="phone" value={f.form.phone} onChange={f.handleChange} autoComplete="tel" className={f.errors.phone ? 'border-error' : ''} />
+                <FieldErr msg={f.errors.phone} />
               </div>
             </div>
 
-            {/* ADRES ZAMIESZKANIA */}
-            <SectionHead icon={<Home size={14} />} label="Adres zamieszkania" />
-            {savedAddresses.length > 0 && (
-              <div className="mb-3 flex flex-wrap gap-2">
-                {savedAddresses.map(a => (
-                  <button key={a.id} type="button" onClick={() => selectSavedAddress('res', a)}
-                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${selectedResAddrId === a.id ? 'bg-primary-container border-primary text-primary' : 'border-(--color-outline) hover:bg-surface-low'}`}>
-                    {a.street} {a.house_number}, {a.city}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label className="block text-xs font-medium mb-1">Ulica *</label><Input name="street" value={form.residenceAddress.street} onChange={e => handleChange(e, 'residenceAddress')} /></div>
-              <div><label className="block text-xs font-medium mb-1">Numer domu *</label><Input name="house" value={form.residenceAddress.house} onChange={e => handleChange(e, 'residenceAddress')} /></div>
-              <div><label className="block text-xs font-medium mb-1">Numer mieszkania</label><Input name="apartment" value={form.residenceAddress.apartment} onChange={e => handleChange(e, 'residenceAddress')} /></div>
-              <div>
-                <label className="block text-xs font-medium mb-1">Kod pocztowy *</label>
-                <Input name="postalCode" value={form.residenceAddress.postalCode} onChange={e => handleChange(e, 'residenceAddress')} inputMode="numeric" maxLength={6} className={errors.residenceAddress_postalCode ? 'border-error' : ''} />
-                <FieldErr msg={errors.residenceAddress_postalCode} />
-              </div>
-              <div><label className="block text-xs font-medium mb-1">Miasto *</label><Input name="city" value={form.residenceAddress.city} onChange={e => handleChange(e, 'residenceAddress')} /></div>
-              <div><label className="block text-xs font-medium mb-1">Kraj *</label><Input name="country" value={form.residenceAddress.country} onChange={e => handleChange(e, 'residenceAddress')} /></div>
-            </div>
+            {/* ADRESY */}
+            <AddressBlock
+              label="Adres zamieszkania"
+              fields={f.form.residenceAddress}
+              savedAddresses={f.savedAddresses}
+              selectedId={f.selectedResAddrId}
+              postalCodeError={f.errors.residenceAddress_postalCode}
+              onChange={e => f.handleChange(e, 'residenceAddress')}
+              onSelect={addr => f.selectSavedAddress('res', addr)}
+            />
 
             <label className="flex items-center gap-2 mt-3 cursor-pointer text-sm">
-              <input type="checkbox" checked={hasDiffCorr} onChange={e => {
-                setHasDiffCorr(e.target.checked)
-                if (!e.target.checked) setForm(prev => ({ ...prev, correspondenceAddress: { ...prev.residenceAddress } }))
+              <input type="checkbox" checked={f.hasDiffCorr} onChange={e => {
+                f.setHasDiffCorr(e.target.checked)
+                if (!e.target.checked) f.setForm(prev => ({ ...prev, correspondenceAddress: { ...prev.residenceAddress } }))
               }} className="rounded" />
               Adres korespondencyjny jest inny niż zamieszkania
             </label>
 
-            {hasDiffCorr && <>
-              <SectionHead icon={<Home size={14} />} label="Adres korespondencyjny" />
-              {savedAddresses.length > 0 && (
-                <div className="mb-3 flex flex-wrap gap-2">
-                  {savedAddresses.map(a => (
-                    <button key={a.id} type="button" onClick={() => selectSavedAddress('corr', a)}
-                      className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${selectedCorrAddrId === a.id ? 'bg-primary-container border-primary text-primary' : 'border-(--color-outline) hover:bg-surface-low'}`}>
-                      {a.street} {a.house_number}, {a.city}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><label className="block text-xs font-medium mb-1">Ulica *</label><Input name="street" value={form.correspondenceAddress.street} onChange={e => handleChange(e, 'correspondenceAddress')} /></div>
-                <div><label className="block text-xs font-medium mb-1">Numer domu *</label><Input name="house" value={form.correspondenceAddress.house} onChange={e => handleChange(e, 'correspondenceAddress')} /></div>
-                <div><label className="block text-xs font-medium mb-1">Numer mieszkania</label><Input name="apartment" value={form.correspondenceAddress.apartment} onChange={e => handleChange(e, 'correspondenceAddress')} /></div>
-                <div>
-                  <label className="block text-xs font-medium mb-1">Kod pocztowy *</label>
-                  <Input name="postalCode" value={form.correspondenceAddress.postalCode} onChange={e => handleChange(e, 'correspondenceAddress')} inputMode="numeric" maxLength={6} className={errors.correspondenceAddress_postalCode ? 'border-error' : ''} />
-                  <FieldErr msg={errors.correspondenceAddress_postalCode} />
-                </div>
-                <div><label className="block text-xs font-medium mb-1">Miasto *</label><Input name="city" value={form.correspondenceAddress.city} onChange={e => handleChange(e, 'correspondenceAddress')} /></div>
-                <div><label className="block text-xs font-medium mb-1">Kraj *</label><Input name="country" value={form.correspondenceAddress.country} onChange={e => handleChange(e, 'correspondenceAddress')} /></div>
-              </div>
-            </>}
+            {f.hasDiffCorr && (
+              <AddressBlock
+                label="Adres korespondencyjny"
+                fields={f.form.correspondenceAddress}
+                savedAddresses={f.savedAddresses}
+                selectedId={f.selectedCorrAddrId}
+                postalCodeError={f.errors.correspondenceAddress_postalCode}
+                onChange={e => f.handleChange(e, 'correspondenceAddress')}
+                onSelect={addr => f.selectSavedAddress('corr', addr)}
+              />
+            )}
 
-            {/* WYKSZTALCENIE */}
+            {/* WYKSZTAŁCENIE */}
             <SectionHead icon={<GraduationCap size={14} />} label="Wykształcenie" />
             <p className="text-xs text-text-muted mb-2">* dane pobierane tylko dla celów statystycznych</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label className="block text-xs font-medium mb-1">Nazwa uczelni wyższej *</label><Input name="educationUniversity" value={form.educationUniversity} onChange={handleChange} /></div>
-              <div><label className="block text-xs font-medium mb-1">Lokalizacja *</label><Input name="educationLocation" value={form.educationLocation} onChange={handleChange} /></div>
+              <div><label className="block text-xs font-medium mb-1">Nazwa uczelni wyższej *</label><Input name="educationUniversity" value={f.form.educationUniversity} onChange={f.handleChange} /></div>
+              <div><label className="block text-xs font-medium mb-1">Lokalizacja *</label><Input name="educationLocation" value={f.form.educationLocation} onChange={f.handleChange} /></div>
               <div>
                 <label className="block text-xs font-medium mb-1">Rok zakończenia *</label>
-                <Input name="educationYear" value={form.educationYear} onChange={handleChange} inputMode="numeric" maxLength={4} className={errors.educationYear ? 'border-error' : ''} />
-                <FieldErr msg={errors.educationYear} />
+                <Input name="educationYear" value={f.form.educationYear} onChange={f.handleChange} inputMode="numeric" maxLength={4} className={f.errors.educationYear ? 'border-error' : ''} />
+                <FieldErr msg={f.errors.educationYear} />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1">Miejsce uzyskania świadectwa dojrzałości *</label>
-                <select name="maturityCountry" value={form.maturityCountry} onChange={handleChange} className="w-full border border-(--color-outline) rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary">
+                <select name="maturityCountry" value={f.form.maturityCountry} onChange={f.handleChange} className="w-full border border-(--color-outline) rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary">
                   <option value="Polska">Polska</option>
                   <option value="Poza Polską">Poza Polską</option>
                 </select>
@@ -456,97 +507,96 @@ export default function ApplicationFormPage() {
             {/* KONTAKT AWARYJNY */}
             <SectionHead icon={<Phone size={14} />} label="Kontakt awaryjny" />
             <label className="flex items-center gap-2 mb-3 cursor-pointer text-sm">
-              <input type="checkbox" checked={hasEmergency} onChange={e => {
-                setHasEmergency(e.target.checked)
-                if (!e.target.checked) setForm(prev => ({ ...prev, emergencyName: '', emergencyLastName: '', emergencyPhone: '' }))
+              <input type="checkbox" checked={f.hasEmergency} onChange={e => {
+                f.setHasEmergency(e.target.checked)
+                if (!e.target.checked) f.setForm(prev => ({ ...prev, emergencyName: '', emergencyLastName: '', emergencyPhone: '' }))
               }} className="rounded" />
               Chcę dodać kontakt awaryjny
             </label>
-            {hasEmergency && (
+            {f.hasEmergency && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className="block text-xs font-medium mb-1">Imię kontaktu</label><Input name="emergencyName" value={form.emergencyName} onChange={handleChange} /></div>
-                <div><label className="block text-xs font-medium mb-1">Nazwisko kontaktu</label><Input name="emergencyLastName" value={form.emergencyLastName} onChange={handleChange} /></div>
-                <div><label className="block text-xs font-medium mb-1">Telefon kontaktu</label><Input type="tel" name="emergencyPhone" value={form.emergencyPhone} onChange={handleChange} /></div>
+                <div><label className="block text-xs font-medium mb-1">Imię kontaktu</label><Input name="emergencyName" value={f.form.emergencyName} onChange={f.handleChange} /></div>
+                <div><label className="block text-xs font-medium mb-1">Nazwisko kontaktu</label><Input name="emergencyLastName" value={f.form.emergencyLastName} onChange={f.handleChange} /></div>
+                <div><label className="block text-xs font-medium mb-1">Telefon kontaktu</label><Input type="tel" name="emergencyPhone" value={f.form.emergencyPhone} onChange={f.handleChange} /></div>
               </div>
             )}
 
             {/* DOKUMENTY */}
-            {documents.length > 0 && <>
-              <SectionHead icon={<Upload size={14} />} label="Dokumenty" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {documents.map(doc => {
-                  const hasExisting = !!existingDocs[doc.id]
-                  const hasNew = !!files[doc.id]
-                  return (
-                    <div key={doc.id} className={`border rounded-lg p-3 text-sm ${errors[`doc_${doc.id}`] ? 'border-error' : 'border-(--color-outline)'}`}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <FileCheck size={14} className={hasExisting || hasNew ? 'text-success' : 'text-text-muted'} />
-                        <span className="font-medium">{doc.name}{doc.required && <span className="text-error ml-1">*</span>}</span>
+            {f.documents.length > 0 && (
+              <>
+                <SectionHead icon={<Upload size={14} />} label="Dokumenty" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {f.documents.map(doc => {
+                    const hasExisting = !!f.existingDocs[doc.id]
+                    const hasNew = !!f.files[doc.id]
+                    return (
+                      <div key={doc.id} className={`border rounded-lg p-3 text-sm ${f.errors[`doc_${doc.id}`] ? 'border-error' : 'border-(--color-outline)'}`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <FileCheck size={14} className={hasExisting || hasNew ? 'text-success' : 'text-text-muted'} />
+                          <span className="font-medium">{doc.name}{doc.required && <span className="text-error ml-1">*</span>}</span>
+                        </div>
+                        {hasExisting && !hasNew && <p className="text-xs text-success mb-2">Poprzednio przesłany</p>}
+                        {hasNew && <p className="text-xs text-success mb-2">Wybrany: {f.files[doc.id]?.name}</p>}
+                        <input
+                          ref={el => { f.fileInputRefs.current[doc.id] = el }}
+                          type="file" accept=".pdf,.doc,.docx" className="hidden"
+                          onChange={e => { const file = e.target.files?.[0] || null; f.setFiles(prev => ({ ...prev, [doc.id]: file })) }}
+                        />
+                        <Button type="button" variant="secondary" size="sm" onClick={() => f.fileInputRefs.current[doc.id]?.click()}>
+                          {hasNew || hasExisting ? 'Zmień plik' : 'Wybierz plik'}
+                        </Button>
+                        <FieldErr msg={f.errors[`doc_${doc.id}`]} />
                       </div>
-                      {hasExisting && !hasNew && <p className="text-xs text-success mb-2">Poprzednio przesłany</p>}
-                      {hasNew && <p className="text-xs text-success mb-2">Wybrany: {files[doc.id]?.name}</p>}
-                      <input ref={el => { fileInputRefs.current[doc.id] = el }} type="file" accept=".pdf,.doc,.docx" className="hidden"
-                        onChange={e => { const f = e.target.files?.[0] || null; setFiles(prev => ({ ...prev, [doc.id]: f })); setSaved(false) }} />
-                      <Button type="button" variant="secondary" size="sm" onClick={() => fileInputRefs.current[doc.id]?.click()}>
-                        {hasNew || hasExisting ? 'Zmień plik' : 'Wybierz plik'}
-                      </Button>
-                      <FieldErr msg={errors[`doc_${doc.id}`]} />
-                    </div>
-                  )
-                })}
-              </div>
-            </>}
+                    )
+                  })}
+                </div>
+              </>
+            )}
 
             {/* ZGODY */}
             <SectionHead icon={<FileCheck size={14} />} label="Zgody i regulaminy" />
             <div className="space-y-3">
-              <div>
-                <label className="flex items-start gap-3 cursor-pointer text-sm">
-                  <input type="checkbox" name="data" checked={form.consents.data} onChange={e => handleChange(e, 'consents')} className="mt-0.5 rounded shrink-0" />
-                  <span><span className="text-error">*</span> Potwierdzam, że wszystkie podane powyżej dane są zgodne z prawdą.</span>
-                </label>
-                <FieldErr msg={errors.data} />
-              </div>
-              <div>
-                <label className="flex items-start gap-3 cursor-pointer text-sm">
-                  <input type="checkbox" name="rules" checked={form.consents.rules} onChange={e => handleChange(e, 'consents')} className="mt-0.5 rounded shrink-0" />
-                  <span>
-                    <span className="text-error">*</span> Potwierdzam, że zapoznałem się z treścią regulaminu studiów AGH.{' '}
-                    <a href="/assets/dokumenty/regulamin-studiow-podyplomowych-agh.pdf" target="_blank" rel="noopener noreferrer" className="text-primary underline">Pełna treść</a>
-                  </span>
-                </label>
-                <FieldErr msg={errors.rules} />
-              </div>
-              <div>
-                <label className="flex items-start gap-3 cursor-pointer text-sm">
-                  <input type="checkbox" name="rodo" checked={form.consents.rodo} onChange={e => handleChange(e, 'consents')} className="mt-0.5 rounded shrink-0" />
-                  <span>
-                    <span className="text-error">*</span> Wyrażam zgodę na przetwarzanie moich danych osobowych w ramach procesu rekrutacji na studia.{' '}
-                    <a href="/assets/dokumenty/zgoda_na_przetwarzanie_danych_osobowych.pdf" target="_blank" rel="noopener noreferrer" className="text-primary underline">Pełna treść</a>
-                  </span>
-                </label>
-                <FieldErr msg={errors.rodo} />
-              </div>
+              {([
+                { name: 'data' as const, error: f.errors.data, label: 'Potwierdzam, że wszystkie podane powyżej dane są zgodne z prawdą.', link: undefined },
+                { name: 'rules' as const, error: f.errors.rules, label: 'Potwierdzam, że zapoznałem się z treścią regulaminu studiów AGH.', link: { href: '/assets/dokumenty/regulamin-studiow-podyplomowych-agh.pdf', text: 'Pełna treść' } },
+                { name: 'rodo' as const, error: f.errors.rodo, label: 'Wyrażam zgodę na przetwarzanie moich danych osobowych w ramach procesu rekrutacji na studia.', link: { href: '/assets/dokumenty/zgoda_na_przetwarzanie_danych_osobowych.pdf', text: 'Pełna treść' } },
+              ]).map(({ name, error, label, link }) => (
+                <div key={name}>
+                  <label className="flex items-start gap-3 cursor-pointer text-sm">
+                    <input
+                      type="checkbox" name={name}
+                      checked={f.form.consents[name]}
+                      onChange={e => f.handleChange(e, 'consents')}
+                      className="mt-0.5 rounded shrink-0"
+                    />
+                    <span>
+                      <span className="text-error">*</span> {label}{' '}
+                      {link && <a href={link.href} target="_blank" rel="noopener noreferrer" className="text-primary underline">{link.text}</a>}
+                    </span>
+                  </label>
+                  <FieldErr msg={error} />
+                </div>
+              ))}
             </div>
 
+            {/* BŁĘDY I PRZYCISKI */}
             {errList.length > 0 && (
               <Alert variant="error" className="mt-4">
                 <strong>Formularz zawiera błędy:</strong>
                 <ul className="list-disc list-inside mt-1">{errList.map((e, i) => <li key={i}>{e}</li>)}</ul>
               </Alert>
             )}
-            {error && <Alert variant="error" className="mt-4">{error}</Alert>}
+            {f.error && <Alert variant="error" className="mt-4">{f.error}</Alert>}
 
             <div className="flex justify-between items-center mt-6 pt-4 border-t border-(--color-outline)">
-              <Button type="button" variant="secondary" disabled={saving || alreadyEnrolled}
-                onClick={() => submitForm('SAVE')}>
-                {saved ? 'Zapisano!' : saving ? 'Zapisywanie...' : 'Zapisz formularz'}
+              <Button type="button" variant="secondary" disabled={f.saving} onClick={() => f.submitForm('SAVE')}>
+                {f.saved ? 'Zapisano!' : f.saving ? 'Zapisywanie...' : 'Zapisz formularz'}
               </Button>
-              <Button type="button" disabled={saving || alreadyEnrolled}
-                onClick={() => submitForm('ENROLL')}>
-                {saving ? 'Wysyłanie...' : 'Wyślij wniosek'}
+              <Button type="button" disabled={f.saving} onClick={() => f.submitForm('ENROLL')}>
+                {f.saving ? 'Wysyłanie...' : 'Wyślij wniosek'}
               </Button>
             </div>
+
           </CardContent>
         </Card>
       </div>

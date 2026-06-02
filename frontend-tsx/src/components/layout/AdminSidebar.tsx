@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+﻿import { NavLink } from 'react-router-dom'
 import { BarChart3, Users, CreditCard, Download, Bell, BookOpen, Building2 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useAuth } from '@/context/AuthContext'
@@ -28,7 +28,7 @@ export default function AdminSidebar() {
 
   const section = (title: string, items: typeof coordLinks) => (
     <div className="mb-4">
-      <p className="text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-3 mb-1">{title}</p>
+      <p className="text-[0.65rem] font-semibold uppercase tracking-wider text-text-muted px-3 mb-1">{title}</p>
       {items.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}
@@ -37,8 +37,8 @@ export default function AdminSidebar() {
             cn(
               'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
               isActive
-                ? 'bg-[var(--color-primary-container)] text-[var(--color-primary)]'
-                : 'text-[var(--color-text)] hover:bg-[var(--color-surface-high)]'
+                ? 'bg-primary-container text-primary'
+                : 'text-text hover:bg-surface-high'
             )
           }
         >
@@ -50,7 +50,7 @@ export default function AdminSidebar() {
   )
 
   return (
-    <aside className="w-[230px] shrink-0 min-h-[calc(100vh-56px)] bg-[var(--color-surface-container)] border-r border-[var(--color-surface-high)] p-4">
+    <aside className="w-[230px] shrink-0 min-h-[calc(100vh-56px)] bg-surface-container border-r border-surface-high p-4">
       {isCoord   && section('Rekrutacja', coordLinks)}
       {isFinance && section('Finanse', financeLinks)}
       {isAdmin   && section('Administracja', adminLinks)}

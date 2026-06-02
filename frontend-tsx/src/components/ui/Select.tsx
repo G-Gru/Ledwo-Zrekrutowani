@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+﻿import { forwardRef } from 'react'
 import { cn } from '@/lib/cn'
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
@@ -13,7 +13,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="flex flex-col gap-1">
         {label && (
-          <label htmlFor={id} className="text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+          <label htmlFor={id} className="text-[0.65rem] font-semibold uppercase tracking-wide text-text-muted">
             {label}
           </label>
         )}
@@ -21,8 +21,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           id={id}
           ref={ref}
           className={cn(
-            'w-full rounded-md border border-[var(--color-surface-high)] bg-[var(--color-surface-low)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50',
-            error && 'border-[var(--color-error)]',
+            'w-full rounded-md border border-surface-high bg-surface-low px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50',
+            error && 'border-error',
             className
           )}
           {...props}
@@ -32,7 +32,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
-        {error && <p className="text-xs text-[var(--color-error)]">{error}</p>}
+        {error && <p className="text-xs text-error">{error}</p>}
       </div>
     )
   }

@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+﻿import { forwardRef } from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/cn'
@@ -8,13 +8,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary:   'bg-[var(--color-primary-container)] text-[var(--color-primary)] hover:bg-yellow-300',
-        secondary: 'border border-[var(--color-surface-high)] bg-transparent text-[var(--color-text-muted)] hover:bg-[var(--color-surface-high)]',
-        danger:    'bg-[var(--color-error)] text-white hover:bg-red-800',
-        warning:   'bg-[var(--color-warning)] text-amber-950 hover:bg-amber-600',
+        primary:   'bg-primary-container text-primary hover:bg-yellow-300',
+        secondary: 'border border-surface-high bg-transparent text-text-muted hover:bg-surface-high',
+        danger:    'bg-error text-white hover:bg-red-800',
+        warning:   'bg-warning text-amber-950 hover:bg-amber-600',
         success:   'bg-green-700 text-white hover:bg-green-800',
-        ghost:     'bg-transparent hover:bg-[var(--color-surface-container)] text-[var(--color-text)]',
-        link:      'bg-transparent underline text-[var(--color-secondary)] hover:text-[var(--color-primary)] p-0 h-auto',
+        ghost:     'bg-transparent hover:bg-surface-container text-text',
+        link:      'bg-transparent underline text-secondary hover:text-primary p-0 h-auto',
       },
       size: {
         sm: 'h-8 px-3 text-sm',

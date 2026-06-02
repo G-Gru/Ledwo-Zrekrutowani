@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+﻿import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
 import { AuthProvider } from '@/context/AuthContext'
 import { isLoggedIn, getUser } from '@/services/auth'
@@ -16,6 +16,7 @@ import RegisterPage from '@/pages/RegisterPage'
 import ApplicationFormPage from '@/pages/ApplicationFormPage'
 import ApplicationSentPage from '@/pages/ApplicationSentPage'
 import FAQPage from '@/pages/FAQPage'
+import ContactPage from '@/pages/ContactPage'
 
 // Account pages
 import MyApplicationsPage from '@/pages/account/MyApplicationsPage'
@@ -41,9 +42,9 @@ function ScrollToTop() {
   return null
 }
 
-function ProtectedRoute({ children, roles }: { children: ReactNode; roles?: UserRole[] }) {
+function ProtectedRoute({ children, roles, redirect = '/studies' }: { children: ReactNode; roles?: UserRole[]; redirect?: string }) {
   if (!isLoggedIn()) return <Navigate to="/login" replace />
-  if (roles?.length && !roles.includes(getUser()?.role as UserRole)) return <Navigate to="/studies" replace />
+  if (roles?.length && !roles.includes(getUser()?.role as UserRole)) return <Navigate to={redirect} replace />
   return <>{children}</>
 }
 
@@ -51,7 +52,7 @@ function AccountLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-1">
       <AccountSidebar />
-      <main className="flex-1 p-6 bg-[var(--color-background)]">{children}</main>
+      <main className="flex-1 p-6 bg-background">{children}</main>
     </div>
   )
 }
@@ -60,11 +61,12 @@ function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-1">
       <AdminSidebar />
-      <main className="flex-1 p-6 bg-[var(--color-background)]">{children}</main>
+      <main className="flex-1 p-6 bg-background">{children}</main>
     </div>
   )
 }
 
+const STUDENT_ROLES: UserRole[] = ['CANDIDATE', 'STUDENT']
 const COORD_ROLES: UserRole[] = ['ADMIN', 'STUDIES_DIRECTOR', 'ADMINISTRATIVE_COORDINATOR']
 const FINANCE_ROLES: UserRole[] = ['ADMIN', 'FINANCE_COORDINATOR']
 const ADMIN_ROLES: UserRole[] = ['ADMIN']
@@ -84,11 +86,12 @@ function AppRoutes() {
         <Route path="/applicationForm" element={<ApplicationFormPage />} />
         <Route path="/applicationSent" element={<ApplicationSentPage />} />
         <Route path="/faq" element={<FAQPage />} />
+        <Route path="/contact" element={<ContactPage />} />
 
         {/* Account */}
-        <Route path="/my-applications" element={<ProtectedRoute><AccountLayout><MyApplicationsPage /></AccountLayout></ProtectedRoute>} />
-        <Route path="/my-payments"     element={<ProtectedRoute><AccountLayout><MyPaymentsPage /></AccountLayout></ProtectedRoute>} />
-        <Route path="/my-documents"    element={<ProtectedRoute><AccountLayout><MyDocumentsPage /></AccountLayout></ProtectedRoute>} />
+        <Route path="/my-applications" element={<ProtectedRoute roles={STUDENT_ROLES} redirect="/my-profile"><AccountLayout><MyApplicationsPage /></AccountLayout></ProtectedRoute>} />
+        <Route path="/my-payments"     element={<ProtectedRoute roles={STUDENT_ROLES} redirect="/my-profile"><AccountLayout><MyPaymentsPage /></AccountLayout></ProtectedRoute>} />
+        <Route path="/my-documents"    element={<ProtectedRoute roles={STUDENT_ROLES} redirect="/my-profile"><AccountLayout><MyDocumentsPage /></AccountLayout></ProtectedRoute>} />
         <Route path="/my-profile"      element={<ProtectedRoute><AccountLayout><MyProfilePage /></AccountLayout></ProtectedRoute>} />
 
         {/* Admin / coordinator */}

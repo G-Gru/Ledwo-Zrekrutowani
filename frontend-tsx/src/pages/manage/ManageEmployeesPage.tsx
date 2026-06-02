@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { api, type AdminUser, type StaffAssignment } from '@/services/api'
 import { Button } from '@/components/ui/Button'
@@ -128,7 +128,7 @@ export default function ManageEmployeesPage() {
     fetchEmployees()
   }
 
-  const selectClass = "w-full border border-[var(--color-outline)] rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+  const selectClass = "w-full border border-surface-high rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary"
 
   return (
     <div className="p-6 space-y-4">
@@ -170,14 +170,14 @@ export default function ManageEmployeesPage() {
                 <Input
                   name="email" type="email" value={form.email} onChange={handleChange}
                   disabled={autoEmail} required
-                  className={autoEmail ? 'bg-[var(--color-surface-low)] opacity-70' : ''}
+                  className={autoEmail ? 'bg-surface-low opacity-70' : ''}
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1">Hasło jednorazowe *</label>
                 <Input
                   name="password" value={form.password} readOnly required
-                  className="bg-[var(--color-surface-low)] opacity-70 font-mono text-xs"
+                  className="bg-surface-low opacity-70 font-mono text-xs"
                 />
               </div>
             </div>
@@ -199,14 +199,14 @@ export default function ManageEmployeesPage() {
                       className="flex-1"
                     />
                     {phones.length > 1 && (
-                      <button type="button" onClick={() => removePhone(i)} className="text-[var(--color-error)] hover:opacity-70 px-2">
+                      <button type="button" onClick={() => removePhone(i)} className="text-error hover:opacity-70 px-2">
                         <X size={14} />
                       </button>
                     )}
                   </div>
                 ))}
               </div>
-              <button type="button" onClick={addPhone} className="mt-2 flex items-center gap-1 text-xs text-[var(--color-primary)] hover:opacity-70">
+              <button type="button" onClick={addPhone} className="mt-2 flex items-center gap-1 text-xs text-primary hover:opacity-70">
                 <Plus size={12} /> Dodaj kolejny numer
               </button>
             </div>
@@ -222,7 +222,7 @@ export default function ManageEmployeesPage() {
       <Card>
         <CardHeader><CardTitle className="text-base">Lista pracowników ({employees.length})</CardTitle></CardHeader>
         <CardContent className="p-0">
-          {loading && <p className="p-4 text-sm text-[var(--color-text-muted)]">Ładowanie...</p>}
+          {loading && <p className="p-4 text-sm text-text-muted">Ładowanie...</p>}
           <Table>
             <TableHeader>
               <TableRow>
@@ -236,14 +236,14 @@ export default function ManageEmployeesPage() {
             </TableHeader>
             <TableBody>
               {employees.length === 0 && !loading && (
-                <TableRow><TableCell colSpan={6} className="text-center text-[var(--color-text-muted)]">Brak pracowników do wyświetlenia.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-text-muted">Brak pracowników do wyświetlenia.</TableCell></TableRow>
               )}
               {employees.map(emp => {
                 const empAssignments = assignments.filter(a => a.user_id === emp.id)
                 return (
                   <TableRow key={emp.id}>
                     <TableCell className="font-medium">
-                      {emp.academic_title && <span className="text-[var(--color-text-muted)] mr-1">{emp.academic_title}</span>}
+                      {emp.academic_title && <span className="text-text-muted mr-1">{emp.academic_title}</span>}
                       {emp.first_name} {emp.last_name}
                     </TableCell>
                     <TableCell>{emp.email || '-'}</TableCell>
@@ -252,7 +252,7 @@ export default function ManageEmployeesPage() {
                         <Badge variant={ROLE_VARIANT[emp.role] as 'info' | 'warning' | 'success' | 'danger'}>
                           {ROLE_LABEL[emp.role] || emp.role}
                         </Badge>
-                      ) : <span className="text-[var(--color-text-muted)] text-xs">Brak roli</span>}
+                      ) : <span className="text-text-muted text-xs">Brak roli</span>}
                     </TableCell>
                     <TableCell>{emp.academic_title || '-'}</TableCell>
                     <TableCell>

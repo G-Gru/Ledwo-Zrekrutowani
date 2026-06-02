@@ -104,6 +104,7 @@ export interface AdminEnrollment {
   id: number
   user_id: number
   student_name: string
+  email: string
   status: string
   status_note?: string
   enrollment_date?: string

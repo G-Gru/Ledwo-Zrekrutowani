@@ -1,4 +1,4 @@
-import { cva, type VariantProps } from 'class-variance-authority'
+﻿import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/cn'
 
 const badgeVariants = cva(
@@ -6,12 +6,12 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default:  'bg-[var(--color-surface-container)] text-[var(--color-text-muted)]',
-        primary:  'bg-[var(--color-primary-container)] text-[var(--color-primary)]',
-        success:  'bg-[var(--color-success-container)] text-[var(--color-success)]',
+        default:  'bg-surface-container text-text-muted',
+        primary:  'bg-primary-container text-primary',
+        success:  'bg-success-container text-success',
         warning:  'bg-amber-100 text-amber-800',
-        danger:   'bg-[var(--color-error-container)] text-[var(--color-error)]',
-        info:     'bg-[var(--color-secondary-container)] text-[var(--color-secondary)]',
+        danger:   'bg-error-container text-error',
+        info:     'bg-secondary-container text-secondary',
       },
     },
     defaultVariants: { variant: 'default' },

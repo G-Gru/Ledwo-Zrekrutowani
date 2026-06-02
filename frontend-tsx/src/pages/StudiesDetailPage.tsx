@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api, type StudiesEdition, type StaffMember } from '@/services/api'
@@ -69,8 +69,8 @@ export default function StudiesDetailPage() {
     })
   }, [id, user])
 
-  if (loading) return <div className="p-10 text-center text-[var(--color-text-muted)]">Ładowanie...</div>
-  if (!edition) return <div className="p-10 text-center text-[var(--color-text-muted)]">Edycja nie znaleziona.</div>
+  if (loading) return <div className="p-10 text-center text-text-muted">Ładowanie...</div>
+  if (!edition) return <div className="p-10 text-center text-text-muted">Edycja nie znaleziona.</div>
 
   const isStaff = ['ADMIN', 'STUDIES_DIRECTOR', 'ADMINISTRATIVE_COORDINATOR', 'FINANCE_COORDINATOR'].includes(user?.role ?? '')
   const recruitmentOpen = edition.status?.toLowerCase() === 'active'
@@ -95,7 +95,7 @@ export default function StudiesDetailPage() {
           <Card>
             <CardHeader><CardTitle>Program kształcenia</CardTitle></CardHeader>
             <CardContent className="flex flex-col gap-4">
-              <p className="text-[var(--color-text-muted)] leading-relaxed">
+              <p className="text-text-muted leading-relaxed">
                 {edition.description || 'Brak opisu programu.'}
               </p>
               {edition.syllabus_url && (
@@ -110,20 +110,20 @@ export default function StudiesDetailPage() {
             <Card>
               <CardHeader><CardTitle className="flex items-center gap-2"><CalendarDays size={16} />Rekrutacja</CardTitle></CardHeader>
               <CardContent className="flex flex-col gap-2 text-sm">
-                <div><p className="text-[0.65rem] uppercase tracking-wide text-[var(--color-text-muted)] font-semibold">Rozpoczęcie</p>
+                <div><p className="text-[0.65rem] uppercase tracking-wide text-text-muted font-semibold">Rozpoczęcie</p>
                   <p className="font-bold text-base">{formatDate(edition.recruitment_start_date)}</p></div>
-                <div className="border-t border-[var(--color-surface-high)]" />
-                <div><p className="text-[0.65rem] uppercase tracking-wide text-[var(--color-text-muted)] font-semibold">Zakończenie</p>
+                <div className="border-t border-surface-high" />
+                <div><p className="text-[0.65rem] uppercase tracking-wide text-text-muted font-semibold">Zakończenie</p>
                   <p className="font-bold text-base">{formatDate(edition.recruitment_end_date)}</p></div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader><CardTitle className="flex items-center gap-2"><CalendarDays size={16} />Terminy studiów</CardTitle></CardHeader>
               <CardContent className="flex flex-col gap-2 text-sm">
-                <div><p className="text-[0.65rem] uppercase tracking-wide text-[var(--color-text-muted)] font-semibold">Rozpoczęcie</p>
+                <div><p className="text-[0.65rem] uppercase tracking-wide text-text-muted font-semibold">Rozpoczęcie</p>
                   <p className="font-bold text-base">{formatDate(edition.start_date)}</p></div>
-                <div className="border-t border-[var(--color-surface-high)]" />
-                <div><p className="text-[0.65rem] uppercase tracking-wide text-[var(--color-text-muted)] font-semibold">Zakończenie</p>
+                <div className="border-t border-surface-high" />
+                <div><p className="text-[0.65rem] uppercase tracking-wide text-text-muted font-semibold">Zakończenie</p>
                   <p className="font-bold text-base">{formatDate(edition.end_date)}</p></div>
               </CardContent>
             </Card>
@@ -135,11 +135,11 @@ export default function StudiesDetailPage() {
           {infoCards.map(({ icon: Icon, label, value }) => (
             <Card key={label}>
               <CardContent className="py-3 flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[var(--color-surface-container)]">
-                  <Icon size={16} className="text-[var(--color-secondary)]" />
+                <div className="p-2 rounded-lg bg-surface-container">
+                  <Icon size={16} className="text-secondary" />
                 </div>
                 <div className="text-left">
-                  <p className="text-[0.65rem] uppercase tracking-wide text-[var(--color-text-muted)] font-semibold">{label}</p>
+                  <p className="text-[0.65rem] uppercase tracking-wide text-text-muted font-semibold">{label}</p>
                   <div className="font-bold text-sm">{value}</div>
                 </div>
               </CardContent>
@@ -181,11 +181,11 @@ export default function StudiesDetailPage() {
       {!isStaff && (
         <div className="flex justify-center py-2">
           {!recruitmentOpen ? (
-            <p className="text-[var(--color-text-muted)] border border-[var(--color-surface-high)] rounded-lg px-5 py-3 text-sm">
+            <p className="text-text-muted border border-surface-high rounded-lg px-5 py-3 text-sm">
               Kierunek nie prowadzi obecnie rekrutacji.
             </p>
           ) : !canApply ? (
-            <p className="text-[var(--color-text-muted)] border border-[var(--color-surface-high)] rounded-lg px-5 py-3 text-sm">
+            <p className="text-text-muted border border-surface-high rounded-lg px-5 py-3 text-sm">
               {(() => {
                 const label: Record<string, string> = { CANDIDATE: 'Kandydat', STUDENT: 'Student', RESERVE: 'Kandydat rezerwowy', REJECTED: 'Odrzucony', EXPELLED: 'Wydalony' }
                 return `Masz już złożony wniosek dla tej edycji.${blockingStatus ? ` Status: ${label[blockingStatus] ?? blockingStatus}.` : ''}`

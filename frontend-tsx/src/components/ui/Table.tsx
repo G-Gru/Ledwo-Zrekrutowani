@@ -1,4 +1,4 @@
-import { cn } from '@/lib/cn'
+﻿import { cn } from '@/lib/cn'
 
 export function Table({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) {
   return (
@@ -9,17 +9,17 @@ export function Table({ className, ...props }: React.HTMLAttributes<HTMLTableEle
 }
 
 export function TableHeader({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn('bg-[var(--color-surface-low)]', className)} {...props} />
+  return <thead className={cn('bg-surface-low', className)} {...props} />
 }
 
 export function TableBody({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <tbody className={cn('[&_tr:nth-child(even)]:bg-[var(--color-surface-container)]', className)} {...props} />
+  return <tbody className={cn('[&_tr:nth-child(even)]:bg-surface-container', className)} {...props} />
 }
 
 export function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) {
   return (
     <tr
-      className={cn('border-b border-[var(--color-surface-high)] hover:bg-[var(--color-secondary-container)]/30 transition-colors', className)}
+      className={cn('border-b border-surface-high hover:bg-secondary-container/30 transition-colors', className)}
       {...props}
     />
   )
@@ -28,7 +28,7 @@ export function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTable
 export function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
-      className={cn('px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] border border-[var(--color-surface-high)]', className)}
+      className={cn('px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-muted border border-surface-high', className)}
       {...props}
     />
   )
@@ -37,7 +37,7 @@ export function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTa
 export function TableCell({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
-      className={cn('px-3 py-2.5 border border-[var(--color-surface-high)] text-[var(--color-text)]', className)}
+      className={cn('px-3 py-2.5 border border-surface-high text-text', className)}
       {...props}
     />
   )

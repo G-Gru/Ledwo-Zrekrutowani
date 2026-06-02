@@ -50,6 +50,10 @@ export default function AdminCandidatesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [filterEdition, setFilterEdition] = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
+  const [filterMissingDocs, setFilterMissingDocs] = useState(false)
+  const [filterUnpaid, setFilterUnpaid] = useState(false)
 
   const [selectedId, setSelectedId] = useState<number | null>(id ? Number(id) : null)
   const [detail, setDetail] = useState<AdminEnrollmentDetail | null>(null)
@@ -90,15 +94,22 @@ export default function AdminCandidatesPage() {
     })
   }, [navigate, selectedId])
 
+  const editions = useMemo(
+    () => [...new Set(enrollments.map((e) => e.studies_name).filter(Boolean))].sort() as string[],
+    [enrollments],
+  )
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return enrollments
-    const q = search.toLowerCase()
-    return enrollments.filter((e) =>
-      e.student_name?.toLowerCase().includes(q) ||
-      e.studies_name?.toLowerCase().includes(q) ||
-      e.edition_name?.toLowerCase().includes(q)
-    )
-  }, [enrollments, search])
+    return enrollments.filter((e) => {
+      const q = search.trim().toLowerCase()
+      if (q && !(e.student_name?.toLowerCase().includes(q) || e.studies_name?.toLowerCase().includes(q) || e.edition_name?.toLowerCase().includes(q))) return false
+      if (filterEdition && e.studies_name !== filterEdition) return false
+      if (filterStatus && e.status?.toUpperCase() !== filterStatus) return false
+      if (filterMissingDocs && !e.missing_documents) return false
+      if (filterUnpaid && e.is_fully_paid) return false
+      return true
+    })
+  }, [enrollments, search, filterEdition, filterStatus, filterMissingDocs, filterUnpaid])
 
   const doDecision = async () => {
     if (!selectedId || !decisionModal) return
@@ -160,18 +171,63 @@ export default function AdminCandidatesPage() {
   return (
     <div className="flex gap-4 h-full">
       {/* Left: list */}
-      <div className="w-80 shrink-0 flex flex-col gap-3">
-        <div>
-          <h1 className="text-xl font-bold mb-3">Kandydaci</h1>
-          <Input placeholder="Szukaj po nazwisku lub kierunku..." value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-8" />
+      <div className="w-80 shrink-0 flex flex-col gap-2">
+        <h1 className="text-xl font-bold">Kandydaci</h1>
+
+        {/* Search */}
+        <Input
+          placeholder="Szukaj po nazwisku lub kierunku..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        {/* Filters */}
+        <div className="flex flex-col gap-1.5">
+          <select
+            value={filterEdition}
+            onChange={(e) => setFilterEdition(e.target.value)}
+            className="w-full rounded-md border border-surface-high bg-surface-low px-2.5 py-1.5 text-xs text-text focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">Wszystkie kierunki</option>
+            {editions.map((ed) => <option key={ed} value={ed}>{ed}</option>)}
+          </select>
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="w-full rounded-md border border-surface-high bg-surface-low px-2.5 py-1.5 text-xs text-text focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">Wszystkie statusy</option>
+            <option value="CANDIDATE">Kandydat</option>
+            <option value="STUDENT">Student</option>
+            <option value="RESERVE">Rezerwowy</option>
+            <option value="REJECTED">Odrzucony</option>
+            <option value="EXPELLED">Skreślony</option>
+            <option value="DRAFT">Wniosek niewysłany</option>
+          </select>
+          <div className="flex gap-3 px-0.5">
+            <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+              <input type="checkbox" checked={filterMissingDocs} onChange={(e) => setFilterMissingDocs(e.target.checked)} />
+              Braki dok.
+            </label>
+            <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+              <input type="checkbox" checked={filterUnpaid} onChange={(e) => setFilterUnpaid(e.target.checked)} />
+              Nieopłacone
+            </label>
+          </div>
+          {(search || filterEdition || filterStatus || filterMissingDocs || filterUnpaid) && (
+            <button
+              onClick={() => { setSearch(''); setFilterEdition(''); setFilterStatus(''); setFilterMissingDocs(false); setFilterUnpaid(false) }}
+              className="text-xs text-text-muted hover:text-text text-left px-0.5 cursor-pointer"
+            >
+              × Wyczyść filtry ({filtered.length} wyników)
+            </button>
+          )}
         </div>
 
         {error && <Alert variant="error" className="text-xs">{error}</Alert>}
 
         {loading ? <p className="text-sm text-text-muted">Ładowanie...</p> : (
-          <div className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-200px)]">
+          <div className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-265px)]">
             {filtered.length === 0 ? (
               <p className="text-sm text-text-muted text-center py-4">Brak wyników</p>
             ) : filtered.map((e) => (

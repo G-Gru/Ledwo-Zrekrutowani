@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { api } from '@/services/api'
 import { Alert } from '@/components/ui/Alert'
@@ -19,7 +19,7 @@ function fmt(v: number) {
   return new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(v)
 }
 
-function StatCard({ icon: Icon, label, value, color = 'text-[var(--color-text)]' }: { icon: React.ElementType; label: string; value: string | number; color?: string }) {
+function StatCard({ icon: Icon, label, value, color = 'text-text' }: { icon: React.ElementType; label: string; value: string | number; color?: string }) {
   return (
     <Card>
       <CardContent className="flex items-center gap-4 py-4">
@@ -86,12 +86,12 @@ export default function AdminDashboardPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <StatCard icon={TrendingUp} label="Edycje" value={sum.editions} />
             <StatCard icon={Users} label="Kandydaci" value={sum.candidates} />
-            <StatCard icon={CheckCircle2} label="Opłacone" value={sum.paid} color="text-[var(--color-success)]" />
-            <StatCard icon={AlertTriangle} label="Nieopłacone" value={sum.unpaid} color="text-[var(--color-error)]" />
-            <StatCard icon={CheckCircle2} label="Studenci" value={sum.students} color="text-[var(--color-success)]" />
-            <StatCard icon={AlertTriangle} label="Braki dokumentów" value={sum.missingDocs} color="text-[var(--color-warning)]" />
-            <StatCard icon={TrendingUp} label="Wpłacone kwoty" value={fmt(sum.paidFees)} color="text-[var(--color-success)]" />
-            <StatCard icon={TrendingUp} label="Nieopłacone kwoty" value={fmt(sum.unpaidFees)} color="text-[var(--color-error)]" />
+            <StatCard icon={CheckCircle2} label="Opłacone" value={sum.paid} color="text-success" />
+            <StatCard icon={AlertTriangle} label="Nieopłacone" value={sum.unpaid} color="text-error" />
+            <StatCard icon={CheckCircle2} label="Studenci" value={sum.students} color="text-success" />
+            <StatCard icon={AlertTriangle} label="Braki dokumentów" value={sum.missingDocs} color="text-warning" />
+            <StatCard icon={TrendingUp} label="Wpłacone kwoty" value={fmt(sum.paidFees)} color="text-success" />
+            <StatCard icon={TrendingUp} label="Nieopłacone kwoty" value={fmt(sum.unpaidFees)} color="text-error" />
           </div>
 
           <Card>

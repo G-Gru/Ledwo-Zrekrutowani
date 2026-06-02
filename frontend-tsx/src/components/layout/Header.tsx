@@ -42,27 +42,22 @@ export default function Header() {
 
         <nav className="flex items-center gap-6 flex-wrap justify-end">
           {navLink('/studies', 'Oferty studiów', isActive('/studies', '/studies/editions/*'))}
+          {navLink('/faq', 'FAQ', isActive('/faq'))}
+          {navLink('/contact', 'Kontakt', isActive('/contact'))}
 
           {isCoordinator && navLink('/admin/dashboard', 'Panel koordynatora', isActive('/admin/*'))}
-          {isFinance     && !isCoordinator && navLink('/admin/finances', 'Panel finansowy', isActive('/admin/finances'))}
-          {isAdmin       && navLink('/manage-studies/editions', 'Panel administratora', isActive('/manage-studies/*'))}
-
-          {isCandidate && (
-            <>
-              {navLink('/my-applications', 'Moje wnioski', isActive('/my-applications'))}
-              {navLink('/my-payments',     'Płatności',    isActive('/my-payments'))}
-            </>
-          )}
+          {isFinance && !isCoordinator && navLink('/admin/finances', 'Panel finansowy', isActive('/admin/finances'))}
+          {isAdmin && navLink('/manage-studies/editions', 'Panel administratora', isActive('/manage-studies/*'))}
 
           <Link
-            to={user ? '/my-profile' : '/login'}
+            to={isCandidate ? '/my-applications' : user ? '/my-profile' : '/login'}
             className={[
               'flex items-center gap-1.5 text-sm font-medium text-white hover:text-white/70 transition-colors pb-0.5',
-              isActive('/my-profile', '/login') ? 'border-b-2 border-white/70' : '',
+              isActive('/my-profile', '/my-applications', '/my-payments', '/my-documents', '/login') ? 'border-b-2 border-white/70' : '',
             ].join(' ')}
           >
             <User size={18} />
-            {!user && 'Logowanie'}
+            {user ? user.first_name || user.email : 'Zaloguj się'}
           </Link>
         </nav>
       </div>
