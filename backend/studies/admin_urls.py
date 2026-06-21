@@ -4,7 +4,7 @@ from .views import StudiesListCreateAdminAPIView, StudiesRetrieveUpdateDestroyAd
     StudiesEditionListCreateAdminAPIView, \
     StudiesEditionRetrieveUpdateDestroyAdminAPIView, StudiesEditionStaffListCreateAdminAPIView, \
     StudiesEditionStaffDestroyAdminAPIView, StudiesDocumentsListCreateAdminAPIView, StudiesDocumentsDestroyAdminAPIView, \
-    CancelEditionAPIView
+    CancelEditionAPIView, AllStaffAssignmentsAdminAPIView
 
 urlpatterns = [
     path("",
@@ -16,6 +16,9 @@ urlpatterns = [
     path("editions/",
          StudiesEditionListCreateAdminAPIView.as_view(),
          name="admin-studies-editions-list-create"),
+    path("editions/staff/all/",
+         AllStaffAssignmentsAdminAPIView.as_view(),
+         name="admin-studies-editions-staff-all"),
     path("editions/<int:edition_pk>/",
          StudiesEditionRetrieveUpdateDestroyAdminAPIView.as_view(),
          name="admin-studies-editions-retrieve-update-destroy"),

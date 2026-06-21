@@ -64,9 +64,18 @@ services:
     depends_on:
       - django
     environment:
-      VITE_API_URL: http://lz-django:8080
+      VITE_API_URL: http://lz-django:8000
     ports:
       - "5173:5173"
+  frontend-tsx:
+    build: ./frontend-tsx
+    container_name: lz-frontend-tsx
+    depends_on:
+      - django
+    environment:
+      VITE_API_URL: http://lz-django:8000
+    ports:
+      - "5174:5174"
 
 volumes:
   pgdata:

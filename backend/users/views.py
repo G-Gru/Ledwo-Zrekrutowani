@@ -35,7 +35,10 @@ def _resolve_login_role(user: User) -> str:
         if role in user_roles:
             return role
 
-    # Fallback for employee without edition staff role assigned.
+    # Fallback: use the global role set on Employee model.
+    if hasattr(user, 'employee') and user.employee.role:
+        return user.employee.role
+
     return "UNASSIGNED_EMPLOYEE"
 
 

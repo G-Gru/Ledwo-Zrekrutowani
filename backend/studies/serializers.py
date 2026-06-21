@@ -69,10 +69,11 @@ class StudiesEditionCreateSerializer(serializers.ModelSerializer):
 
 class StudiesEditionListSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='studies.name', read_only=True)
+    studies_id = serializers.IntegerField(source='studies.id', read_only=True)
 
     class Meta:
         model = StudiesEdition
-        fields = ('id', 'name', 'price', 'start_date', 'status', 'academic_year')
+        fields = ('id', 'studies_id', 'name', 'price', 'start_date', 'status', 'academic_year')
 
 class StudiesEditionDetailsSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='studies.name', read_only=True)
@@ -100,6 +101,17 @@ class StudiesEditionStaffReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudiesEditionStaff
         exclude = ('studies_edition', )
+
+class StaffAssignmentSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+    edition_id = serializers.IntegerField(source='studies_edition.id', read_only=True)
+    edition_academic_year = serializers.CharField(source='studies_edition.academic_year', read_only=True)
+    edition_status = serializers.CharField(source='studies_edition.status', read_only=True)
+    studies_name = serializers.CharField(source='studies_edition.studies.name', read_only=True)
+
+    class Meta:
+        model = StudiesEditionStaff
+        fields = ('id', 'user_id', 'role', 'edition_id', 'edition_academic_year', 'edition_status', 'studies_name')
 
 class StudiesDocumentSerializer(serializers.ModelSerializer):
     class Meta:

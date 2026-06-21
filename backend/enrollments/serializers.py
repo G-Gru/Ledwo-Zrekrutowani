@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from files.models import File
+from payments.serializers import FeeSerializer
 from studies.models import StudiesEdition, StudiesDocument
 from studies.serializers import StudiesEditionListSerializer, StudiesDocumentSerializer
 from .models import Enrollment, SubmittedDocument, FormData, Address, DocumentHistory
@@ -9,6 +10,7 @@ from .validators import is_valid_pesel, pesel_to_birthdate, is_valid_phone, is_v
 
 class AdminEnrollmentSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
     is_fully_paid = serializers.SerializerMethodField()
     missing_documents = serializers.SerializerMethodField()
     system_status = serializers.SerializerMethodField()
@@ -18,13 +20,16 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enrollment
         fields = [
-            'id', 'student_name', 'status', 'status_note', 'enrollment_date',
+            'id', 'student_name', 'email', 'status', 'status_note', 'enrollment_date',
             'is_fully_paid', 'missing_documents', 'system_status',
             'studies_name', 'edition_name'
         ]
 
     def get_student_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}"
+
+    def get_email(self, obj):
+        return obj.user.email
 
     def get_is_fully_paid(self, obj):
         # Weryfikacja opłat
@@ -250,9 +255,10 @@ class AdminFormDataSerializer(serializers.ModelSerializer):
 class AdminEnrollmentDetailSerializer(AdminEnrollmentSerializer):
     form_data = serializers.SerializerMethodField()
     documents = serializers.SerializerMethodField()
+    payments = FeeSerializer(source='fees', many=True, read_only=True)
 
     class Meta(AdminEnrollmentSerializer.Meta):
-        fields = AdminEnrollmentSerializer.Meta.fields + ['form_data', 'documents']
+        fields = AdminEnrollmentSerializer.Meta.fields + ['form_data', 'documents', 'payments']
 
     def get_form_data(self, obj):
         try:

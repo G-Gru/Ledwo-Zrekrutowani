@@ -51,9 +51,20 @@ class EnrollmentFormRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
         edition_pk = self.kwargs['edition_pk']
         return get_object_or_404(
             FormData,
-            enrollment__studies_edition_id = edition_pk,
-            enrollment__user = self.request.user
+            enrollment__studies_edition_id=edition_pk,
+            enrollment__user=self.request.user
         )
+
+    def retrieve(self, request, *args, **kwargs):
+        edition_pk = self.kwargs['edition_pk']
+        try:
+            instance = FormData.objects.get(
+                enrollment__studies_edition_id=edition_pk,
+                enrollment__user=request.user
+            )
+            return Response(self.get_serializer(instance).data)
+        except FormData.DoesNotExist:
+            return Response(None)
 
     def perform_update(self, serializer):
         edition_pk = self.kwargs['edition_pk']
@@ -66,6 +77,18 @@ class EnrollmentPreviousFormRetrieveAPIView(generics.RetrieveAPIView):
 
     def get_object(self):
         return services.get_previous_form(self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        enrollment = Enrollment.objects.filter(
+            user=request.user,
+            status__in=Enrollment.Status.strict_active()
+        ).order_by("enrollment_date").first()
+        if not enrollment:
+            return Response(None)
+        try:
+            return Response(self.get_serializer(enrollment.form).data)
+        except FormData.DoesNotExist:
+            return Response(None)
 
 class AddressListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = AddressSerializer
@@ -252,6 +275,14 @@ class AdminEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
         return Response({
             "message": f"Przypomnienie o płatności zostało wysłane do: {enrollment.user.email}"
         }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='save-note')
+    def save_note(self, request, pk=None):
+        enrollment = self.get_object()
+        note = request.data.get('note', '')
+        enrollment.status_note = note
+        enrollment.save(update_fields=['status_note'])
+        return Response({'status_note': enrollment.status_note})
 
     @action(detail=True, methods=['get'], url_path='details')
     def get_details(self, request, pk=None):
