@@ -34,7 +34,6 @@ Komponenty UI wzorowane na shadcn/ui — napisane od zera w `src/components/ui/`
 | Surface lighter | `#f6f3f2` | Tło strony |
 | Error | `#ba1a1a` | Błędy |
 
-**Zasada:** tylko klasy Tailwind i CSS variables — zero inline styles. Zawsze komponent `<Button>`, `<Table>` itd., nigdy surowy HTML.
 
 ### Kluczowe pliki
 
